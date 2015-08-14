@@ -1,8 +1,10 @@
-#include "stdafx.h"
 #include "Shortcut.h"
 
 BOOL
-	CShortCut::Create(__in LPTSTR lpPath, __in LPTSTR lpName)
+	CShortCut::Create(
+	__in LPTSTR lpPath,
+	__in LPTSTR lpName
+	)
 {
 	BOOL				bRet					= FALSE;
 
@@ -11,15 +13,14 @@ BOOL
 	TCHAR				tchLnkPath[MAX_PATH]	= {0};
 	IShellLink		*	pIShellLink				= NULL;
 	IPersistFile	*	pIPersistFile			= NULL;
-	
+	BOOL				bNeedCoUninitialize		= FALSE;
+
 
 	__try
 	{
 		if (!lpPath || !lpName)
 		{
-			printf("input parameter error. 0x%08p 0x%08p \n",
-				lpPath, lpName);
-
+			printfEx("input parameter error. 0x%08p 0x%08p", lpPath, lpName);
 			__leave;
 		}
 
@@ -32,17 +33,13 @@ BOOL
 			);
 		if (FAILED(hResult))
 		{
-			printf("SHGetFolderLocation failed. (%d) \n",
-				hResult);
-
+			printfEx("SHGetFolderLocation failed. (0x%08x)", hResult);
 			__leave;
 		}
 
 		if (!SHGetPathFromIDList(lpItemIdList, tchLnkPath))
 		{
-			printf("SHGetPathFromIDList failed. (%d) \n",
-				GetLastError());
-
+			printfEx("SHGetPathFromIDList failed. (%d)", GetLastError());
 			__leave;
 		}
 
@@ -50,7 +47,14 @@ BOOL
 		_tcscat_s(tchLnkPath, _countof(tchLnkPath), lpName);
 		_tcscat_s(tchLnkPath, _countof(tchLnkPath), _T(".lnk"));
 
-		// CoInitialize(NULL);
+		hResult = CoInitialize(NULL);
+		if (FAILED(hResult))
+		{
+			printfEx("CoInitialize failed. (0x%08x)", hResult);
+			__leave;
+		}
+
+		bNeedCoUninitialize = TRUE;
 
 		hResult = CoCreateInstance(
 			CLSID_ShellLink,
@@ -61,9 +65,7 @@ BOOL
 			);
 		if (FAILED(hResult))
 		{
-			printf("CoCreateInstance failed. (%d) \n",
-				hResult);
-
+			printfEx("CoCreateInstance failed. (0x%08x)", hResult);
 			__leave;
 		}
 
@@ -73,27 +75,21 @@ BOOL
 			);
 		if (FAILED(hResult))
 		{
-			printf("QueryInterface failed. (%d) \n",
-				hResult);
-
+			printfEx("QueryInterface failed. (0x%08x)", hResult);
 			__leave;
 		}
 
 		hResult = pIShellLink->SetPath(lpPath);
 		if (FAILED(hResult))
 		{
-			printf("SetPath failed. %S (%d) \n",
-				lpPath, hResult);
-
+			printfEx("SetPath failed. %S (0x%08x)", lpPath, hResult);
 			__leave;
 		}
 
 		hResult = pIShellLink->SetShowCmd(SW_SHOWNORMAL);
 		if (FAILED(hResult))
 		{
-			printf("SetShowCmd failed. (%d) \n",
-				hResult);
-
+			printfEx("SetShowCmd failed. (0x%08x)", hResult);
 			__leave;
 		}
 
@@ -103,22 +99,16 @@ BOOL
 			);
 		if (FAILED(hResult))
 		{
-			printf("Resolve failed. (%d) \n",
-				hResult);
-
+			printfEx("Resolve failed. (0x%08x)", hResult);
 			__leave;
 		}
 
 		hResult = pIPersistFile->Save(tchLnkPath, TRUE);
 		if (FAILED(hResult))
 		{
-			printf("Save failed. %S (%d) \n",
-				tchLnkPath, hResult);
-
+			printfEx("Save failed. %S (0x%08x)", tchLnkPath, hResult);
 			__leave;
 		}
-
-		// CoUninitialize();
 
 		bRet = TRUE;
 	}
@@ -129,6 +119,9 @@ BOOL
 			pIShellLink->Release();
 			pIShellLink = NULL;
 		}
+
+		if (bNeedCoUninitialize)
+			CoUninitialize();
 	}
 
 	return bRet;

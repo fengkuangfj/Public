@@ -1,7 +1,7 @@
 #include "GetModulePath.h"
 
 BOOL
-	GetModulePath(
+	CGetModulePath::GetModulePath(
 	__in HMODULE	hModule,
 	__in LPTSTR		lpInBuf,
 	__in ULONG		ulInBufSizeCh
@@ -12,37 +12,37 @@ BOOL
 	DWORD	dwResult	= 0;
 
 
-	printf("[%s] begin \n", __FUNCTION__);
+	printfEx("begin");
 
 	__try
 	{
 		if (!lpInBuf || !ulInBufSizeCh)
 		{
-			printf("input arguments error. lpInBuf(%p) ulInBufSizeCh(%d) \n", lpInBuf, ulInBufSizeCh);
+			printfEx("input arguments error. lpInBuf(0x%08p) ulInBufSizeCh(%d)", lpInBuf, ulInBufSizeCh);
 			__leave;
 		}
 
 		if (!hModule)
 		{
-			printf("the file used to create the calling process \n");
+			printfEx("the file used to create the calling process");
 			hModule = GetModuleHandle(NULL);
 			if (!hModule)
 			{
-				printf("GetModuleHandle failed. (%d) \n", GetLastError());
+				printfEx("GetModuleHandle failed. (%d)", GetLastError());
 				__leave;
 			}
 		}
 		else
-			printf("the fully qualified path of the module \n");
+			printfEx("the fully qualified path of the module");
 
 		dwResult = GetModuleFileName(hModule, lpInBuf, ulInBufSizeCh);
 		if (!dwResult)
 		{
-			printf("GetModuleFileName failed. (%d) \n", GetLastError());
+			printfEx("GetModuleFileName failed. (%d)", GetLastError());
 			__leave;
 		}
 		else
-			printf("%S \n", lpInBuf);
+			printfEx("%S", lpInBuf);
 
 		bRet = TRUE;
 	}
@@ -51,7 +51,7 @@ BOOL
 		;
 	}
 
-	printf("[%s] end \n", __FUNCTION__);
+	printfEx("end");
 
 	return bRet;
 }
