@@ -11,7 +11,7 @@ class CGetModulePath
 public:
 	static
 		BOOL
-		GetModulePath(
+		Get(
 		__in_opt	HMODULE	hModule,
 		__in		LPTSTR	lpInBuf,
 		__in		ULONG	ulInBufSizeCh

@@ -1,7 +1,7 @@
 #include "GetModulePath.h"
 
 BOOL
-	CGetModulePath::GetModulePath(
+	CGetModulePath::Get(
 	__in HMODULE	hModule,
 	__in LPTSTR		lpInBuf,
 	__in ULONG		ulInBufSizeCh
