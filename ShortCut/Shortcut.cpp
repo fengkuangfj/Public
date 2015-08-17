@@ -112,6 +112,8 @@ BOOL
 			__leave;
 		}
 
+		printfEx("%S -> %S", lpPath, tchLnkPath);
+
 		bRet = TRUE;
 	}
 	__finally
