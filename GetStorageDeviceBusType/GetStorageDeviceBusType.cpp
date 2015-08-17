@@ -1,33 +1,33 @@
 #include "GetStorageDeviceBusType.h"
 
 BOOL
-	CGetStorageDeviceBusType::Get(  
+	CGetStorageDeviceBusType::Get(
 	__in	LPTSTR				lpPath,
 	__out	PSTORAGE_BUS_TYPE	pStorageBusType
 	)
-{  
+{
 	BOOL						bRet					= FALSE;
 
-	TCHAR                       tchPathSym[MAX_PATH]	= {0};  
-	TCHAR                       tchVolumeSym[MAX_PATH]  = {0};  
-	HANDLE                      hVolume                 = INVALID_HANDLE_VALUE;  
-	STORAGE_DEVICE_DESCRIPTOR   StorageDeviceDescriptor = {0};  
-	DWORD                       dwBytesReturned         = 0;  
+	TCHAR                       tchPathSym[MAX_PATH]	= {0};
+	TCHAR                       tchVolumeSym[MAX_PATH]  = {0};
+	HANDLE                      hVolume                 = INVALID_HANDLE_VALUE;
+	STORAGE_DEVICE_DESCRIPTOR   StorageDeviceDescriptor = {0};
+	DWORD                       dwBytesReturned         = 0;
 
 	STORAGE_PROPERTY_QUERY      StoragePropertyQuery;
 
 
 	printfEx("begin");
 
-	__try  
+	__try
 	{
 		ZeroMemory(&StoragePropertyQuery, sizeof(STORAGE_PROPERTY_QUERY));
 
 		if (!lpPath || !pStorageBusType)
-		{  
+		{
 			printfEx("input arguments error. 0x%08p 0x%08p", lpPath, pStorageBusType);
 			__leave;
-		}  
+		}
 
 		_tcscat_s(tchPathSym, _countof(tchPathSym), _T("\\\\.\\"));
 		_tcscat_s(tchPathSym, _countof(tchPathSym), lpPath);
@@ -48,7 +48,7 @@ BOOL
 		{
 			printfEx("CreateFile failed. %S (%d)", tchVolumeSym, GetLastError());
 			__leave;
-		}  
+		}
 
 		StoragePropertyQuery.PropertyId = StorageDeviceProperty;
 		StoragePropertyQuery.QueryType = PropertyStandardQuery;
@@ -72,9 +72,9 @@ BOOL
 		}
 
 		*pStorageBusType = StorageDeviceDescriptor.BusType;
-	}  
-	__finally  
-	{  
+	}
+	__finally
+	{
 		if (INVALID_HANDLE_VALUE != hVolume)
 		{
 			CloseHandle(hVolume);
