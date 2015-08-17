@@ -1,7 +1,7 @@
-#include "GetStorageDeviceBusType.h"
+#include "StorageDeviceBusType.h"
 
 BOOL
-	CGetStorageDeviceBusType::Get(
+	CStorageDeviceBusType::Get(
 	__in	LPTSTR				lpPath,
 	__out	PSTORAGE_BUS_TYPE	pStorageBusType
 	)

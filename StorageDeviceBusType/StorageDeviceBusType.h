@@ -7,7 +7,7 @@
 
 #define MOD_GET_STORAGE_DEVICE_BUS_TYPE _T("存储设备总线类型")
 
-class CGetStorageDeviceBusType
+class CStorageDeviceBusType
 {
 public:
 	static

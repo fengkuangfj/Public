@@ -6,7 +6,7 @@
 
 #define MOD_GET_MODULE_PATH _T("获取模块路径")
 
-class CGetModulePath
+class CModulePath
 {
 public:
 	static
