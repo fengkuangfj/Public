@@ -18,7 +18,7 @@ BOOL
 	{
 		if (!lpInBuf || !ulInBufSizeCh)
 		{
-			printfEx("input arguments error. lpInBuf(0x%08p) ulInBufSizeCh(%d)", lpInBuf, ulInBufSizeCh);
+			printfEx("input arguments error. 0x%08p %d", lpInBuf, ulInBufSizeCh);
 			__leave;
 		}
 
