@@ -9,20 +9,7 @@
 
 VOID
 	PrintfInternal(
-	__in								PCHAR	pFuncName,
-	__in __drv_formatString(printfEx)	LPTSTR	Fmt,
+	__in PCHAR	pFuncName,
+	__in LPSTR	Fmt,
 	...
-	)
-{
-	TCHAR tchInfo[MAX_PATH] = {0};
-
-	va_list Args;
-
-	va_start(Args, Fmt);
-
-	StringCchPrintf(tchInfo, _countof(tchInfo), Fmt, Args);
-
-	printf("[%s] %S \n", pFuncName, tchInfo);
-
-	va_end(Args);
-}
+	);

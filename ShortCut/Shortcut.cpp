@@ -16,6 +16,8 @@ BOOL
 	BOOL				bNeedCoUninitialize		= FALSE;
 
 
+	printfEx("begin");
+
 	__try
 	{
 		if (!lpPath || !lpName)
@@ -123,6 +125,8 @@ BOOL
 		if (bNeedCoUninitialize)
 			CoUninitialize();
 	}
+
+	printfEx("end");
 
 	return bRet;
 }

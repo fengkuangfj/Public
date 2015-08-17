@@ -1,7 +1,6 @@
 #pragma once
 
 #include <Windows.h>
-#include <stdio.h>
 #include <Shlobj.h>
 #include <tchar.h>
 
