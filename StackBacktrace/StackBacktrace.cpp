@@ -66,6 +66,9 @@ BOOL
 			__leave;
 		}
 
+		if (!PathFileExistsA(lpSymDir))
+			__leave;
+
 		if (!ms_hProcess)
 		{
 			ms_hProcess = GetCurrentProcess();

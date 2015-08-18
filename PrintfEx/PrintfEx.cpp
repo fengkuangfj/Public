@@ -92,7 +92,7 @@ VOID
 				{
 					if (!StackBackTrace.StackBacktrace())
 					{
-						printf("StackBacktrace failed \n");
+						printf("StackBackTrace.StackBacktrace failed \n");
 						__leave;
 					}
 				}
@@ -168,7 +168,7 @@ BOOL
 		if (lpSymDir)
 		{
 			if (!StackBackTrace.Init(lpSymDir))
-				printf("Init failed \n");
+				printf("StackBackTrace.Init failed \n");
 			else
 				bUseStackBackTrace = TRUE;
 		}
@@ -197,7 +197,7 @@ BOOL
 	{
 		if (!StackBackTrace.Unload())
 		{
-			printf("Unload failed \n");
+			printf("StackBackTrace.Unload failed \n");
 			__leave;
 		}
 

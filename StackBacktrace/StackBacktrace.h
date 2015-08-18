@@ -3,8 +3,10 @@
 #include <Windows.h>
 #include <stdio.h>
 #include <Dbghelp.h>
+#include <Shlwapi.h>
 
 #pragma comment(lib, "Dbghelp.lib")
+#pragma comment(lib, "Shlwapi.lib")
 
 #define MOD_STACK_BACK_TRACE _T("Õ»»ØËÝ")
 
