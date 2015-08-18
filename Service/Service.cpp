@@ -379,7 +379,7 @@ BOOL
 }
 
 BOOL
-	CService::ChangeConfig(
+	CService::Disable(
 	__in LPWSTR lpServiceName
 	)
 {

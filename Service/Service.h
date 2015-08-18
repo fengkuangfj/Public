@@ -31,7 +31,7 @@ public:
 		);
 
 	BOOL
-		ChangeConfig(
+		Disable(
 		__in LPWSTR lpServiceName
 		);
 };
