@@ -1,10 +1,8 @@
 #pragma once
 
+#include <Windows.h>
 
-#ifndef _OS_VERSION_TAG_
-#define _OS_VERSION_TAG_	'SVSO'
-#endif
-
+#define MOD_OPERATION_SYSTEM_VERSION _T("操作系统版本")
 
 enum OS_VER
 {
@@ -29,7 +27,6 @@ enum OS_VER_AND_PROC_TYPE
 	OS_VER_AND_PROC_TYPE_WINDOWS_7_X86,
 	OS_VER_AND_PROC_TYPE_WINDOWS_7_X64
 };
-
 
 class COsVersion
 {

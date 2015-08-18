@@ -1,8 +1,7 @@
-#include "stdafx.h"
-
+#include "CommandLine.h"
 
 BOOL
-	ExecuteCmdLine(
+	CCommandLine::Execute(
 	__in		LPTSTR	lpCmdLine,
 	__in_opt	BOOL	bWaitUntilCmdExit
 	)
@@ -28,8 +27,8 @@ BOOL
 		_tcscat_s(CmdLine, _countof(CmdLine), lpCmdLine);
 
 		StartupInfo.cb = sizeof(STARTUPINFO);
-  		StartupInfo.dwFlags = STARTF_USESHOWWINDOW;
-  		StartupInfo.wShowWindow = SW_HIDE;
+		StartupInfo.dwFlags = STARTF_USESHOWWINDOW;
+		StartupInfo.wShowWindow = SW_HIDE;
 
 		if (!CreateProcess(
 			NULL,

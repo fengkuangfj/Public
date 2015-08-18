@@ -1,43 +1,41 @@
-#include "stdafx.h"
 #include "SimpleDump.h"
-
 
 MINIDUMP_TYPE					CSimpleDump::ms_MinidumpType						= MiniDumpNormal;
 BOOL							CSimpleDump::ms_bRestart							= FALSE;
-HMODULE							CSimpleDump::ms_hModule							= NULL;
-APPLICATION_TYPE				CSimpleDump::ms_ApplicationType					= APPLICATION_TYPE_UNKNOWN;
-PROGRAM_TYPE					CSimpleDump::ms_ProgramType						= PROGRAM_TYPE_TYPE_UNKNOWN;
-LPTSTR							CSimpleDump::ms_lpCmdLine						= NULL;
-TCHAR							CSimpleDump::ms_tchRestartTag[MAX_PATH]			= {0};
+HMODULE							CSimpleDump::ms_hModule								= NULL;
+APPLICATION_TYPE				CSimpleDump::ms_ApplicationType						= APPLICATION_TYPE_UNKNOWN;
+PROGRAM_TYPE					CSimpleDump::ms_ProgramType							= PROGRAM_TYPE_TYPE_UNKNOWN;
+LPTSTR							CSimpleDump::ms_lpCmdLine							= NULL;
+TCHAR							CSimpleDump::ms_tchRestartTag[MAX_PATH]				= {0};
 
-RESTART							CSimpleDump::ms_Restart							= NULL;
+RESTART							CSimpleDump::ms_Restart								= NULL;
 
-HMODULE							CSimpleDump::ms_hModuleKernel32Dll				= NULL;
-BOOL							CSimpleDump::ms_bCanUseGetOSVersionByIsOrGreater = FALSE;
+HMODULE							CSimpleDump::ms_hModuleKernel32Dll					= NULL;
+BOOL							CSimpleDump::ms_bCanUseGetOSVersionByIsOrGreater	= FALSE;
 IS_WINDOWS_SERVER				CSimpleDump::IsWindowsServer						= NULL;
 IS_WINDOWS_10_OR_GREATER		CSimpleDump::IsWindows1OrGreater					= NULL;
-IS_WINDOWS_8_POINT_1_OR_GREATER	CSimpleDump::IsWindows8Point1OrGreater			= NULL;
+IS_WINDOWS_8_POINT_1_OR_GREATER	CSimpleDump::IsWindows8Point1OrGreater				= NULL;
 IS_WINDOWS_8_OR_GREATER			CSimpleDump::IsWindows8OrGreater					= NULL;
-IS_WINDOWS_7_SP_1_OR_GREATER	CSimpleDump::IsWindows7SP1OrGreater				= NULL;
+IS_WINDOWS_7_SP_1_OR_GREATER	CSimpleDump::IsWindows7SP1OrGreater					= NULL;
 IS_WINDOWS_7_OR_GREATER			CSimpleDump::IsWindows7OrGreater					= NULL;
-IS_WINDOWS_VISTA_SP2_OR_GREATER	CSimpleDump::IsWindowsVistaSP2OrGreater			= NULL;
-IS_WINDOWS_VISTA_SP1_OR_GREATER	CSimpleDump::IsWindowsVistaSP1OrGreater			= NULL;
+IS_WINDOWS_VISTA_SP2_OR_GREATER	CSimpleDump::IsWindowsVistaSP2OrGreater				= NULL;
+IS_WINDOWS_VISTA_SP1_OR_GREATER	CSimpleDump::IsWindowsVistaSP1OrGreater				= NULL;
 IS_WINDOWS_VISTA_OR_GREATER		CSimpleDump::IsWindowsVistaOrGreater				= NULL;
 IS_WINDOWS_XP_SP3_OR_GREATER	CSimpleDump::IsWindowsXPSP3OrGreater				= NULL;
 IS_WINDOWS_XP_SP2_OR_GREATER	CSimpleDump::IsWindowsXPSP2OrGreater				= NULL;
 IS_WINDOWS_XP_SP1_OR_GREATER	CSimpleDump::IsWindowsXPSP1OrGreater				= NULL;
-IS_WINDOWS_XP_OR_GREATER		CSimpleDump::IsWindowsXPOrGreater				= NULL;
+IS_WINDOWS_XP_OR_GREATER		CSimpleDump::IsWindowsXPOrGreater					= NULL;
 
-BOOL							CSimpleDump::ms_bCanUseRegisterRestart			= FALSE;
-REGISTER_APPLICATION_RESTART	CSimpleDump::RegisterApplicationRestart			= NULL;
+BOOL							CSimpleDump::ms_bCanUseRegisterRestart				= FALSE;
+REGISTER_APPLICATION_RESTART	CSimpleDump::RegisterApplicationRestart				= NULL;
 
-HMODULE							CSimpleDump::ms_hModuleWerDll					= NULL;
-BOOL							CSimpleDump::ms_bCanUseGenWerReport				= FALSE;
+HMODULE							CSimpleDump::ms_hModuleWerDll						= NULL;
+BOOL							CSimpleDump::ms_bCanUseGenWerReport					= FALSE;
 WER_REPORT_CREATE				CSimpleDump::WerReportCreate						= NULL;
-WER_REPORT_SET_PARAMETER		CSimpleDump::WerReportSetParameter				= NULL;
-WER_REPORT_ADD_DUMP				CSimpleDump::WerReportAddDump					= NULL;
+WER_REPORT_SET_PARAMETER		CSimpleDump::WerReportSetParameter					= NULL;
+WER_REPORT_ADD_DUMP				CSimpleDump::WerReportAddDump						= NULL;
 WER_REPORT_SUBMIT				CSimpleDump::WerReportSubmit						= NULL;
-WER_REPORT_CLOSE_HANDLE			CSimpleDump::WerReportCloseHandle				= NULL;
+WER_REPORT_CLOSE_HANDLE			CSimpleDump::WerReportCloseHandle					= NULL;
 
 
 BOOL

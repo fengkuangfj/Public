@@ -5,7 +5,7 @@
 
 #include "../PrintfEx/PrintfEx.h"
 
-#define MOD_GET_STORAGE_DEVICE_BUS_TYPE _T("存储设备总线类型")
+#define MOD_STORAGE_DEVICE_BUS_TYPE _T("存储设备总线类型")
 
 class CStorageDeviceBusType
 {

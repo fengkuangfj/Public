@@ -4,7 +4,7 @@
 #include <strsafe.h>
 #include <locale.h>
 
-#define MOD_PRINTF_EX _T("printf")
+#define MOD_PRINTF_EX _T("PrintfEx")
 
 class CPrintfEx
 {

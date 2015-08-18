@@ -1,8 +1,8 @@
-﻿#ifndef _SIMPLE_DUMP_H_
-#define _SIMPLE_DUMP_H_
+﻿#pragma once
 
 #include <Windows.h>
 #include <time.h>
+#include <tchar.h>
 #include <strsafe.h>
 
 #include <DbgHelp.h>
@@ -15,6 +15,7 @@
 #pragma comment(lib, "Version.lib")
 #pragma comment(lib, "Psapi.lib")
 
+#define MOD_SIMPLE_DUMP							_T("简单转储")
 
 #define	CMD_LINE_MAX_CHARS 						32768
 
@@ -56,7 +57,6 @@
 #define WER_SUBMIT_REPORT_MACHINE_ID            8192
 
 #define WER_MAX_PREFERRED_MODULES_BUFFER		256
-
 
 typedef enum _OS_VERSION_USER_DEFINED
 {
@@ -238,7 +238,6 @@ typedef struct _WER_DUMP_CUSTOM_OPTIONS
 	WCHAR wzPreferredModuleList[WER_MAX_PREFERRED_MODULES_BUFFER];
 } WER_DUMP_CUSTOM_OPTIONS, *PWER_DUMP_CUSTOM_OPTIONS;
 
-
 typedef BOOL (*IS_WINDOWS_SERVER)(void);
 typedef BOOL (*IS_WINDOWS_10_OR_GREATER)(void);
 typedef BOOL (*IS_WINDOWS_8_POINT_1_OR_GREATER)(void);
@@ -306,7 +305,6 @@ typedef
 	(WINAPI * WER_REPORT_CLOSE_HANDLE)(
 	__in HREPORT hReportHandle
 	);
-
 
 class CSimpleDump
 {
@@ -377,7 +375,6 @@ private:
 	static WER_REPORT_ADD_DUMP				WerReportAddDump;
 	static WER_REPORT_SUBMIT				WerReportSubmit;
 	static WER_REPORT_CLOSE_HANDLE			WerReportCloseHandle;
-
 
 	static
 		BOOL
@@ -491,5 +488,3 @@ private:
 		__in_opt LPTSTR	lpCmdLine
 		);
 };
-
-#endif

@@ -6,6 +6,8 @@
 
 #pragma comment(lib, "Dbghelp.lib")
 
+#define MOD_STACK_BACK_TRACE _T("Õ»»ØËÝ")
+
 /*++
 *
 * Routine Description:

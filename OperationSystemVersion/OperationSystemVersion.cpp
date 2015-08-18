@@ -1,12 +1,10 @@
-#include "stdafx.h"
-
+#include "OperationSystemVersion.h"
 
 OS_VER			COsVersion::ms_OsVer			= OS_VER_UNKNOWN;
 OS_PROC_TYPE	COsVersion::ms_OsProcType		= OS_PROC_TYPE_UNKNOWN;
 BOOL			COsVersion::ms_bInitOsVer		= FALSE;
 BOOL			COsVersion::ms_bInitOsProcType	= FALSE;
 OSVERSIONINFO	COsVersion::ms_OsVerInfo		= {0};
-
 
 BOOL
 	COsVersion::Init()
