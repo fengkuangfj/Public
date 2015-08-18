@@ -17,15 +17,13 @@ BOOL
 	STORAGE_PROPERTY_QUERY      StoragePropertyQuery;
 
 
-	printfEx("begin");
-
 	__try
 	{
 		ZeroMemory(&StoragePropertyQuery, sizeof(STORAGE_PROPERTY_QUERY));
 
 		if (!lpPath || !pStorageBusType)
 		{
-			printfEx("input arguments error. 0x%08p 0x%08p", lpPath, pStorageBusType);
+			printfEx(MOD_STORAGE_DEVICE_BUS_TYPE, PRINTF_LEVEL_ERROR, "input arguments error. 0x%08p 0x%08p", lpPath, pStorageBusType);
 			__leave;
 		}
 
@@ -46,7 +44,7 @@ BOOL
 			);
 		if (INVALID_HANDLE_VALUE == hVolume)
 		{
-			printfEx("CreateFile failed. %S (%d)", tchVolumeSym, GetLastError());
+			printfEx(MOD_STORAGE_DEVICE_BUS_TYPE, PRINTF_LEVEL_ERROR, "CreateFile failed. %S (%d)", tchVolumeSym, GetLastError());
 			__leave;
 		}
 
@@ -67,7 +65,7 @@ BOOL
 			);  
 		if (!bRet)
 		{
-			printfEx("DeviceIoControl failed. (%d)", GetLastError());
+			printfEx(MOD_STORAGE_DEVICE_BUS_TYPE, PRINTF_LEVEL_ERROR, "DeviceIoControl failed. (%d)", GetLastError());
 			__leave;
 		}
 
@@ -81,8 +79,6 @@ BOOL
 			hVolume = INVALID_HANDLE_VALUE;
 		}
 	}
-
-	printfEx("end");
 
 	return bRet;
 }

@@ -7,7 +7,7 @@
 #include <string.h>
 #include <Shlobj.h>
 
-#define _LOG_MOD_	_T("日志")
+#define MOD_SIMPLE_LOG	_T("简单日志")
 
 #define CSimpleLogWrite(lpMod, FMT, ...) CSimpleLog::Write(lpMod, __FUNCTION__, FMT, __VA_ARGS__)
 
@@ -22,9 +22,9 @@ public:
 	static
 		BOOL
 		Write(
-		__in								LPTSTR	lpMod,
-		__in								LPCSTR	lpFuncName,
-		__in_z __drv_formatString(printf)	LPTSTR	Fmt,
+		__in LPTSTR	lpMod,
+		__in LPSTR	lpFuncName,
+		__in LPTSTR	lpFmt,
 		...
 		);
 

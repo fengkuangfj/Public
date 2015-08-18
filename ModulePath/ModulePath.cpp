@@ -2,9 +2,9 @@
 
 BOOL
 	CModulePath::Get(
-	__in HMODULE	hModule,
-	__in LPTSTR		lpInBuf,
-	__in ULONG		ulInBufSizeCh
+	__in_opt	HMODULE	hModule,
+	__out		LPTSTR	lpOutBuf,
+	__in		ULONG	ulOutBufSizeCh
 	)
 {
 	BOOL	bRet		= FALSE;
@@ -12,37 +12,35 @@ BOOL
 	DWORD	dwResult	= 0;
 
 
-	printfEx("begin");
-
 	__try
 	{
-		if (!lpInBuf || !ulInBufSizeCh)
+		if (!lpOutBuf || !ulOutBufSizeCh)
 		{
-			printfEx("input arguments error. 0x%08p %d", lpInBuf, ulInBufSizeCh);
+			printfEx(MOD_MODULE_PATH, PRINTF_LEVEL_ERROR, "input arguments error. 0x%08p %d", lpOutBuf, ulOutBufSizeCh);
 			__leave;
 		}
 
 		if (!hModule)
 		{
-			printfEx("the file used to create the calling process");
+			printfEx(MOD_MODULE_PATH, PRINTF_LEVEL_INFORMATION, "the file used to create the calling process");
 			hModule = GetModuleHandle(NULL);
 			if (!hModule)
 			{
-				printfEx("GetModuleHandle failed. (%d)", GetLastError());
+				printfEx(MOD_MODULE_PATH, PRINTF_LEVEL_ERROR, "GetModuleHandle failed. (%d)", GetLastError());
 				__leave;
 			}
 		}
 		else
-			printfEx("the fully qualified path of the module");
+			printfEx(MOD_MODULE_PATH, PRINTF_LEVEL_INFORMATION, "the fully qualified path of the module");
 
-		dwResult = GetModuleFileName(hModule, lpInBuf, ulInBufSizeCh);
+		dwResult = GetModuleFileName(hModule, lpOutBuf, ulOutBufSizeCh);
 		if (!dwResult)
 		{
-			printfEx("GetModuleFileName failed. (%d)", GetLastError());
+			printfEx(MOD_MODULE_PATH, PRINTF_LEVEL_ERROR, "GetModuleFileName failed. (%d)", GetLastError());
 			__leave;
 		}
 		else
-			printfEx("%S", lpInBuf);
+			printfEx(MOD_MODULE_PATH, PRINTF_LEVEL_INFORMATION, "%S", lpOutBuf);
 
 		bRet = TRUE;
 	}
@@ -50,8 +48,6 @@ BOOL
 	{
 		;
 	}
-
-	printfEx("end");
 
 	return bRet;
 }

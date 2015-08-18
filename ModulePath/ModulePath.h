@@ -13,7 +13,7 @@ public:
 		BOOL
 		Get(
 		__in_opt	HMODULE	hModule,
-		__in		LPTSTR	lpInBuf,
-		__in		ULONG	ulInBufSizeCh
+		__out		LPTSTR	lpOutBuf,
+		__in		ULONG	ulOutBufSizeCh
 		);
 };

@@ -16,13 +16,11 @@ BOOL
 	BOOL				bNeedCoUninitialize		= FALSE;
 
 
-	printfEx("begin");
-
 	__try
 	{
 		if (!lpPath || !lpName)
 		{
-			printfEx("input parameter error. 0x%08p 0x%08p", lpPath, lpName);
+			printfEx(MOD_SHORTCUT, PRINTF_LEVEL_ERROR, "input parameter error. 0x%08p 0x%08p", lpPath, lpName);
 			__leave;
 		}
 
@@ -35,13 +33,13 @@ BOOL
 			);
 		if (FAILED(hResult))
 		{
-			printfEx("SHGetFolderLocation failed. (0x%08x)", hResult);
+			printfEx(MOD_SHORTCUT, PRINTF_LEVEL_ERROR, "SHGetFolderLocation failed. (0x%08x)", hResult);
 			__leave;
 		}
 
 		if (!SHGetPathFromIDList(lpItemIdList, tchLnkPath))
 		{
-			printfEx("SHGetPathFromIDList failed. (%d)", GetLastError());
+			printfEx(MOD_SHORTCUT, PRINTF_LEVEL_ERROR, "SHGetPathFromIDList failed. (%d)", GetLastError());
 			__leave;
 		}
 
@@ -52,7 +50,7 @@ BOOL
 		hResult = CoInitialize(NULL);
 		if (FAILED(hResult))
 		{
-			printfEx("CoInitialize failed. (0x%08x)", hResult);
+			printfEx(MOD_SHORTCUT, PRINTF_LEVEL_ERROR, "CoInitialize failed. (0x%08x)", hResult);
 			__leave;
 		}
 
@@ -67,7 +65,7 @@ BOOL
 			);
 		if (FAILED(hResult))
 		{
-			printfEx("CoCreateInstance failed. (0x%08x)", hResult);
+			printfEx(MOD_SHORTCUT, PRINTF_LEVEL_ERROR, "CoCreateInstance failed. (0x%08x)", hResult);
 			__leave;
 		}
 
@@ -77,21 +75,21 @@ BOOL
 			);
 		if (FAILED(hResult))
 		{
-			printfEx("QueryInterface failed. (0x%08x)", hResult);
+			printfEx(MOD_SHORTCUT, PRINTF_LEVEL_ERROR, "QueryInterface failed. (0x%08x)", hResult);
 			__leave;
 		}
 
 		hResult = pIShellLink->SetPath(lpPath);
 		if (FAILED(hResult))
 		{
-			printfEx("SetPath failed. %S (0x%08x)", lpPath, hResult);
+			printfEx(MOD_SHORTCUT, PRINTF_LEVEL_ERROR, "SetPath failed. %S (0x%08x)", lpPath, hResult);
 			__leave;
 		}
 
 		hResult = pIShellLink->SetShowCmd(SW_SHOWNORMAL);
 		if (FAILED(hResult))
 		{
-			printfEx("SetShowCmd failed. (0x%08x)", hResult);
+			printfEx(MOD_SHORTCUT, PRINTF_LEVEL_ERROR, "SetShowCmd failed. (0x%08x)", hResult);
 			__leave;
 		}
 
@@ -101,18 +99,18 @@ BOOL
 			);
 		if (FAILED(hResult))
 		{
-			printfEx("Resolve failed. (0x%08x)", hResult);
+			printfEx(MOD_SHORTCUT, PRINTF_LEVEL_ERROR, "Resolve failed. (0x%08x)", hResult);
 			__leave;
 		}
 
 		hResult = pIPersistFile->Save(tchLnkPath, TRUE);
 		if (FAILED(hResult))
 		{
-			printfEx("Save failed. %S (0x%08x)", tchLnkPath, hResult);
+			printfEx(MOD_SHORTCUT, PRINTF_LEVEL_ERROR, "Save failed. %S (0x%08x)", tchLnkPath, hResult);
 			__leave;
 		}
 
-		printfEx("%S -> %S", lpPath, tchLnkPath);
+		printfEx(MOD_SHORTCUT, PRINTF_LEVEL_INFORMATION, "%S -> %S", lpPath, tchLnkPath);
 
 		bRet = TRUE;
 	}
@@ -127,8 +125,6 @@ BOOL
 		if (bNeedCoUninitialize)
 			CoUninitialize();
 	}
-
-	printfEx("end");
 
 	return bRet;
 }

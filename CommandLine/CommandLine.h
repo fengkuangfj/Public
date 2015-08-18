@@ -11,7 +11,7 @@ public:
 	static
 		BOOL
 		Execute(
-		__in		LPTSTR	lpCmdLine,
-		__in_opt	BOOL	bWaitUntilCmdExit = TRUE
+		__in LPTSTR	lpCmdLine,
+		__in BOOL	bWaitUntilCmdExit
 		);
 };

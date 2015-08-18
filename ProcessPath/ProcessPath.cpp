@@ -4,8 +4,8 @@ BOOL
 	CProcessPath::Get(
 	__in	BOOL	bCurrentProc,
 	__in	ULONG	ulPid,
-	__out	LPTSTR	lpInBuf,
-	__in	ULONG	ulInBufSizeCh
+	__out	LPTSTR	lpOutBuf,
+	__in	ULONG	ulOutBufSizeCh
 	)
 {
 	BOOL	bRet						= FALSE;
@@ -18,25 +18,23 @@ BOOL
 	TCHAR	tchVolName[MAX_PATH]		= {0};
 
 
-	printfEx("begin");
-
 	__try
 	{
-		if (!lpInBuf || !ulInBufSizeCh || (!bCurrentProc && !ulPid))
+		if (!lpOutBuf || !ulOutBufSizeCh || (!bCurrentProc && !ulPid))
 		{
-			printfEx("input arguments error. %d %d 0x%08p %d", bCurrentProc, ulPid, lpInBuf, ulInBufSizeCh);
+			printfEx(MOD_PROCESS_PATH, PRINTF_LEVEL_ERROR, "input arguments error. %d %d 0x%08p %d", bCurrentProc, ulPid, lpOutBuf, ulOutBufSizeCh);
 			__leave;
 		}
 
 		if (bCurrentProc)
 		{
-			if (!CModulePath::Get(NULL, lpInBuf, ulInBufSizeCh))
+			if (!CModulePath::Get(NULL, lpOutBuf, ulOutBufSizeCh))
 			{
-				printfEx("Get failed");
+				printfEx(MOD_PROCESS_PATH, PRINTF_LEVEL_ERROR, "Get failed");
 				__leave;
 			}
 
-			printfEx("%S", lpInBuf);
+			printfEx(MOD_PROCESS_PATH, PRINTF_LEVEL_INFORMATION, "%S", lpOutBuf);
 
 			bRet = TRUE;
 			__leave;
@@ -45,27 +43,27 @@ BOOL
 		hProc = OpenProcess(PROCESS_QUERY_INFORMATION, FALSE, ulPid);
 		if (!hProc)
 		{
-			printfEx("OpenProcess failed. (%d)", GetLastError());
+			printfEx(MOD_PROCESS_PATH, PRINTF_LEVEL_ERROR, "OpenProcess failed. (%d)", GetLastError());
 			__leave;
 		}
 
 		hModule = LoadLibrary(_T("Kernel32.dll"));
 		if (!hModule)
 		{
-			printfEx("LoadLibrary failed. (%d)", GetLastError());
+			printfEx(MOD_PROCESS_PATH, PRINTF_LEVEL_ERROR, "LoadLibrary failed. (%d)", GetLastError());
 			__leave;
 		}
 
 		if (GetProcAddress(hModule, "QueryFullProcessImageNameA"))
 		{
-			dwProcPathLenCh = ulInBufSizeCh;
-			if (!QueryFullProcessImageName(hProc, 0, lpInBuf, &dwProcPathLenCh))
+			dwProcPathLenCh = ulOutBufSizeCh;
+			if (!QueryFullProcessImageName(hProc, 0, lpOutBuf, &dwProcPathLenCh))
 			{
-				printfEx("QueryFullProcessImageName failed. (%d)", GetLastError());
+				printfEx(MOD_PROCESS_PATH, PRINTF_LEVEL_ERROR, "QueryFullProcessImageName failed. (%d)", GetLastError());
 				__leave;
 			}
 
-			printfEx("[QueryFullProcessImageName] [%d] %S", ulPid, lpInBuf);
+			printfEx(MOD_PROCESS_PATH, PRINTF_LEVEL_INFORMATION, "[QueryFullProcessImageName] [%d] %S", ulPid, lpOutBuf);
 
 			bRet = TRUE;
 			__leave;
@@ -73,7 +71,7 @@ BOOL
 
 		if (!GetProcessImageFileName(hProc, tchProcPathDev, _countof(tchProcPathDev)))
 		{
-			printfEx("GetProcessImageFileName failed. (%d)", GetLastError());
+			printfEx(MOD_PROCESS_PATH, PRINTF_LEVEL_ERROR, "GetProcessImageFileName failed. (%d)", GetLastError());
 			__leave;
 		}
 
@@ -87,7 +85,7 @@ BOOL
 					continue;
 				else
 				{
-					printfEx("QueryDosDevice failed. (%d)", GetLastError());
+					printfEx(MOD_PROCESS_PATH, PRINTF_LEVEL_ERROR, "QueryDosDevice failed. (%d)", GetLastError());
 					__leave;
 				}
 			}
@@ -101,10 +99,10 @@ BOOL
 
 		if (bRet)
 		{
-			_tcscat_s(lpInBuf, ulInBufSizeCh, tchVolName);
-			_tcscat_s(lpInBuf, ulInBufSizeCh, tchProcPathDev + _tcslen(tchVolNameDev));
+			_tcscat_s(lpOutBuf, ulOutBufSizeCh, tchVolName);
+			_tcscat_s(lpOutBuf, ulOutBufSizeCh, tchProcPathDev + _tcslen(tchVolNameDev));
 
-			printfEx("[QueryDosDevice] [%d] %S", ulPid, lpInBuf);
+			printfEx(MOD_PROCESS_PATH, PRINTF_LEVEL_INFORMATION, "[QueryDosDevice] [%d] %S", ulPid, lpOutBuf);
 		}
 	}
 	__finally
@@ -121,8 +119,6 @@ BOOL
 			hProc = NULL;
 		}
 	}
-
-	printfEx("end");
 
 	return bRet;
 }

@@ -58,7 +58,7 @@ BOOL
 			CloseHandle(hFile);
 
 		if (bRet)
-			CSimpleLogWrite(_LOG_MOD_, _T("日志模块初始化成功"));
+			CSimpleLogWrite(MOD_SIMPLE_LOG, _T("日志模块初始化成功"));
 	}
 
 	return bRet;
@@ -66,9 +66,9 @@ BOOL
 
 BOOL
 	CSimpleLog::Write(
-	__in								LPTSTR	lpMod,
-	__in								LPCSTR	lpFuncName,
-	__in_z __drv_formatString(printf)	LPTSTR	Fmt,
+	__in LPTSTR	lpMod,
+	__in LPSTR	lpFuncName,
+	__in LPTSTR	lpFmt,
 	...
 	)
 {
@@ -96,7 +96,7 @@ BOOL
 	{
 		EnterCriticalSection(&CSimpleLog::ms_CriticalSection);
 
-		va_start(Args, Fmt);
+		va_start(Args, lpFmt);
 
 		if (!_tcslen(CSimpleLog::ms_LogPath))
 			__leave;
@@ -127,8 +127,7 @@ BOOL
 
 		// 时间
 		time(&rawTime);
-		if (localtime_s(&timeInfo, &rawTime))
-			__leave;
+		localtime_s(&timeInfo, &rawTime);
 
 		StringCbPrintf(Tmp, sizeof(Tmp), _T("[%04d-%02d-%02d][%02d:%02d:%02d]"),
 			timeInfo.tm_year + 1900,
@@ -164,8 +163,8 @@ BOOL
 		_tcscat_s(tchLog, _countof(tchLog), Tmp);
 
 		// 日志
-		if (Fmt)
-	 		StringCbVPrintf(Tmp, sizeof(Tmp), Fmt, Args);
+		if (lpFmt)
+	 		StringCbVPrintf(Tmp, sizeof(Tmp), lpFmt, Args);
 		else
 			StringCbPrintf(Tmp, sizeof(Tmp), _T("参数非法"));
 		_tcscat_s(tchLog, _countof(tchLog), Tmp);

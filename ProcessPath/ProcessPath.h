@@ -20,7 +20,7 @@ public:
 		Get(
 		__in	BOOL	bCurrentProc,
 		__in	ULONG	ulPid,
-		__out	LPTSTR	lpInBuf,
-		__in	ULONG	ulInBufSizeCh
+		__out	LPTSTR	lpOutBuf,
+		__in	ULONG	ulOutBufSizeCh
 		);
 };

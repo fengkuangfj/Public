@@ -51,12 +51,13 @@ BOOL
 	_Out_ LPDWORD lpNumberOfBytesRead
 	);
 
-
 class CStackBacktrace
 {
 public:
 	BOOL
-		Init();
+		Init(
+		__in LPSTR lpSymDir
+		);
 
 	BOOL
 		Unload();
@@ -64,7 +65,10 @@ public:
 	BOOL
 		StackBacktrace();
 
-private:
 	BOOL
 		WalkFrameChaim();
+
+private:
+	static RTLWALKFRAMECHAIN	ms_RtlWalkFrameChain;
+	static HANDLE				ms_hProcess;
 };

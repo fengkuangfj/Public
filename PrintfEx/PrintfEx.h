@@ -6,6 +6,8 @@
 #include <locale.h>
 #include <time.h>
 
+#include "../StackBacktrace/StackBacktrace.h"
+
 #define MOD_PRINTF_EX _T("PrintfEx")
 
 typedef enum _PRINTF_LEVEL
@@ -20,13 +22,32 @@ typedef enum _PRINTF_LEVEL
 class CPrintfEx
 {
 public:
+	BOOL
+		Init(
+		__in_opt LPSTR lpSymDir
+		);
+
+	BOOL
+		Unload();
+
 	static
 		VOID
 		PrintfInternal(
 		__in LPTSTR			lpMod,
 		__in PRINTF_LEVEL	PrintfLevel,
-		__in LPSTR			pFuncName,
-		__in LPSTR			Fmt,
+		__in LPSTR			lpFuncName,
+		__in LPSTR			lpFmt,
 		...
 		);
+
+	static
+		BOOL
+		ErrorCodeConnote(
+		__in	DWORD	dwErrorCode,
+		__out	LPTSTR	lpOutBuf,
+		__in	ULONG	ulOutBufSizeCh
+		);
+
+private:
+	static BOOL bUseStackBackTrace;
 };

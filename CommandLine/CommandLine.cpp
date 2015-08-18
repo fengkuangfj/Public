@@ -2,8 +2,8 @@
 
 BOOL
 	CCommandLine::Execute(
-	__in		LPTSTR	lpCmdLine,
-	__in_opt	BOOL	bWaitUntilCmdExit
+	__in LPTSTR	lpCmdLine,
+	__in BOOL	bWaitUntilCmdExit
 	)
 {
 	BOOL				bRet				= FALSE;
