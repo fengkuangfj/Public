@@ -20,6 +20,8 @@ BOOL
 			__leave;
 		}
 
+		ZeroMemory(lpOutBuf, ulOutBufSizeCh * sizeof(TCHAR));
+
 		if (!hModule)
 		{
 			printfEx(MOD_MODULE_PATH, PRINTF_LEVEL_INFORMATION, "the file used to create the calling process");

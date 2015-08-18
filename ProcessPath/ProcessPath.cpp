@@ -26,6 +26,8 @@ BOOL
 			__leave;
 		}
 
+		ZeroMemory(lpOutBuf, ulOutBufSizeCh * sizeof(TCHAR));
+
 		if (bCurrentProc)
 		{
 			if (!CModulePath::Get(NULL, lpOutBuf, ulOutBufSizeCh))
@@ -54,20 +56,20 @@ BOOL
 			__leave;
 		}
 
-		if (GetProcAddress(hModule, "QueryFullProcessImageNameA"))
-		{
-			dwProcPathLenCh = ulOutBufSizeCh;
-			if (!QueryFullProcessImageName(hProc, 0, lpOutBuf, &dwProcPathLenCh))
-			{
-				printfEx(MOD_PROCESS_PATH, PRINTF_LEVEL_ERROR, "QueryFullProcessImageName failed. (%d)", GetLastError());
-				__leave;
-			}
-
-			printfEx(MOD_PROCESS_PATH, PRINTF_LEVEL_INFORMATION, "[QueryFullProcessImageName] [%d] %S", ulPid, lpOutBuf);
-
-			bRet = TRUE;
-			__leave;
-		}
+// 		if (GetProcAddress(hModule, "QueryFullProcessImageNameA"))
+// 		{
+// 			dwProcPathLenCh = ulOutBufSizeCh;
+// 			if (!QueryFullProcessImageName(hProc, 0, lpOutBuf, &dwProcPathLenCh))
+// 			{
+// 				printfEx(MOD_PROCESS_PATH, PRINTF_LEVEL_ERROR, "QueryFullProcessImageName failed. (%d)", GetLastError());
+// 				__leave;
+// 			}
+// 
+// 			printfEx(MOD_PROCESS_PATH, PRINTF_LEVEL_INFORMATION, "[QueryFullProcessImageName] [%d] %S", ulPid, lpOutBuf);
+// 
+// 			bRet = TRUE;
+// 			__leave;
+// 		}
 
 		if (!GetProcessImageFileName(hProc, tchProcPathDev, _countof(tchProcPathDev)))
 		{
