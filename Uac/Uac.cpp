@@ -104,7 +104,7 @@ BOOL
 			);
 		if (ERROR_SUCCESS != lResult)
 		{
-			printfEx(MOD_UAC, PRINTF_LEVEL_ERROR, "RegSetValueEx 2 failed. EnableLUA (%d)", lResult);
+			printfEx(MOD_UAC, PRINTF_LEVEL_ERROR, "RegSetValueEx failed. EnableLUA (%d)", lResult);
 			__leave;
 		}
 
