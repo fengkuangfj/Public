@@ -6,7 +6,9 @@ VOID
 	CPrintfEx::PrintfInternal(
 	__in LPTSTR			lpMod,
 	__in PRINTF_LEVEL	PrintfLevel,
-	__in LPSTR			lpFuncName,
+	__in LPSTR			lpFile,
+	__in LPSTR			lpFunction,
+	__in ULONG			ulLine,
 	__in LPSTR			lpFmt,
 	...
 	)
@@ -33,7 +35,7 @@ VOID
 		{
 		case PRINTF_LEVEL_INFORMATION:
 			{
-				printf("[INFO][%04d/%02d/%02d][%02d:%02d:%02d][%05d][%lS][%hs] %hs \n", 
+				printf("[INFO][%04d/%02d/%02d][%02d:%02d:%02d][%05d][%lS][%hs][%d][%hs] %hs \n", 
 					timeInfo.tm_year + 1900,
 					timeInfo.tm_mon + 1,
 					timeInfo.tm_mday,
@@ -42,7 +44,9 @@ VOID
 					timeInfo.tm_sec,
 					GetCurrentThreadId(),
 					lpMod ? lpMod : _T("未知模块"),
-					lpFuncName,
+					lpFile,
+					ulLine,
+					lpFunction,
 					chFmtInfo
 					);
 
@@ -50,7 +54,7 @@ VOID
 			}
 		case PRINTF_LEVEL_WARNING:
 			{
-				printf("[WARN][%04d/%02d/%02d][%02d:%02d:%02d][%05d][%lS][%hs] %hs \n", 
+				printf("[WARN][%04d/%02d/%02d][%02d:%02d:%02d][%05d][%lS][%hs][%d][%hs] %hs \n", 
 					timeInfo.tm_year + 1900,
 					timeInfo.tm_mon + 1,
 					timeInfo.tm_mday,
@@ -59,7 +63,9 @@ VOID
 					timeInfo.tm_sec,
 					GetCurrentThreadId(),
 					lpMod ? lpMod : _T("未知模块"),
-					lpFuncName,
+					lpFile,
+					ulLine,
+					lpFunction,
 					chFmtInfo
 					);
 
@@ -67,7 +73,7 @@ VOID
 			}
 		case PRINTF_LEVEL_ERROR:
 			{
-				printf("[ERRO][%04d/%02d/%02d][%02d:%02d:%02d][%05d][%lS][%hs] %hs \n", 
+				printf("[ERRO][%04d/%02d/%02d][%02d:%02d:%02d][%05d][%lS][%hs][%d][%hs] %hs \n", 
 					timeInfo.tm_year + 1900,
 					timeInfo.tm_mon + 1,
 					timeInfo.tm_mday,
@@ -76,7 +82,9 @@ VOID
 					timeInfo.tm_sec,
 					GetCurrentThreadId(),
 					lpMod ? lpMod : _T("未知模块"),
-					lpFuncName,
+					lpFile,
+					ulLine,
+					lpFunction,
 					chFmtInfo
 					);
 

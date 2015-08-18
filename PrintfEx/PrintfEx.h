@@ -17,7 +17,7 @@ typedef enum _PRINTF_LEVEL
 	PRINTF_LEVEL_ERROR
 } PRINTF_LEVEL, *PPRINTF_LEVEL, *LPPRINTF_LEVEL;
 
-#define printfEx(lpMod, PrintfLevel, FMT, ...) CPrintfEx::PrintfInternal(lpMod, PrintfLevel, __FUNCTION__, FMT, __VA_ARGS__)
+#define printfEx(lpMod, PrintfLevel, FMT, ...) CPrintfEx::PrintfInternal(lpMod, PrintfLevel, __FILE__, __FUNCTION__, __LINE__, FMT, __VA_ARGS__)
 
 class CPrintfEx
 {
@@ -35,7 +35,9 @@ public:
 		PrintfInternal(
 		__in LPTSTR			lpMod,
 		__in PRINTF_LEVEL	PrintfLevel,
-		__in LPSTR			lpFuncName,
+		__in LPSTR			lpFile,
+		__in LPSTR			lpFunction,
+		__in ULONG			ulLine,
 		__in LPSTR			lpFmt,
 		...
 		);
