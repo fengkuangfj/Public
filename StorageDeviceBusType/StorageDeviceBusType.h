@@ -3,7 +3,7 @@
 #include <Windows.h>
 #include <tchar.h>
 
-#include "../PrintfEx/PrintfEx.h"
+#include "..\\PrintfEx\\PrintfEx.h"
 
 #define MOD_STORAGE_DEVICE_BUS_TYPE _T("存储设备总线类型")
 

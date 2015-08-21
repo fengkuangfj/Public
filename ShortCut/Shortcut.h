@@ -4,7 +4,7 @@
 #include <Shlobj.h>
 #include <tchar.h>
 
-#include "../../Public/PrintfEx/PrintfEx.h"
+#include "..\\..\\Public\\PrintfEx\\PrintfEx.h"
 
 #define MOD_SHORTCUT _T("¿ì½Ý·½Ê½")
 

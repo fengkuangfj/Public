@@ -2,7 +2,7 @@
 
 #include <Windows.h>
 
-#include "../PrintfEx/PrintfEx.h"
+#include "..\\PrintfEx\\PrintfEx.h"
 
 #define MOD_SERVICE _T("·þÎñ")
 
@@ -11,8 +11,13 @@ class CService
 public:
 	BOOL
 		Install(
-		__in LPWSTR lpServiceName,
-		__in LPWSTR lpPath
+		__in		LPWSTR	lpServiceName,
+		__in		DWORD	dwServiceType,
+		__in		DWORD	dwStartType,
+		__in_opt	DWORD	dwErrorControl,
+		__in		LPWSTR	lpPath,
+		__in_opt	LPWSTR	lpLoadOrderGroup,
+		__in_opt	LPWSTR	lpDependencies
 		);
 
 	BOOL

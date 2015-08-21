@@ -2,7 +2,7 @@
 
 #include <Windows.h>
 
-#include "../PrintfEx/PrintfEx.h"
+#include "..\\PrintfEx\\PrintfEx.h"
 
 #define MOD_UAC _T("UAC")
 

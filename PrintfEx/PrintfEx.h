@@ -6,7 +6,7 @@
 #include <locale.h>
 #include <time.h>
 
-#include "../StackBacktrace/StackBacktrace.h"
+#include "..\\StackBacktrace\\StackBacktrace.h"
 
 #define MOD_PRINTF_EX _T("PrintfEx")
 
