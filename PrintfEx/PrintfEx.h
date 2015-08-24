@@ -24,7 +24,7 @@ class CPrintfEx
 public:
 	BOOL
 		Init(
-		__in_opt LPSTR lpSymDir
+		__in_opt LPTSTR lpSymDir
 		);
 
 	BOOL

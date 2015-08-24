@@ -25,7 +25,14 @@ BOOL
 		if (bCurrentProcess)
 			hProcess = GetCurrentProcess();
 		else
-			;
+		{
+			hProcess = OpenProcess(PROCESS_ALL_ACCESS, FALSE, ulPid);
+			if (!hProcess)
+			{
+				printfEx(MOD_PROCESS_PRIVILEGE, PRINTF_LEVEL_ERROR, "OpenProcess failed. (%d)", GetLastError());
+				__leave;
+			}
+		}
 
 		if (!OpenProcessToken(hProcess, TOKEN_ADJUST_PRIVILEGES, &hToken))
 		{

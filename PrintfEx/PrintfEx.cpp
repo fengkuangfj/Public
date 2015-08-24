@@ -155,7 +155,7 @@ BOOL
 
 BOOL
 	CPrintfEx::Init(
-	__in_opt LPSTR lpSymDir
+	__in_opt LPTSTR lpSymDir
 	)
 {
 	BOOL			bRet			= FALSE;
