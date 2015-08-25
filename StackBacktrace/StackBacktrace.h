@@ -58,7 +58,7 @@ class CStackBacktrace
 public:
 	BOOL
 		Init(
-		__in LPSTR lpSymDir
+		__in LPTSTR lpSymDir
 		);
 
 	BOOL

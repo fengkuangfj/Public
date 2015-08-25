@@ -25,7 +25,14 @@ BOOL
 		if (bCurrentProcess)
 			hProcess = GetCurrentProcess();
 		else
-			;
+		{
+			hProcess = OpenProcess(PROCESS_ALL_ACCESS, FALSE, ulPid);
+			if (!hProcess)
+			{
+				printfEx(MOD_PROCESS_PRIVILEGE, PRINTF_LEVEL_ERROR, "OpenProcess failed. (%d)", GetLastError());
+				__leave;
+			}
+		}
 
 		if (!OpenProcessToken(hProcess, TOKEN_ADJUST_PRIVILEGES, &hToken))
 		{
@@ -57,6 +64,45 @@ BOOL
 			CloseHandle(hToken);
 			hToken = NULL;
 		}
+	}
+
+	return bRet;
+}
+
+BOOL
+	CProcessPrivilege::RunAs(
+	__in LPTSTR lpPath
+	)
+{
+	BOOL				bRet				= FALSE;
+
+	SHELLEXECUTEINFO	ShellExecuteInfo	= {0};
+
+
+	__try
+	{
+		if (!lpPath)
+		{
+			printfEx(MOD_PROCESS_PRIVILEGE, PRINTF_LEVEL_ERROR, "input argument error");
+			__leave;
+		}
+
+		ShellExecuteInfo.cbSize = sizeof(ShellExecuteInfo);
+		ShellExecuteInfo.lpVerb = _T("runas");
+		ShellExecuteInfo.lpFile = lpPath;
+		ShellExecuteInfo.nShow = SW_SHOWNORMAL;
+
+		if (!ShellExecuteEx(&ShellExecuteInfo))
+		{
+			printfEx(MOD_PROCESS_PRIVILEGE, PRINTF_LEVEL_ERROR, "ShellExecuteEx failed. (%d)", GetLastError());
+			__leave;
+		}
+
+		bRet = TRUE;
+	}
+	__finally
+	{
+		;
 	}
 
 	return bRet;

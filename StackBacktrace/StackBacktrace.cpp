@@ -32,7 +32,7 @@ BOOL
 
 BOOL
 	CStackBacktrace::Init(
-	__in LPSTR lpSymDir
+	__in LPTSTR lpSymDir
 	)
 {
 	BOOL	bRet		= FALSE;
@@ -66,7 +66,7 @@ BOOL
 			__leave;
 		}
 
-		if (!PathFileExistsA(lpSymDir))
+		if (!PathFileExists(lpSymDir))
 			__leave;
 
 		if (!ms_hProcess)
@@ -78,7 +78,7 @@ BOOL
 				__leave;
 			}
 
-			if (!SymInitialize(ms_hProcess, lpSymDir, TRUE))
+			if (!SymInitializeW(ms_hProcess, lpSymDir, TRUE))
 			{
 				printf("SymInitialize failed. (%d) \n", GetLastError());
 				__leave;

@@ -16,4 +16,10 @@ public:
 		__in ULONG	ulPid,
 		__in LPTSTR lpName
 		);
+
+	static
+		BOOL
+		RunAs(
+		__in LPTSTR lpPath
+		);
 };
