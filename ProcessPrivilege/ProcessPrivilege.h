@@ -11,15 +11,23 @@ class CProcessPrivilege
 public:
 	static
 		BOOL
-		Adjust(
-		__in BOOL	bCurrentProcess,
-		__in ULONG	ulPid,
-		__in LPTSTR lpName
+		RunAs(
+		__in LPTSTR lpPath
 		);
 
 	static
 		BOOL
-		RunAs(
-		__in LPTSTR lpPath
+		Raise(
+		__in BOOL	bCurrentProcess,
+		__in ULONG	ulPid
+		);
+
+private:
+	static
+		BOOL
+		Adjust(
+		__in BOOL	bCurrentProcess,
+		__in ULONG	ulPid,
+		__in LPTSTR lpName
 		);
 };

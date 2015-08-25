@@ -107,3 +107,66 @@ BOOL
 
 	return bRet;
 }
+
+BOOL
+	CProcessPrivilege::Raise(
+	__in BOOL	bCurrentProcess,
+	__in ULONG	ulPid
+	)
+{
+	BOOL bRet = FALSE;
+
+
+	__try
+	{
+		if (!bCurrentProcess && !ulPid)
+		{
+			printfEx(MOD_PROCESS_PRIVILEGE, PRINTF_LEVEL_ERROR, "input arguments error");
+			__leave;
+		}
+
+		Adjust(bCurrentProcess, ulPid, SE_CREATE_TOKEN_NAME          );
+		Adjust(bCurrentProcess, ulPid, SE_ASSIGNPRIMARYTOKEN_NAME    );
+		Adjust(bCurrentProcess, ulPid, SE_LOCK_MEMORY_NAME           );
+		Adjust(bCurrentProcess, ulPid, SE_INCREASE_QUOTA_NAME        );
+		// Adjust(bCurrentProcess, ulPid, SE_UNSOLICITED_INPUT_NAME     );
+		Adjust(bCurrentProcess, ulPid, SE_MACHINE_ACCOUNT_NAME       );
+		Adjust(bCurrentProcess, ulPid, SE_TCB_NAME                   );
+		Adjust(bCurrentProcess, ulPid, SE_SECURITY_NAME              );
+		Adjust(bCurrentProcess, ulPid, SE_TAKE_OWNERSHIP_NAME        );
+		Adjust(bCurrentProcess, ulPid, SE_LOAD_DRIVER_NAME           );
+		Adjust(bCurrentProcess, ulPid, SE_SYSTEM_PROFILE_NAME        );
+		Adjust(bCurrentProcess, ulPid, SE_SYSTEMTIME_NAME            );
+		Adjust(bCurrentProcess, ulPid, SE_PROF_SINGLE_PROCESS_NAME   );
+		Adjust(bCurrentProcess, ulPid, SE_INC_BASE_PRIORITY_NAME     );
+		Adjust(bCurrentProcess, ulPid, SE_CREATE_PAGEFILE_NAME       );
+		Adjust(bCurrentProcess, ulPid, SE_CREATE_PERMANENT_NAME      );
+		Adjust(bCurrentProcess, ulPid, SE_BACKUP_NAME                );
+		Adjust(bCurrentProcess, ulPid, SE_RESTORE_NAME               );
+		Adjust(bCurrentProcess, ulPid, SE_SHUTDOWN_NAME              );
+		Adjust(bCurrentProcess, ulPid, SE_DEBUG_NAME                 );
+		Adjust(bCurrentProcess, ulPid, SE_AUDIT_NAME                 );
+		Adjust(bCurrentProcess, ulPid, SE_SYSTEM_ENVIRONMENT_NAME    );
+		Adjust(bCurrentProcess, ulPid, SE_CHANGE_NOTIFY_NAME         );
+		Adjust(bCurrentProcess, ulPid, SE_REMOTE_SHUTDOWN_NAME       );
+		Adjust(bCurrentProcess, ulPid, SE_UNDOCK_NAME                );
+		Adjust(bCurrentProcess, ulPid, SE_SYNC_AGENT_NAME            );
+		Adjust(bCurrentProcess, ulPid, SE_ENABLE_DELEGATION_NAME     );
+		Adjust(bCurrentProcess, ulPid, SE_MANAGE_VOLUME_NAME         );
+		Adjust(bCurrentProcess, ulPid, SE_IMPERSONATE_NAME           );
+		Adjust(bCurrentProcess, ulPid, SE_CREATE_GLOBAL_NAME         );
+		Adjust(bCurrentProcess, ulPid, SE_TRUSTED_CREDMAN_ACCESS_NAME);
+		Adjust(bCurrentProcess, ulPid, SE_RELABEL_NAME               );
+		Adjust(bCurrentProcess, ulPid, SE_INC_WORKING_SET_NAME       );
+		Adjust(bCurrentProcess, ulPid, SE_TIME_ZONE_NAME             );
+		Adjust(bCurrentProcess, ulPid, SE_CREATE_SYMBOLIC_LINK_NAME  );
+
+		bRet = TRUE;
+	}
+	__finally
+	{
+		;
+	}
+
+	return bRet;
+}
