@@ -97,10 +97,23 @@ VOID
 					}
 				}
 
-				__asm
+#ifdef _DEBUG
+				if (IsDebuggerPresent())
 				{
-					int 3
+					__asm
+					{
+						int 3
+					}
 				}
+				else
+				{
+#ifdef _ASSERT
+					VERIFY(FALSE);
+#else
+					assert(FALSE);
+#endif
+				}
+#endif
 
 				break;
 			}

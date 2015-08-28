@@ -5,6 +5,7 @@
 #include <strsafe.h>
 #include <locale.h>
 #include <time.h>
+#include <assert.h>
 
 #include "..\\StackBacktrace\\StackBacktrace.h"
 
