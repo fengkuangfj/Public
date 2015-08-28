@@ -97,6 +97,11 @@ VOID
 					}
 				}
 
+				__asm
+				{
+					int 3
+				}
+
 				break;
 			}
 		default:
