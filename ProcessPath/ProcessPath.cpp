@@ -1,5 +1,7 @@
 #include "ProcessPath.h"
 
+QUERY_FULL_PROCESS_IMAGE_NAME g_QueryFullProcessImageName = NULL;
+
 BOOL
 	CProcessPath::Get(
 	__in	BOOL	bCurrentProc,
@@ -56,19 +58,23 @@ BOOL
 			__leave;
 		}
 
-		if (GetProcAddress(hModule, "QueryFullProcessImageNameA"))
+		if (!g_QueryFullProcessImageName)
 		{
-			dwProcPathLenCh = ulOutBufSizeCh;
-			if (!QueryFullProcessImageName(hProc, 0, lpOutBuf, &dwProcPathLenCh))
+			g_QueryFullProcessImageName = (QUERY_FULL_PROCESS_IMAGE_NAME)GetProcAddress(hModule, "QueryFullProcessImageName");
+			if (g_QueryFullProcessImageName)
 			{
-				printfEx(MOD_PROCESS_PATH, PRINTF_LEVEL_ERROR, "QueryFullProcessImageName failed. (%d)", GetLastError());
+				dwProcPathLenCh = ulOutBufSizeCh;
+				if (!g_QueryFullProcessImageName(hProc, 0, lpOutBuf, &dwProcPathLenCh))
+				{
+					printfEx(MOD_PROCESS_PATH, PRINTF_LEVEL_ERROR, "QueryFullProcessImageName failed. (%d)", GetLastError());
+					__leave;
+				}
+
+				printfEx(MOD_PROCESS_PATH, PRINTF_LEVEL_INFORMATION, "[QueryFullProcessImageName] [%d] %S", ulPid, lpOutBuf);
+
+				bRet = TRUE;
 				__leave;
 			}
-
-			printfEx(MOD_PROCESS_PATH, PRINTF_LEVEL_INFORMATION, "[QueryFullProcessImageName] [%d] %S", ulPid, lpOutBuf);
-
-			bRet = TRUE;
-			__leave;
 		}
 
 		if (!GetProcessImageFileName(hProc, tchProcPathDev, _countof(tchProcPathDev)))

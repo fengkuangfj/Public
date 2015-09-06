@@ -6,6 +6,18 @@
 
 #define MOD_SERVICE _T("·þÎñ")
 
+typedef
+	BOOL
+	(* WOW64_DISABLE_WOW64_FS_REDIRECTION)(
+	__out PVOID * OldValue
+	);
+
+typedef
+	BOOL
+	(* WOW64_REVERT_WOW64_FS_REDIRECTION)(
+	__in PVOID OlValue
+	);
+
 class CService
 {
 public:

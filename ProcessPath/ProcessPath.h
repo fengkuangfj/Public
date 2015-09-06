@@ -12,6 +12,15 @@
 
 #define MOD_PROCESS_PATH _T("½ø³ÌÂ·¾¶")
 
+typedef
+	BOOL
+	(* QUERY_FULL_PROCESS_IMAGE_NAME)(
+	__in									HANDLE	hProcess,
+	__in									DWORD	dwFlags,
+	__out_ecount_part(*lpdwSize, *lpdwSize) LPWSTR	lpExeName,
+	__inout									PDWORD	lpdwSize
+	);
+
 class CProcessPath
 {
 public:

@@ -1,5 +1,8 @@
 #include "Service.h"
 
+WOW64_DISABLE_WOW64_FS_REDIRECTION	g_Wow64DisableWow64FsRedirection	= NULL;
+WOW64_REVERT_WOW64_FS_REDIRECTION	g_Wow64RevertWow64FsRedirection		= NULL;
+
 BOOL
 	CService::Install(
 	__in		LPWSTR	lpServiceName,
@@ -23,6 +26,7 @@ BOOL
 	LPWSTR		lpPosition						= NULL;
 	PVOID		pOldValue						= NULL;
 	BOOL		bWow64DisableWow64FsRedirection = FALSE;
+	HMODULE		hModule							= NULL;
 
 
 	__try
@@ -34,13 +38,31 @@ BOOL
 			__leave;
 		}
 
-		if (!Wow64DisableWow64FsRedirection(&pOldValue))
+		hModule = LoadLibrary(_T("Kernel32.dll"));
+		if (!hModule)
 		{
-			printfEx(MOD_SERVICE, PRINTF_LEVEL_ERROR, "Wow64DisableWow64FsRedirection failed. (%d)", GetLastError());
+			printfEx(MOD_SERVICE, PRINTF_LEVEL_ERROR, "LoadLibrary failed. (%d)", GetLastError());
 			__leave;
 		}
 
-		bWow64DisableWow64FsRedirection = TRUE;
+		g_Wow64DisableWow64FsRedirection = (WOW64_DISABLE_WOW64_FS_REDIRECTION)GetProcAddress(hModule, "Wow64DisableWow64FsRedirection");
+		if (g_Wow64DisableWow64FsRedirection)
+		{
+			if (!g_Wow64DisableWow64FsRedirection(&pOldValue))
+			{
+				printfEx(MOD_SERVICE, PRINTF_LEVEL_ERROR, "Wow64DisableWow64FsRedirection failed. (%d)", GetLastError());
+				__leave;
+			}
+
+			bWow64DisableWow64FsRedirection = TRUE;
+
+			g_Wow64RevertWow64FsRedirection = (WOW64_REVERT_WOW64_FS_REDIRECTION)GetProcAddress(hModule, "Wow64RevertWow64FsRedirection");
+			if (!g_Wow64RevertWow64FsRedirection)
+			{
+				printfEx(MOD_SERVICE, PRINTF_LEVEL_ERROR, "GetProcAddress failed. (%d)", GetLastError());
+				__leave;
+			}
+		}
 
 		hScManager = OpenSCManager(NULL, NULL, SC_MANAGER_ALL_ACCESS);
 		if (!hScManager) 
@@ -397,8 +419,14 @@ BOOL
 
 		if (bWow64DisableWow64FsRedirection)
 		{
-			Wow64RevertWow64FsRedirection(pOldValue);
+			g_Wow64RevertWow64FsRedirection(pOldValue);
 			pOldValue = NULL;
+		}
+
+		if (hModule)
+		{
+			FreeLibrary(hModule);
+			hModule = NULL;
 		}
 	}
 
