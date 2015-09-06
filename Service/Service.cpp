@@ -83,7 +83,7 @@ BOOL
 
 					wcscat_s(wchPath, _countof(wchPath), lpPosition + 1);
 
-					if (!CopyFile(lpPath, wchPath, FALSE))
+					if (!CopyFile(lpPath, wchPath, TRUE))
 					{
 						printfEx(MOD_SERVICE, PRINTF_LEVEL_ERROR, "CopyFile failed. %S -> %S", lpPath, wchPath);
 						__leave;
