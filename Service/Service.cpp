@@ -45,22 +45,25 @@ BOOL
 			__leave;
 		}
 
-		g_Wow64DisableWow64FsRedirection = (WOW64_DISABLE_WOW64_FS_REDIRECTION)GetProcAddress(hModule, "Wow64DisableWow64FsRedirection");
-		if (g_Wow64DisableWow64FsRedirection)
+		if (!g_Wow64DisableWow64FsRedirection)
 		{
-			if (!g_Wow64DisableWow64FsRedirection(&pOldValue))
+			g_Wow64DisableWow64FsRedirection = (WOW64_DISABLE_WOW64_FS_REDIRECTION)GetProcAddress(hModule, "Wow64DisableWow64FsRedirection");
+			if (g_Wow64DisableWow64FsRedirection)
 			{
-				printfEx(MOD_SERVICE, PRINTF_LEVEL_ERROR, "Wow64DisableWow64FsRedirection failed. (%d)", GetLastError());
-				__leave;
-			}
+				if (!g_Wow64DisableWow64FsRedirection(&pOldValue))
+				{
+					printfEx(MOD_SERVICE, PRINTF_LEVEL_ERROR, "Wow64DisableWow64FsRedirection failed. (%d)", GetLastError());
+					__leave;
+				}
 
-			bWow64DisableWow64FsRedirection = TRUE;
+				bWow64DisableWow64FsRedirection = TRUE;
 
-			g_Wow64RevertWow64FsRedirection = (WOW64_REVERT_WOW64_FS_REDIRECTION)GetProcAddress(hModule, "Wow64RevertWow64FsRedirection");
-			if (!g_Wow64RevertWow64FsRedirection)
-			{
-				printfEx(MOD_SERVICE, PRINTF_LEVEL_ERROR, "GetProcAddress failed. (%d)", GetLastError());
-				__leave;
+				g_Wow64RevertWow64FsRedirection = (WOW64_REVERT_WOW64_FS_REDIRECTION)GetProcAddress(hModule, "Wow64RevertWow64FsRedirection");
+				if (!g_Wow64RevertWow64FsRedirection)
+				{
+					printfEx(MOD_SERVICE, PRINTF_LEVEL_ERROR, "GetProcAddress failed. (%d)", GetLastError());
+					__leave;
+				}
 			}
 		}
 
@@ -419,8 +422,11 @@ BOOL
 
 		if (bWow64DisableWow64FsRedirection)
 		{
-			g_Wow64RevertWow64FsRedirection(pOldValue);
-			pOldValue = NULL;
+			if (g_Wow64RevertWow64FsRedirection)
+			{
+				g_Wow64RevertWow64FsRedirection(pOldValue);
+				pOldValue = NULL;
+			}
 		}
 
 		if (hModule)
