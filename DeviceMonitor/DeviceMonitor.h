@@ -5,10 +5,11 @@
 #include <Windows.h>
 #include <Dbt.h>
 
-#include "..\\SimpleDump\\SimpleDump.h"
+#include <afxwin.h>
+
 #include "..\\PrintfEx\\PrintfEx.h"
 
-class CDeviceMonitorWnd
+class CDeviceMonitorWnd : public CWnd
 {
 public:
 
@@ -18,11 +19,18 @@ class CDeviceMonitor
 {
 public:
 	BOOL
-		Init();
+		Init(
+		__in HANDLE hWindowOrService,
+		__in BOOL	bService
+		);
+
+	BOOL
+		Unload();
 
 	BOOL
 		MessageLoop();
 
 private:
-
+	static CDeviceMonitorWnd *	ms_pDeviceMonitorWnd;
+	static HDEVNOTIFY			ms_hDevNotify;
 };

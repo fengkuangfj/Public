@@ -1,57 +1,70 @@
 ﻿#include "DeviceMonitor.h"
 
+CDeviceMonitorWnd * CDeviceMonitor::ms_pDeviceMonitorWnd	= NULL;
+HDEVNOTIFY			CDeviceMonitor::ms_hDevNotify			= NULL;
+
 BOOL
 	CDeviceMonitor::Init(
-	__in HANDLE hWorS
-	__in BOOL	bW
+	__in HANDLE hWindowOrService,
+	__in BOOL	bService
 	)
 {
-	BOOL bRet = FALSE;
+	BOOL							bRet				= FALSE;
 
-	DEV_BROADCAST_DEVICEINTERFACE NotificationFilter = {0};
-	HDEVNOTIFY hDevNotify = NULL;
+	DEV_BROADCAST_DEVICEINTERFACE	NotificationFilter	= {0};
+	HDEVNOTIFY						hDevNotify			= NULL;
+	DWORD							dwFlags				= 0;
 
 
 	__try
 	{
+		NotificationFilter.dbcc_size = sizeof(NotificationFilter);
+		NotificationFilter.dbcc_devicetype = DBT_DEVTYP_DEVICEINTERFACE;
+		NotificationFilter.dbcc_classguid = GUID_DEVINTERFACE_VOLUME;
 
-	
-			ZeroMemory( &NotificationFilter, sizeof(NotificationFilter) );
-			NotificationFilter.dbcc_size		= sizeof(DEV_BROADCAST_DEVICEINTERFACE);
-			NotificationFilter.dbcc_devicetype	= DBT_DEVTYP_DEVICEINTERFACE;
-			NotificationFilter.dbcc_classguid	= GUID_DEVINTERFACE_VOLUME;
-
-			hDevNotify = RegisterDeviceNotification(
-				hWorS,
-				&NotificationFilter,
-				DEVICE_NOTIFY_WINDOW_HANDLE
-				);
+		if (bService)
+		{
+			dwFlags = DEVICE_NOTIFY_SERVICE_HANDLE;
 
 
-			if(!*hDevNotify)
+			if (!hWindowOrService)
 			{
-				
+				printfEx(MOD_DEVICE_MONITOR, PRINTF_LEVEL_ERROR, "input argument error");
+				__leave;
 			}
+		}
+		else
+		{
+			dwFlags = DEVICE_NOTIFY_WINDOW_HANDLE;
 
-		
+			if (!hWindowOrService)
+			{
+				if (!ms_pDeviceMonitorWnd)
+				{
+					ms_pDeviceMonitorWnd = new CDeviceMonitorWnd();
+					if (!ms_pDeviceMonitorWnd)
+					{
+						printfEx(MOD_DEVICE_MONITOR, PRINTF_LEVEL_ERROR, "new failed. (%d)", GetLastError());
+						__leave;
+					}
+				}
 
+				hWindowOrService = ms_pDeviceMonitorWnd->m_hWnd;
+			}
+		}
 
-// 		switch (CSimpleDump::GetApplicationType())
-// 		{
-// 		case APPLICATION_TYPE_CONSOLE:
-// 			{
-// 				break;
-// 			}
-// 		case APPLICATION_TYPE_NOT_CONSOLE:
-// 			{
-// 				break;
-// 			}
-// 		default:
-// 			{
-// 				printfEx(MOD_DEVICE_MONITOR, PRINTF_LEVEL_ERROR, "input arguments error. 0x%08p %d", lpOutBuf, ulOutBufSizeCh);
-// 				__leave;
-// 			}
-// 		}
+		ms_hDevNotify = RegisterDeviceNotification(
+			hWindowOrService,
+			&NotificationFilter,
+			dwFlags
+			);
+		if (!ms_hDevNotify)
+		{
+			printfEx(MOD_DEVICE_MONITOR, PRINTF_LEVEL_ERROR, "RegisterDeviceNotification failed. (%d)", GetLastError());
+			__leave;
+		}
+
+		bRet = TRUE;
 	}
 	__finally
 	{
@@ -59,7 +72,38 @@ BOOL
 	}
 
 	return bRet;
-	
+}
+
+BOOL
+	CDeviceMonitor::Unload()
+{
+	BOOL bRet = FALSE;
+
+
+	__try
+	{
+		if (ms_hDevNotify)
+		{
+			if (!UnregisterDeviceNotification(ms_hDevNotify))
+				printfEx(MOD_DEVICE_MONITOR, PRINTF_LEVEL_ERROR, "UnregisterDeviceNotification failed. (%d)", GetLastError());
+			else
+				ms_hDevNotify = NULL;
+		}
+
+		if (ms_pDeviceMonitorWnd)
+		{
+			delete ms_pDeviceMonitorWnd;
+			ms_pDeviceMonitorWnd = NULL;
+		}
+
+		bRet = TRUE;
+	}
+	__finally
+	{
+		;
+	}
+
+	return bRet;
 }
 
 BOOL
