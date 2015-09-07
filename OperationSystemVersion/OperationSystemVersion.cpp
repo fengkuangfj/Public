@@ -1,13 +1,13 @@
 #include "OperationSystemVersion.h"
 
-OS_VER			COsVersion::ms_OsVer			= OS_VER_UNKNOWN;
-OS_PROC_TYPE	COsVersion::ms_OsProcType		= OS_PROC_TYPE_UNKNOWN;
-BOOL			COsVersion::ms_bInitOsVer		= FALSE;
-BOOL			COsVersion::ms_bInitOsProcType	= FALSE;
-OSVERSIONINFO	COsVersion::ms_OsVerInfo		= {0};
+OS_VER			COperationSystemVersion::ms_OsVer			= OS_VER_UNKNOWN;
+OS_PROC_TYPE	COperationSystemVersion::ms_OsProcType		= OS_PROC_TYPE_UNKNOWN;
+BOOL			COperationSystemVersion::ms_bInitOsVer		= FALSE;
+BOOL			COperationSystemVersion::ms_bInitOsProcType	= FALSE;
+OSVERSIONINFO	COperationSystemVersion::ms_OsVerInfo		= {0};
 
 BOOL
-	COsVersion::Init()
+	COperationSystemVersion::Init()
 {
 	BOOL bRet = FALSE;
 
@@ -37,7 +37,7 @@ BOOL
 }
 
 OS_VER
-	COsVersion::GetOSVer(
+	COperationSystemVersion::GetOSVer(
 	__out_opt OSVERSIONINFO* pOsVersionInfo
 	)
 {
@@ -80,7 +80,7 @@ OS_VER
 }
 
 OS_PROC_TYPE
-	COsVersion::GetOSProcType()
+	COperationSystemVersion::GetOSProcType()
 {
 	OS_PROC_TYPE	ret			= OS_PROC_TYPE_UNKNOWN;
 
@@ -114,7 +114,7 @@ OS_PROC_TYPE
 }
 
 OS_VER_AND_PROC_TYPE
-	COsVersion::GetOsVerAndProcType()
+	COperationSystemVersion::GetOsVerAndProcType()
 {
 	OS_VER_AND_PROC_TYPE	OsVerAndProcType	= OS_VER_AND_PROC_TYPE_UNKNOWN;
 

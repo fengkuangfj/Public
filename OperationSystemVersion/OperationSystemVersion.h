@@ -28,7 +28,7 @@ enum OS_VER_AND_PROC_TYPE
 	OS_VER_AND_PROC_TYPE_WINDOWS_7_X64
 };
 
-class COsVersion
+class COperationSystemVersion
 {
 public:
 	BOOL
