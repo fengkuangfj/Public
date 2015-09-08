@@ -926,6 +926,53 @@ BOOL
 		// Report running status when initialization is complete.
 		ReportSvcStatus(SERVICE_RUNNING, NO_ERROR, 0);
 
+		TCHAR			tchPdbDir[MAX_PATH] = {0};
+		LPTSTR			lpPosition			= NULL;
+
+		CPrintfEx		PrintfEx;
+		CVolumeDetector	VolumeDetector;
+		CService		Service;
+
+
+		__try
+		{
+			if (GetModuleFileName(NULL, tchPdbDir, _countof(tchPdbDir)))
+			{
+				lpPosition = _tcsrchr(tchPdbDir, _T('\\'));
+				if (lpPosition)
+				{
+					*(lpPosition) = _T('\0');
+
+					PrintfEx.Init(tchPdbDir, TRUE);
+				}
+			}
+
+			printfEx(MOD_SERVICE, PRINTF_LEVEL_INFORMATION, "日志模块初始化完毕，按任意键继续\n");
+
+			if (!VolumeDetector.Init(NULL, NULL, FALSE))
+			{
+				printfEx(MOD_SERVICE, PRINTF_LEVEL_ERROR, "VolumeDetector.Init failed");
+				__leave;
+			}
+
+			if (!VolumeDetector.MessageLoop())
+			{
+				printfEx(MOD_SERVICE, PRINTF_LEVEL_ERROR, "VolumeDetector.MessageLoop failed");
+				__leave;
+			}
+
+			if (!VolumeDetector.Unload())
+			{
+				printfEx(MOD_SERVICE, PRINTF_LEVEL_ERROR, "VolumeDetector.Unload failed");
+				__leave;
+			}
+		}
+		__finally
+		{
+			printfEx(MOD_SERVICE, PRINTF_LEVEL_INFORMATION, "按任意键退出");
+			PrintfEx.Unload();
+		}
+
 		// TO_DO: Perform work until service stops.
 		while (TRUE)
 		{

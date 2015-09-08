@@ -1,6 +1,7 @@
 #include "PrintfEx.h"
 
-BOOL CPrintfEx::bUseStackBackTrace = FALSE;
+BOOL CPrintfEx::ms_bUseStackBackTrace = FALSE;
+BOOL CPrintfEx::ms_bOutputDebugString = FALSE;
 
 VOID
 	CPrintfEx::PrintfInternal(
@@ -13,9 +14,11 @@ VOID
 	...
 	)
 {
-	time_t			rawTime				= 0;
-	tm				timeInfo			= {0};
-	CHAR			chFmtInfo[MAX_PATH]	= {0};
+	time_t			rawTime					= 0;
+	tm				timeInfo				= {0};
+	CHAR			chFmtInfo[MAX_PATH]		= {0};
+	CHAR			chLogTemp[MAX_PATH * 2]	= {0};
+	CHAR			chLog[MAX_PATH * 2]		= {0};
 
 	va_list			Args;
 
@@ -31,64 +34,58 @@ VOID
 
 		StringCchVPrintfA(chFmtInfo, _countof(chFmtInfo), lpFmt, Args);
 
+		StringCchPrintfA(chLogTemp, _countof(chLogTemp), "[%04d/%02d/%02d][%02d:%02d:%02d][%05d][%lS][%hs][%d][%hs] %hs \n",
+			timeInfo.tm_year + 1900,
+			timeInfo.tm_mon + 1,
+			timeInfo.tm_mday,
+			timeInfo.tm_hour,
+			timeInfo.tm_min,
+			timeInfo.tm_sec,
+			GetCurrentThreadId(),
+			lpMod ? lpMod : _T("未知模块"),
+			lpFile,
+			ulLine,
+			lpFunction,
+			chFmtInfo
+			);
+
 		switch (PrintfLevel)
 		{
 		case PRINTF_LEVEL_INFORMATION:
 			{
-				printf("[INFO][%04d/%02d/%02d][%02d:%02d:%02d][%05d][%lS][%hs][%d][%hs] %hs \n", 
-					timeInfo.tm_year + 1900,
-					timeInfo.tm_mon + 1,
-					timeInfo.tm_mday,
-					timeInfo.tm_hour,
-					timeInfo.tm_min,
-					timeInfo.tm_sec,
-					GetCurrentThreadId(),
-					lpMod ? lpMod : _T("未知模块"),
-					lpFile,
-					ulLine,
-					lpFunction,
-					chFmtInfo
-					);
+				strcat_s(chLog, _countof(chLog), "[INFO]");
+				strcat_s(chLog, _countof(chLog), chLogTemp);
+
+				printf(chLog);
+
+				if (ms_bOutputDebugString)
+					OutputDebugStringA(chLog);
 
 				break;
 			}
 		case PRINTF_LEVEL_WARNING:
 			{
-				printf("[WARN][%04d/%02d/%02d][%02d:%02d:%02d][%05d][%lS][%hs][%d][%hs] %hs \n", 
-					timeInfo.tm_year + 1900,
-					timeInfo.tm_mon + 1,
-					timeInfo.tm_mday,
-					timeInfo.tm_hour,
-					timeInfo.tm_min,
-					timeInfo.tm_sec,
-					GetCurrentThreadId(),
-					lpMod ? lpMod : _T("未知模块"),
-					lpFile,
-					ulLine,
-					lpFunction,
-					chFmtInfo
-					);
+				strcat_s(chLog, _countof(chLog), "[WARN]");
+				strcat_s(chLog, _countof(chLog), chLogTemp);
+
+				printf(chLog);
+
+				if (ms_bOutputDebugString)
+					OutputDebugStringA(chLog);
 
 				break;
 			}
 		case PRINTF_LEVEL_ERROR:
 			{
-				printf("[ERRO][%04d/%02d/%02d][%02d:%02d:%02d][%05d][%lS][%hs][%d][%hs] %hs \n", 
-					timeInfo.tm_year + 1900,
-					timeInfo.tm_mon + 1,
-					timeInfo.tm_mday,
-					timeInfo.tm_hour,
-					timeInfo.tm_min,
-					timeInfo.tm_sec,
-					GetCurrentThreadId(),
-					lpMod ? lpMod : _T("未知模块"),
-					lpFile,
-					ulLine,
-					lpFunction,
-					chFmtInfo
-					);
+				strcat_s(chLog, _countof(chLog), "[ERRO]");
+				strcat_s(chLog, _countof(chLog), chLogTemp);
 
-				if (bUseStackBackTrace)
+				printf(chLog);
+
+				if (ms_bOutputDebugString)
+					OutputDebugStringA(chLog);
+
+				if (ms_bUseStackBackTrace)
 				{
 					if (!StackBackTrace.StackBacktrace())
 					{
@@ -173,7 +170,8 @@ BOOL
 
 BOOL
 	CPrintfEx::Init(
-	__in_opt LPTSTR lpSymDir
+	__in_opt LPTSTR	lpSymDir,
+	__in_opt BOOL	bOutputDebugString
 	)
 {
 	BOOL			bRet			= FALSE;
@@ -188,8 +186,10 @@ BOOL
 			if (!StackBackTrace.Init(lpSymDir))
 				printf("StackBackTrace.Init failed \n");
 			else
-				bUseStackBackTrace = TRUE;
+				ms_bUseStackBackTrace = TRUE;
 		}
+
+		ms_bOutputDebugString = bOutputDebugString;
 
 		setlocale(LC_ALL, "");
 

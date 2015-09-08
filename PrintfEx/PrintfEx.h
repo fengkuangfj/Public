@@ -25,7 +25,8 @@ class CPrintfEx
 public:
 	BOOL
 		Init(
-		__in_opt LPTSTR lpSymDir
+		__in_opt LPTSTR	lpSymDir,
+		__in_opt BOOL	bOutputDebugString
 		);
 
 	BOOL
@@ -52,5 +53,6 @@ public:
 		);
 
 private:
-	static BOOL bUseStackBackTrace;
+	static BOOL ms_bUseStackBackTrace;
+	static BOOL ms_bOutputDebugString;
 };

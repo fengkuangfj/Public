@@ -3,6 +3,7 @@
 #include <Windows.h>
 
 #include "..\\PrintfEx\\PrintfEx.h"
+#include "..\\VolumeDetector\\\VolumeDetector.h"
 
 #define MOD_SERVICE _T("·þÎñ")
 
