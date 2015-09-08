@@ -1,7 +1,13 @@
 #include "Service.h"
 
-WOW64_DISABLE_WOW64_FS_REDIRECTION	g_Wow64DisableWow64FsRedirection	= NULL;
-WOW64_REVERT_WOW64_FS_REDIRECTION	g_Wow64RevertWow64FsRedirection		= NULL;
+WOW64_DISABLE_WOW64_FS_REDIRECTION	g_Wow64DisableWow64FsRedirection		= NULL;
+WOW64_REVERT_WOW64_FS_REDIRECTION	g_Wow64RevertWow64FsRedirection			= NULL;
+
+TCHAR								CService::ms_tchServiceName[MAX_PATH]	= {0};
+SERVICE_STATUS_HANDLE				CService::ms_SvcStatusHandle			= NULL;
+SERVICE_STATUS						CService::ms_SvcStatus					= {0};
+HANDLE								CService::ms_hSvcStopEvent				= NULL;
+DWORD								CService::ms_dwCheckPoint				= 1;
 
 BOOL
 	CService::Install(
@@ -659,6 +665,281 @@ BOOL
 			CloseServiceHandle(hScManager);
 			hScManager = NULL;
 		}
+	}
+
+	return bRet;
+}
+
+BOOL
+	CService::Register(
+	__in LPTSTR lpServiceName
+	)
+{
+	BOOL					bRet				= FALSE;
+
+	SERVICE_TABLE_ENTRY		ServiceTableEntry[]	= 
+	{
+		{lpServiceName, (LPSERVICE_MAIN_FUNCTION)Main},
+		{NULL, NULL}
+	};
+
+
+	__try
+	{
+		if (!lpServiceName)
+		{
+			printfEx(MOD_SERVICE, PRINTF_LEVEL_ERROR, "input argument error");
+			__leave;
+		}
+
+		_tcscat_s(ms_tchServiceName, _countof(ms_tchServiceName), lpServiceName);
+
+		if (!StartServiceCtrlDispatcher(ServiceTableEntry))
+		{
+			printfEx(MOD_SERVICE, PRINTF_LEVEL_ERROR, "StartServiceCtrlDispatcher failed. (%d)", GetLastError());
+			__leave;
+		}
+
+		bRet = TRUE;
+	}
+	__finally
+	{
+		;
+	}
+
+	return bRet;
+}
+
+//
+// Purpose: 
+//   Called by SCM whenever a control code is sent to the service
+//   using the ControlService function.
+//
+// Parameters:
+//   dwCtrl - control code
+// 
+// Return value:
+//   None
+//
+DWORD
+	WINAPI
+	CService::CtrlHandler(
+	_In_ DWORD	dwControl,
+	_In_ DWORD	dwEventType,
+	_In_ LPVOID	lpEventData,
+	_In_ LPVOID	lpContext
+	)
+{
+	DWORD dwRet = NO_ERROR;
+
+
+	__try
+	{
+		// Handle the requested control code. 
+		switch (dwControl)
+		{
+		case SERVICE_CONTROL_STOP:
+			{
+				ReportSvcStatus(SERVICE_STOP_PENDING, NO_ERROR, 0);
+
+				// Signal the service to stop.
+				SetEvent(ms_hSvcStopEvent);
+				ReportSvcStatus(ms_SvcStatus.dwCurrentState, NO_ERROR, 0);
+				break;
+			}
+		case SERVICE_CONTROL_PAUSE:
+		case SERVICE_CONTROL_CONTINUE:
+		case SERVICE_CONTROL_INTERROGATE:
+		case SERVICE_CONTROL_SHUTDOWN:
+		case SERVICE_CONTROL_PARAMCHANGE:
+		case SERVICE_CONTROL_NETBINDADD:
+		case SERVICE_CONTROL_NETBINDREMOVE:
+		case SERVICE_CONTROL_NETBINDENABLE:
+		case SERVICE_CONTROL_NETBINDDISABLE:
+		case SERVICE_CONTROL_DEVICEEVENT:
+		case SERVICE_CONTROL_HARDWAREPROFILECHANGE:
+		case SERVICE_CONTROL_POWEREVENT:
+		case SERVICE_CONTROL_SESSIONCHANGE:
+		case SERVICE_CONTROL_PRESHUTDOWN:
+		case SERVICE_CONTROL_TIMECHANGE:
+		case SERVICE_CONTROL_TRIGGEREVENT:
+			break;
+		default:
+			{
+				printfEx(MOD_SERVICE, PRINTF_LEVEL_ERROR, "dwControl error. 0x%08x", dwControl);
+				__leave;
+			}
+		}
+	}
+	__finally
+	{
+		;
+	}
+
+	return dwRet;
+}
+
+//
+// Purpose: 
+//   Sets the current service status and reports it to the SCM.
+//
+// Parameters:
+//   dwCurrentState - The current state (see SERVICE_STATUS)
+//   dwWin32ExitCode - The system error code
+//   dwWaitHint - Estimated time for pending operation, 
+//     in milliseconds
+// 
+// Return value:
+//   None
+//
+VOID
+	CService::ReportSvcStatus(
+	DWORD dwCurrentState,
+	DWORD dwWin32ExitCode,
+	DWORD dwWaitHint
+	)
+{
+	__try
+	{
+		// Fill in the SERVICE_STATUS structure.
+		ms_SvcStatus.dwCurrentState = dwCurrentState;
+		ms_SvcStatus.dwWin32ExitCode = dwWin32ExitCode;
+		ms_SvcStatus.dwWaitHint = dwWaitHint;
+
+		if (SERVICE_START_PENDING == dwCurrentState)
+			ms_SvcStatus.dwControlsAccepted = 0;
+		else
+			ms_SvcStatus.dwControlsAccepted = SERVICE_ACCEPT_STOP;
+
+		if ((SERVICE_RUNNING == dwCurrentState) || (SERVICE_STOPPED == dwCurrentState))
+			ms_SvcStatus.dwCheckPoint = 0;
+		else
+			ms_SvcStatus.dwCheckPoint = ms_dwCheckPoint++;
+
+		// Report the status of the service to the SCM.
+		SetServiceStatus(ms_SvcStatusHandle, &ms_SvcStatus);
+	}
+	__finally
+	{
+		;
+	}
+
+	return ;
+}
+
+//
+// Purpose: 
+//   Entry point for the service
+//
+// Parameters:
+//   dwArgc - Number of arguments in the lpszArgv array
+//   lpszArgv - Array of strings. The first string is the name of
+//     the service and subsequent strings are passed by the process
+//     that called the StartService function to start the service.
+// 
+// Return value:
+//   None.
+//
+VOID
+	WINAPI
+	CService::Main(
+	DWORD		dwArgc,
+	LPTSTR *	lpszArgv
+	)
+{
+	HANDLE			hDataMgr			=	NULL;
+	HANDLE			hRpcServer			=	NULL;
+	CHAR			DbPath[MAX_PATH]	=	{0};
+
+
+	__try
+	{
+		// Register the handler function for the service
+		ms_SvcStatusHandle = RegisterServiceCtrlHandlerEx(ms_tchServiceName, CtrlHandler, NULL);
+		if (!ms_SvcStatusHandle )
+		{
+			printfEx(MOD_SERVICE, PRINTF_LEVEL_ERROR, "RegisterServiceCtrlHandler failed. (%d)", GetLastError());
+			__leave;
+		}
+
+		// These SERVICE_STATUS members remain as set here
+		ms_SvcStatus.dwServiceType = SERVICE_WIN32_OWN_PROCESS;
+		ms_SvcStatus.dwServiceSpecificExitCode = 0;
+
+		// Report initial status to the SCM
+		ReportSvcStatus(SERVICE_START_PENDING, NO_ERROR, 3000);
+
+		// Perform service-specific initialization and work.
+		if (!Init(dwArgc, lpszArgv))
+		{
+			printfEx(MOD_SERVICE, PRINTF_LEVEL_ERROR, "Init failed");
+			__leave;
+		}
+	}
+	__finally
+	{
+		;
+	}
+
+	return ;
+}
+
+//
+// Purpose: 
+//   The service code
+//
+// Parameters:
+//   dwArgc - Number of arguments in the lpszArgv array
+//   lpszArgv - Array of strings. The first string is the name of
+//     the service and subsequent strings are passed by the process
+//     that called the StartService function to start the service.
+// 
+// Return value:
+//   None
+//
+BOOL
+	CService::Init(
+	DWORD		dwArgc,
+	LPTSTR *	lpszArgv
+	)
+{
+	BOOL bRet = FALSE;
+
+
+	__try
+	{
+		// TO_DO: Declare and set any required variables.
+		//   Be sure to periodically call ReportSvcStatus() with 
+		//   SERVICE_START_PENDING. If initialization fails, call
+		//   ReportSvcStatus with SERVICE_STOPPED.
+
+		// Create an event. The control handler function, SvcCtrlHandler,
+		// signals this event when it receives the stop control code.
+		ms_hSvcStopEvent = CreateEvent(NULL, TRUE, FALSE, NULL);
+		if (!ms_hSvcStopEvent)
+		{
+			printfEx(MOD_SERVICE, PRINTF_LEVEL_ERROR, "CreateEvent failed. (%d)", GetLastError());
+			ReportSvcStatus(SERVICE_STOPPED, NO_ERROR, 0);
+			__leave;
+		}
+
+		// Report running status when initialization is complete.
+		ReportSvcStatus(SERVICE_RUNNING, NO_ERROR, 0);
+
+		// TO_DO: Perform work until service stops.
+		while (TRUE)
+		{
+			// Check whether to stop the service.
+			WaitForSingleObject(ms_hSvcStopEvent, INFINITE);
+
+			ReportSvcStatus(SERVICE_STOPPED, NO_ERROR, 0);
+			bRet = TRUE;
+			__leave;
+		}
+	}
+	__finally
+	{
+		;
 	}
 
 	return bRet;

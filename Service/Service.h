@@ -51,4 +51,49 @@ public:
 		Disable(
 		__in LPWSTR lpServiceName
 		);
+
+	BOOL
+		Register(
+		__in LPTSTR lpServiceName
+		);
+
+private:
+	static TCHAR					ms_tchServiceName[MAX_PATH];
+	static SERVICE_STATUS_HANDLE	ms_SvcStatusHandle;
+	static SERVICE_STATUS			ms_SvcStatus;
+	static HANDLE					ms_hSvcStopEvent;
+	static DWORD					ms_dwCheckPoint;
+
+	static
+		VOID
+		WINAPI
+		Main(
+		DWORD		dwArgc,
+		LPTSTR *	lpszArgv
+		);
+
+	static
+		VOID
+		ReportSvcStatus(
+		DWORD dwCurrentState,
+		DWORD dwWin32ExitCode,
+		DWORD dwWaitHint
+		);
+
+	static
+		BOOL
+		Init(
+		DWORD		dwArgc,
+		LPTSTR *	lpszArgv
+		);
+
+	static
+		DWORD
+		WINAPI
+		CtrlHandler(
+		_In_ DWORD	dwControl,
+		_In_ DWORD	dwEventType,
+		_In_ LPVOID	lpEventData,
+		_In_ LPVOID	lpContext
+		);
 };
