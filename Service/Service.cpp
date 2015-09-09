@@ -8,6 +8,8 @@ SERVICE_STATUS_HANDLE				CService::ms_SvcStatusHandle			= NULL;
 SERVICE_STATUS						CService::ms_SvcStatus					= {0};
 HANDLE								CService::ms_hSvcStopEvent				= NULL;
 DWORD								CService::ms_dwCheckPoint				= 1;
+INITMOD								CService::ms_InitMod					= NULL;
+UNLOADMOD							CService::ms_UnloadMod					= NULL;
 
 BOOL
 	CService::Install(
@@ -672,7 +674,9 @@ BOOL
 
 BOOL
 	CService::Register(
-	__in LPTSTR lpServiceName
+	__in LPTSTR		lpServiceName,
+	__in INITMOD	InitMod,
+	__in UNLOADMOD	UnloadMod
 	)
 {
 	BOOL					bRet				= FALSE;
@@ -686,25 +690,32 @@ BOOL
 
 	__try
 	{
-		if (!lpServiceName)
+		printfEx(MOD_SERVICE, PRINTF_LEVEL_INFORMATION, "begin");
+
+		if (!lpServiceName || !InitMod || !UnloadMod)
 		{
-			printfEx(MOD_SERVICE, PRINTF_LEVEL_ERROR, "input argument error");
+			printfEx(MOD_SERVICE, PRINTF_LEVEL_ERROR, "input arguments error. 0x%08p 0x%08p 0x%08p",lpServiceName, InitMod, UnloadMod);
 			__leave;
 		}
 
+		ms_InitMod = InitMod;
+		ms_UnloadMod = UnloadMod;
+
 		_tcscat_s(ms_tchServiceName, _countof(ms_tchServiceName), lpServiceName);
 
+		printfEx(MOD_SERVICE, PRINTF_LEVEL_INFORMATION, "StartServiceCtrlDispatcher begin");
 		if (!StartServiceCtrlDispatcher(ServiceTableEntry))
 		{
 			printfEx(MOD_SERVICE, PRINTF_LEVEL_ERROR, "StartServiceCtrlDispatcher failed. (%d)", GetLastError());
 			__leave;
 		}
+		printfEx(MOD_SERVICE, PRINTF_LEVEL_INFORMATION, "StartServiceCtrlDispatcher end");
 
 		bRet = TRUE;
 	}
 	__finally
 	{
-		;
+		printfEx(MOD_SERVICE, PRINTF_LEVEL_INFORMATION, "end");
 	}
 
 	return bRet;
@@ -730,7 +741,10 @@ DWORD
 	_In_ LPVOID	lpContext
 	)
 {
-	DWORD dwRet = NO_ERROR;
+	DWORD							dwRet				= NO_ERROR;
+
+	PDEV_BROADCAST_DEVICEINTERFACE	pDevBroadcastVolume	= NULL;
+	TCHAR							tchName[MAX_PATH]	= {0};
 
 
 	__try
@@ -740,6 +754,10 @@ DWORD
 		{
 		case SERVICE_CONTROL_STOP:
 			{
+				printfEx(MOD_SERVICE, PRINTF_LEVEL_INFORMATION, "SERVICE_CONTROL_STOP");
+
+				ms_UnloadMod();
+
 				ReportSvcStatus(SERVICE_STOP_PENDING, NO_ERROR, 0);
 
 				// Signal the service to stop.
@@ -750,17 +768,116 @@ DWORD
 		case SERVICE_CONTROL_PAUSE:
 		case SERVICE_CONTROL_CONTINUE:
 		case SERVICE_CONTROL_INTERROGATE:
+			break;
 		case SERVICE_CONTROL_SHUTDOWN:
+			{
+				printfEx(MOD_SERVICE, PRINTF_LEVEL_INFORMATION, "SERVICE_CONTROL_SHUTDOWN");
+				break;
+			}
 		case SERVICE_CONTROL_PARAMCHANGE:
 		case SERVICE_CONTROL_NETBINDADD:
 		case SERVICE_CONTROL_NETBINDREMOVE:
 		case SERVICE_CONTROL_NETBINDENABLE:
 		case SERVICE_CONTROL_NETBINDDISABLE:
+			break;
 		case SERVICE_CONTROL_DEVICEEVENT:
+			{
+				pDevBroadcastVolume = (PDEV_BROADCAST_DEVICEINTERFACE)lpEventData;
+				if (!pDevBroadcastVolume)
+					break;
+
+// 				if (!CVolumeDetector::BinaryToVolume(pDevBroadcastVolume->dbcv_unitmask, tchName, _countof(tchName)))
+// 				{
+// 					printfEx(MOD_VOLUME_DETECTOR, PRINTF_LEVEL_INFORMATION, "BinaryToVolume failed. %I64d", pDevBroadcastVolume->dbcv_unitmask);
+// 					break;
+// 				}
+
+				_tcscat_s(tchName, _countof(tchName), pDevBroadcastVolume->dbcc_name);
+
+				switch (dwEventType)
+				{
+				case DBT_DEVICEARRIVAL:
+					{
+						printfEx(MOD_SERVICE, PRINTF_LEVEL_INFORMATION, "system detected a new device. %S", tchName);
+						break;
+					}
+				case DBT_DEVICEQUERYREMOVE:
+					{
+						printfEx(MOD_SERVICE, PRINTF_LEVEL_INFORMATION, "wants to remove, may fail. %S", tchName);
+						break;
+					}
+				case DBT_DEVICEQUERYREMOVEFAILED:
+					{
+						printfEx(MOD_SERVICE, PRINTF_LEVEL_INFORMATION, "removal aborted. %S", tchName);
+						break;
+					}
+				case DBT_DEVICEREMOVEPENDING:
+					{
+						printfEx(MOD_SERVICE, PRINTF_LEVEL_INFORMATION, "about to remove, still avail. %S", tchName);
+						break;
+					}
+				case DBT_DEVICEREMOVECOMPLETE:
+					{
+						printfEx(MOD_SERVICE, PRINTF_LEVEL_INFORMATION, "device is gone. %S", tchName);
+						break;
+					}
+				case DBT_DEVICETYPESPECIFIC:
+					{
+						printfEx(MOD_SERVICE, PRINTF_LEVEL_INFORMATION, "type specific event. %S", tchName);
+						break;
+					}
+#if (WINVER >= 0x040A)
+				case DBT_CUSTOMEVENT:
+					{
+						printfEx(MOD_SERVICE, PRINTF_LEVEL_INFORMATION, "user-defined event. %S", tchName);
+						break;
+					}
+#endif
+#if (WINVER >= _WIN32_WINNT_WIN7)
+				case DBT_DEVINSTENUMERATED:
+					{
+						printfEx(MOD_SERVICE, PRINTF_LEVEL_INFORMATION, "[>= _WIN32_WINNT_WIN7] system detected a new device. %S", tchName);
+						break;
+					}
+				case DBT_DEVINSTSTARTED:
+					{
+						printfEx(MOD_SERVICE, PRINTF_LEVEL_INFORMATION, "[>= _WIN32_WINNT_WIN7] device installed and started. %S", tchName);
+						break;
+					}
+				case DBT_DEVINSTREMOVED:
+					{
+						printfEx(MOD_SERVICE, PRINTF_LEVEL_INFORMATION, "[>= _WIN32_WINNT_WIN7] device removed from system. %S", tchName);
+						break;
+					}
+				case DBT_DEVINSTPROPERTYCHANGED:
+					{
+						printfEx(MOD_SERVICE, PRINTF_LEVEL_INFORMATION, "[>= _WIN32_WINNT_WIN7] a property on the device changed. %S", tchName);
+						break;
+					}
+#endif
+				default:
+					{
+						printfEx(MOD_SERVICE, PRINTF_LEVEL_ERROR, "wParam error. 0x%08x", dwEventType);
+						__leave;
+					}
+				}
+
+				break;
+			}
 		case SERVICE_CONTROL_HARDWAREPROFILECHANGE:
+			break;
 		case SERVICE_CONTROL_POWEREVENT:
+			{
+				printfEx(MOD_SERVICE, PRINTF_LEVEL_INFORMATION, "SERVICE_CONTROL_POWEREVENT");
+				break;
+			}
 		case SERVICE_CONTROL_SESSIONCHANGE:
+			break;
 		case SERVICE_CONTROL_PRESHUTDOWN:
+			{
+				printfEx(MOD_SERVICE, PRINTF_LEVEL_INFORMATION, "SERVICE_CONTROL_PRESHUTDOWN");
+				break;
+			}
 		case SERVICE_CONTROL_TIMECHANGE:
 		case SERVICE_CONTROL_TRIGGEREVENT:
 			break;
@@ -854,6 +971,8 @@ VOID
 
 	__try
 	{
+		printfEx(MOD_SERVICE, PRINTF_LEVEL_INFORMATION, "begin");
+
 		// Register the handler function for the service
 		ms_SvcStatusHandle = RegisterServiceCtrlHandlerEx(ms_tchServiceName, CtrlHandler, NULL);
 		if (!ms_SvcStatusHandle )
@@ -878,7 +997,7 @@ VOID
 	}
 	__finally
 	{
-		;
+		printfEx(MOD_SERVICE, PRINTF_LEVEL_INFORMATION, "end");
 	}
 
 	return ;
@@ -908,6 +1027,8 @@ BOOL
 
 	__try
 	{
+		printfEx(MOD_SERVICE, PRINTF_LEVEL_INFORMATION, "begin");
+
 		// TO_DO: Declare and set any required variables.
 		//   Be sure to periodically call ReportSvcStatus() with 
 		//   SERVICE_START_PENDING. If initialization fails, call
@@ -926,67 +1047,29 @@ BOOL
 		// Report running status when initialization is complete.
 		ReportSvcStatus(SERVICE_RUNNING, NO_ERROR, 0);
 
-		TCHAR			tchPdbDir[MAX_PATH] = {0};
-		LPTSTR			lpPosition			= NULL;
-
-		CPrintfEx		PrintfEx;
-		CVolumeDetector	VolumeDetector;
-		CService		Service;
-
-
-		__try
-		{
-			if (GetModuleFileName(NULL, tchPdbDir, _countof(tchPdbDir)))
-			{
-				lpPosition = _tcsrchr(tchPdbDir, _T('\\'));
-				if (lpPosition)
-				{
-					*(lpPosition) = _T('\0');
-
-					PrintfEx.Init(tchPdbDir, TRUE);
-				}
-			}
-
-			printfEx(MOD_SERVICE, PRINTF_LEVEL_INFORMATION, "日志模块初始化完毕，按任意键继续\n");
-
-			if (!VolumeDetector.Init(NULL, NULL, FALSE))
-			{
-				printfEx(MOD_SERVICE, PRINTF_LEVEL_ERROR, "VolumeDetector.Init failed");
-				__leave;
-			}
-
-			if (!VolumeDetector.MessageLoop())
-			{
-				printfEx(MOD_SERVICE, PRINTF_LEVEL_ERROR, "VolumeDetector.MessageLoop failed");
-				__leave;
-			}
-
-			if (!VolumeDetector.Unload())
-			{
-				printfEx(MOD_SERVICE, PRINTF_LEVEL_ERROR, "VolumeDetector.Unload failed");
-				__leave;
-			}
-		}
-		__finally
-		{
-			printfEx(MOD_SERVICE, PRINTF_LEVEL_INFORMATION, "按任意键退出");
-			PrintfEx.Unload();
-		}
-
 		// TO_DO: Perform work until service stops.
-		while (TRUE)
+		if (!ms_InitMod(TRUE, FALSE, FALSE))
 		{
-			// Check whether to stop the service.
-			WaitForSingleObject(ms_hSvcStopEvent, INFINITE);
-
-			ReportSvcStatus(SERVICE_STOPPED, NO_ERROR, 0);
-			bRet = TRUE;
+			printfEx(MOD_SERVICE, PRINTF_LEVEL_ERROR, "ms_Test failed");
 			__leave;
 		}
+
+
+
+
+
+
+		// Check whether to stop the service.
+		printfEx(MOD_SERVICE, PRINTF_LEVEL_INFORMATION, "开始等待");
+		WaitForSingleObject(ms_hSvcStopEvent, INFINITE);
+		printfEx(MOD_SERVICE, PRINTF_LEVEL_INFORMATION, "等待成功");
+
+		ReportSvcStatus(SERVICE_STOPPED, NO_ERROR, 0);
+		bRet = TRUE;
 	}
 	__finally
 	{
-		;
+		printfEx(MOD_SERVICE, PRINTF_LEVEL_INFORMATION, "end");
 	}
 
 	return bRet;

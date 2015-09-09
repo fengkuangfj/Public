@@ -1,7 +1,7 @@
 #include "PrintfEx.h"
 
 BOOL CPrintfEx::ms_bUseStackBackTrace = FALSE;
-BOOL CPrintfEx::ms_bOutputDebugString = FALSE;
+BOOL CPrintfEx::ms_bOutputDebugString = TRUE;
 
 VOID
 	CPrintfEx::PrintfInternal(
@@ -189,7 +189,7 @@ BOOL
 				ms_bUseStackBackTrace = TRUE;
 		}
 
-		ms_bOutputDebugString = bOutputDebugString;
+		// ms_bOutputDebugString = bOutputDebugString;
 
 		setlocale(LC_ALL, "");
 

@@ -9,6 +9,18 @@
 
 typedef
 	BOOL
+	(* INITMOD)(
+	__in BOOL bService,
+	__in BOOL bCreateMassageLoop,
+	__in BOOL bCreateMassageLoopThread
+	);
+
+typedef
+	BOOL
+	(* UNLOADMOD)();
+
+typedef
+	BOOL
 	(* WOW64_DISABLE_WOW64_FS_REDIRECTION)(
 	__out PVOID * OldValue
 	);
@@ -22,6 +34,8 @@ typedef
 class CService
 {
 public:
+	static SERVICE_STATUS_HANDLE ms_SvcStatusHandle;
+
 	BOOL
 		Install(
 		__in		LPWSTR	lpServiceName,
@@ -55,15 +69,18 @@ public:
 
 	BOOL
 		Register(
-		__in LPTSTR lpServiceName
+		__in LPTSTR		lpServiceName,
+		__in INITMOD	InitMod,
+		__in UNLOADMOD	UnloadMod
 		);
 
 private:
 	static TCHAR					ms_tchServiceName[MAX_PATH];
-	static SERVICE_STATUS_HANDLE	ms_SvcStatusHandle;
 	static SERVICE_STATUS			ms_SvcStatus;
 	static HANDLE					ms_hSvcStopEvent;
 	static DWORD					ms_dwCheckPoint;
+	static INITMOD					ms_InitMod;
+	static UNLOADMOD				ms_UnloadMod;
 
 	static
 		VOID

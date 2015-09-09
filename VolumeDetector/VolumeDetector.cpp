@@ -1,20 +1,29 @@
 ﻿#include "VolumeDetector.h"
 
-HANDLE	CVolumeDetector::ms_hWindowOrService	= NULL;
-BOOL	CVolumeDetector::ms_bService			= FALSE;
+HANDLE		CVolumeDetector::ms_hWindowOrService	= NULL;
+BOOL		CVolumeDetector::ms_bService			= FALSE;
+HDEVNOTIFY	CVolumeDetector::ms_hDevNotify			= NULL;
 
 BOOL
 	CVolumeDetector::Init(
 	__in_opt	LPTSTR	lpModuleName,
 	__in		HANDLE	hWindowOrService,
-	__in		BOOL	bService
+	__in		BOOL	bService,
+	__in		BOOL	bCreateMassageLoop,
+	__in		BOOL	bCreateMassageLoopThread
 	)
 {
-	BOOL bRet = FALSE;
+	BOOL							bRet				= FALSE;
 
+	DEV_BROADCAST_DEVICEINTERFACE	NotificationFilter	= {0};
 
+	CVolumeDetector					VolumeDetector;
+
+	// https://msdn.microsoft.com/en-us/library/aa363432(v=VS.85).aspx
 	__try
 	{
+		printfEx(MOD_VOLUME_DETECTOR, PRINTF_LEVEL_INFORMATION, "begin");
+
 		if (!ms_hWindowOrService)
 		{
 			ms_hWindowOrService = hWindowOrService;
@@ -24,7 +33,18 @@ BOOL
 			{
 				if (!ms_hWindowOrService)
 				{
-					printfEx(MOD_DEVICE_MONITOR, PRINTF_LEVEL_ERROR, "input argument error");
+					printfEx(MOD_VOLUME_DETECTOR, PRINTF_LEVEL_ERROR, "input argument error");
+					__leave;
+				}
+				
+				NotificationFilter.dbcc_size = sizeof(NotificationFilter);
+				NotificationFilter.dbcc_devicetype = DBT_DEVTYP_DEVICEINTERFACE;
+				NotificationFilter.dbcc_classguid = GUID_DEVINTERFACE_VOLUME;
+	
+				ms_hDevNotify = RegisterDeviceNotification(ms_hWindowOrService, &NotificationFilter, DEVICE_NOTIFY_SERVICE_HANDLE);
+				if (!ms_hDevNotify)
+				{
+					printfEx(MOD_VOLUME_DETECTOR, PRINTF_LEVEL_ERROR, "RegisterDeviceNotification failed. (%d)", GetLastError());
 					__leave;
 				}
 			}
@@ -35,7 +55,16 @@ BOOL
 					ms_hWindowOrService = CreateWnd(lpModuleName, NULL);
 					if (!ms_hWindowOrService)
 					{
-						printfEx(MOD_DEVICE_MONITOR, PRINTF_LEVEL_ERROR, "CreateWnd failed");
+						printfEx(MOD_VOLUME_DETECTOR, PRINTF_LEVEL_ERROR, "CreateWnd failed");
+						__leave;
+					}
+				}
+
+				if (!bCreateMassageLoop)
+				{
+					if (!VolumeDetector.MessageLoop(bCreateMassageLoopThread))
+					{
+						printfEx(MOD_VOLUME_DETECTOR, PRINTF_LEVEL_ERROR, "VolumeDetector.MessageLoop failed");
 						__leave;
 					}
 				}
@@ -46,7 +75,7 @@ BOOL
 	}
 	__finally
 	{
-		;
+		printfEx(MOD_VOLUME_DETECTOR, PRINTF_LEVEL_INFORMATION, "end");
 	}
 
 	return bRet;
@@ -60,21 +89,103 @@ BOOL
 
 	__try
 	{
-		if (ms_hWindowOrService)
+		printfEx(MOD_VOLUME_DETECTOR, PRINTF_LEVEL_INFORMATION, "begin");
+
+		if (!ms_bService && ms_hWindowOrService)
 			SendMessage((HWND)ms_hWindowOrService, WM_CLOSE, 0, 0);
+
+		if (ms_hDevNotify)
+		{
+			if (!UnregisterDeviceNotification(ms_hDevNotify))
+				printfEx(MOD_VOLUME_DETECTOR, PRINTF_LEVEL_ERROR, "UnregisterDeviceNotification failed. (%d)", GetLastError());
+
+			ms_hDevNotify = NULL;
+		}
 
 		bRet = TRUE;
 	}
 	__finally
 	{
-		;
+		printfEx(MOD_VOLUME_DETECTOR, PRINTF_LEVEL_INFORMATION, "end");
+	}
+
+	return bRet;
+}
+
+unsigned int
+	__stdcall
+	CVolumeDetector::MessageLoopWorkThread(
+	__in void * lpParameter
+	)
+{
+	__try
+	{
+		printfEx(MOD_VOLUME_DETECTOR, PRINTF_LEVEL_INFORMATION, "begin");
+
+		if (!MessageLoopInternal())
+		{
+			printfEx(MOD_VOLUME_DETECTOR, PRINTF_LEVEL_ERROR, "MessageLoopInternal failed");
+			__leave;
+		}
+	}
+	__finally
+	{
+		printfEx(MOD_VOLUME_DETECTOR, PRINTF_LEVEL_INFORMATION, "end");
+	}
+
+	return 0;
+}
+
+BOOL
+	CVolumeDetector::MessageLoop(
+	__in BOOL bCreateThread
+	)
+{
+	BOOL	bRet	= FALSE;
+
+	HANDLE	hThread = NULL;
+
+
+	__try
+	{
+		printfEx(MOD_VOLUME_DETECTOR, PRINTF_LEVEL_INFORMATION, "begin");
+
+		if (bCreateThread)
+		{
+			hThread = (HANDLE)_beginthreadex(NULL, 0, MessageLoopWorkThread, NULL, 0, NULL);
+			if (!hThread)
+			{
+				printfEx(MOD_VOLUME_DETECTOR, PRINTF_LEVEL_ERROR, "_beginthreadex failed. (%d)", GetLastError());
+				__leave;
+			}
+		}
+		else
+		{
+			if (!MessageLoopInternal())
+			{
+				printfEx(MOD_VOLUME_DETECTOR, PRINTF_LEVEL_ERROR, "MessageLoopInternal failed");
+				__leave;
+			}
+		}
+
+		bRet = TRUE;
+	}
+	__finally
+	{
+		if (hThread)
+		{
+			CloseHandle(hThread);
+			hThread = NULL;
+		}
+
+		printfEx(MOD_VOLUME_DETECTOR, PRINTF_LEVEL_INFORMATION, "end");
 	}
 
 	return bRet;
 }
 
 BOOL
-	CVolumeDetector::MessageLoop()
+	CVolumeDetector::MessageLoopInternal()
 {
 	BOOL	bRet	= FALSE;
 
@@ -83,12 +194,14 @@ BOOL
 
 	__try
 	{
+		printfEx(MOD_VOLUME_DETECTOR, PRINTF_LEVEL_INFORMATION, "begin");
+
 		// Start the message loop. 
 		while (0 != (bRet = GetMessage(&msg, NULL, 0, 0)))
 		{
 			if (-1 == bRet)
 			{
-				printfEx(MOD_DEVICE_MONITOR, PRINTF_LEVEL_ERROR, "GetMessage failed. (%d)", GetLastError());
+				printfEx(MOD_VOLUME_DETECTOR, PRINTF_LEVEL_ERROR, "GetMessage failed. (%d)", GetLastError());
 				__leave;
 			}
 
@@ -100,7 +213,7 @@ BOOL
 	}
 	__finally
 	{
-		;
+		printfEx(MOD_VOLUME_DETECTOR, PRINTF_LEVEL_INFORMATION, "end");
 	}
 
 	return bRet;
@@ -123,7 +236,7 @@ HANDLE
 		hInstance = GetModuleHandle(lpModuleName);
 		if (!hInstance)
 		{
-			printfEx(MOD_DEVICE_MONITOR, PRINTF_LEVEL_ERROR, "GetModuleHandle failed. (%d)", GetLastError());
+			printfEx(MOD_VOLUME_DETECTOR, PRINTF_LEVEL_ERROR, "GetModuleHandle failed. (%d)", GetLastError());
 			__leave;
 		}
 
@@ -143,7 +256,7 @@ HANDLE
 
 			if (!RegisterClass(&WndClass)) 
 			{
-				printfEx(MOD_DEVICE_MONITOR, PRINTF_LEVEL_ERROR, "RegisterClass failed. (%d)", GetLastError());
+				printfEx(MOD_VOLUME_DETECTOR, PRINTF_LEVEL_ERROR, "RegisterClass failed. (%d)", GetLastError());
 				__leave;
 			}
 		} 
@@ -166,7 +279,7 @@ HANDLE
 		{
 			// If the main window cannot be created, terminate 
 			// the application. 
-			printfEx(MOD_DEVICE_MONITOR, PRINTF_LEVEL_ERROR, "CreateWindow failed. (%d)", GetLastError());
+			printfEx(MOD_VOLUME_DETECTOR, PRINTF_LEVEL_ERROR, "CreateWindow failed. (%d)", GetLastError());
 			__leave;
 		}
 
@@ -211,7 +324,7 @@ LRESULT
 
 				if (!CVolumeDetector::BinaryToVolume(pDevBroadcastVolume->dbcv_unitmask, tchName, _countof(tchName)))
 				{
-					printfEx(MOD_DEVICE_MONITOR, PRINTF_LEVEL_INFORMATION, "BinaryToVolume failed. %I64d", pDevBroadcastVolume->dbcv_unitmask);
+					printfEx(MOD_VOLUME_DETECTOR, PRINTF_LEVEL_INFORMATION, "BinaryToVolume failed. %I64d", pDevBroadcastVolume->dbcv_unitmask);
 					break;
 				}
 
@@ -219,66 +332,66 @@ LRESULT
 				{
 				case DBT_DEVICEARRIVAL:
 					{
-						printfEx(MOD_DEVICE_MONITOR, PRINTF_LEVEL_INFORMATION, "system detected a new device. %S", tchName);
+						printfEx(MOD_VOLUME_DETECTOR, PRINTF_LEVEL_INFORMATION, "system detected a new device. %S", tchName);
 						break;
 					}
 				case DBT_DEVICEQUERYREMOVE:
 					{
-						printfEx(MOD_DEVICE_MONITOR, PRINTF_LEVEL_INFORMATION, "wants to remove, may fail. %S", tchName);
+						printfEx(MOD_VOLUME_DETECTOR, PRINTF_LEVEL_INFORMATION, "wants to remove, may fail. %S", tchName);
 						break;
 					}
 				case DBT_DEVICEQUERYREMOVEFAILED:
 					{
-						printfEx(MOD_DEVICE_MONITOR, PRINTF_LEVEL_INFORMATION, "removal aborted. %S", tchName);
+						printfEx(MOD_VOLUME_DETECTOR, PRINTF_LEVEL_INFORMATION, "removal aborted. %S", tchName);
 						break;
 					}
 				case DBT_DEVICEREMOVEPENDING:
 					{
-						printfEx(MOD_DEVICE_MONITOR, PRINTF_LEVEL_INFORMATION, "about to remove, still avail. %S", tchName);
+						printfEx(MOD_VOLUME_DETECTOR, PRINTF_LEVEL_INFORMATION, "about to remove, still avail. %S", tchName);
 						break;
 					}
 				case DBT_DEVICEREMOVECOMPLETE:
 					{
-						printfEx(MOD_DEVICE_MONITOR, PRINTF_LEVEL_INFORMATION, "device is gone. %S", tchName);
+						printfEx(MOD_VOLUME_DETECTOR, PRINTF_LEVEL_INFORMATION, "device is gone. %S", tchName);
 						break;
 					}
 				case DBT_DEVICETYPESPECIFIC:
 					{
-						printfEx(MOD_DEVICE_MONITOR, PRINTF_LEVEL_INFORMATION, "type specific event. %S", tchName);
+						printfEx(MOD_VOLUME_DETECTOR, PRINTF_LEVEL_INFORMATION, "type specific event. %S", tchName);
 						break;
 					}
 #if (WINVER >= 0x040A)
 				case DBT_CUSTOMEVENT:
 					{
-						printfEx(MOD_DEVICE_MONITOR, PRINTF_LEVEL_INFORMATION, "user-defined event. %S", tchName);
+						printfEx(MOD_VOLUME_DETECTOR, PRINTF_LEVEL_INFORMATION, "user-defined event. %S", tchName);
 						break;
 					}
 #endif
 #if (WINVER >= _WIN32_WINNT_WIN7)
 				case DBT_DEVINSTENUMERATED:
 					{
-						printfEx(MOD_DEVICE_MONITOR, PRINTF_LEVEL_INFORMATION, "[>= _WIN32_WINNT_WIN7] system detected a new device. %S", tchName);
+						printfEx(MOD_VOLUME_DETECTOR, PRINTF_LEVEL_INFORMATION, "[>= _WIN32_WINNT_WIN7] system detected a new device. %S", tchName);
 						break;
 					}
 				case DBT_DEVINSTSTARTED:
 					{
-						printfEx(MOD_DEVICE_MONITOR, PRINTF_LEVEL_INFORMATION, "[>= _WIN32_WINNT_WIN7] device installed and started. %S", tchName);
+						printfEx(MOD_VOLUME_DETECTOR, PRINTF_LEVEL_INFORMATION, "[>= _WIN32_WINNT_WIN7] device installed and started. %S", tchName);
 						break;
 					}
 				case DBT_DEVINSTREMOVED:
 					{
-						printfEx(MOD_DEVICE_MONITOR, PRINTF_LEVEL_INFORMATION, "[>= _WIN32_WINNT_WIN7] device removed from system. %S", tchName);
+						printfEx(MOD_VOLUME_DETECTOR, PRINTF_LEVEL_INFORMATION, "[>= _WIN32_WINNT_WIN7] device removed from system. %S", tchName);
 						break;
 					}
 				case DBT_DEVINSTPROPERTYCHANGED:
 					{
-						printfEx(MOD_DEVICE_MONITOR, PRINTF_LEVEL_INFORMATION, "[>= _WIN32_WINNT_WIN7] a property on the device changed. %S", tchName);
+						printfEx(MOD_VOLUME_DETECTOR, PRINTF_LEVEL_INFORMATION, "[>= _WIN32_WINNT_WIN7] a property on the device changed. %S", tchName);
 						break;
 					}
 #endif
 				default:
 					{
-						printfEx(MOD_DEVICE_MONITOR, PRINTF_LEVEL_ERROR, "wParam error. 0x%08x", wParam);
+						printfEx(MOD_VOLUME_DETECTOR, PRINTF_LEVEL_ERROR, "wParam error. 0x%08x", wParam);
 						__leave;
 					}
 				}
@@ -326,7 +439,7 @@ BOOL
 	{
 		if (!dwBinary || !lpInBuf || !ulInBufSizeCh)
 		{
-			printfEx(MOD_DEVICE_MONITOR, PRINTF_LEVEL_ERROR, "input arguments error. %I64d 0x%08p %d", dwBinary, lpInBuf, ulInBufSizeCh);
+			printfEx(MOD_VOLUME_DETECTOR, PRINTF_LEVEL_ERROR, "input arguments error. %I64d 0x%08p %d", dwBinary, lpInBuf, ulInBufSizeCh);
 			__leave;
 		}
 
@@ -362,7 +475,7 @@ ULONG
 	{
 		if (!dwPower || (1 == dwPower && 1 == ulBase))
 		{
-			printfEx(MOD_DEVICE_MONITOR, PRINTF_LEVEL_ERROR, "input arguments error. %I64d %d", dwPower, ulBase);
+			printfEx(MOD_VOLUME_DETECTOR, PRINTF_LEVEL_ERROR, "input arguments error. %I64d %d", dwPower, ulBase);
 			__leave;
 		}
 
@@ -374,7 +487,7 @@ ULONG
 			{
 				if (1 != dwRemainder)
 				{
-					printfEx(MOD_DEVICE_MONITOR, PRINTF_LEVEL_ERROR, "dwPower error. %I64D %d", dwPower, ulBase);
+					printfEx(MOD_VOLUME_DETECTOR, PRINTF_LEVEL_ERROR, "dwPower error. %I64D %d", dwPower, ulBase);
 					__leave;
 				}
 

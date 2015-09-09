@@ -1,9 +1,10 @@
 #pragma once
 
-#define MOD_DEVICE_MONITOR _T("Éè±¸Ì½²â")
+#define MOD_VOLUME_DETECTOR _T("¾íÌ½²â")
 
 #include <Windows.h>
 #include <Dbt.h>
+#include <process.h>
 
 #include "..\\PrintfEx\\PrintfEx.h"
 
@@ -28,14 +29,18 @@ public:
 		Init(
 		__in_opt	LPTSTR	lpModuleName,
 		__in		HANDLE	hWindowOrService,
-		__in		BOOL	bService
+		__in		BOOL	bService,
+		__in		BOOL	bCreateMassageLoop,
+		__in		BOOL	bCreateMassageLoopThread
 		);
 
 	BOOL
 		Unload();
 
 	BOOL
-		MessageLoop();
+		MessageLoop(
+		__in BOOL bCreateThread
+		);
 
 	static
 		BOOL
@@ -46,6 +51,8 @@ public:
 		);
 
 private:
+	static HDEVNOTIFY ms_hDevNotify;
+
 	HANDLE
 		CreateWnd(
 		__in_opt LPTSTR		lpModuleName,
@@ -57,5 +64,16 @@ private:
 		GetIndex(
 		__in DWORD dwPower,
 		__in ULONG ulBase
+		);
+
+	static
+		BOOL
+		MessageLoopInternal();
+
+	static
+		unsigned int
+		__stdcall
+		MessageLoopWorkThread(
+		__in void * lpParameter
 		);
 };
