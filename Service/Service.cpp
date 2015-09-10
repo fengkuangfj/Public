@@ -789,6 +789,8 @@ DWORD
 				if (!ms_UnloadMod())
 					printfEx(MOD_SERVICE, PRINTF_LEVEL_ERROR, "[SERVICE_CONTROL_SHUTDOWN] ms_UnloadMod failed");
 
+				SetEvent(ms_hSvcStopEvent);
+
 				break;
 			}
 		case SERVICE_CONTROL_PARAMCHANGE:
@@ -812,6 +814,8 @@ DWORD
 
 				if (!ms_UnloadMod())
 					printfEx(MOD_SERVICE, PRINTF_LEVEL_ERROR, "[SERVICE_CONTROL_PRESHUTDOWN] ms_UnloadMod failed");
+
+				SetEvent(ms_hSvcStopEvent);
 
 				break;
 			}
