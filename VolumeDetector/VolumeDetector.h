@@ -20,45 +20,17 @@ LRESULT
 
 typedef struct _VOLUME_DETECTOR_INIT_ARGUMENTS
 {
-	TCHAR			tchModuleName[MAX_PATH];
-
-	BOOL			bService;
-
-	union
-	{
-		struct
-		{
-			HANDLE	hService;
-		} Service;
-
-		struct
-		{
-			HANDLE	hWindow;
-			WNDPROC lpfnWndProc;
-			BOOL	bCreateMassageLoop;
-		} Window;
-	};
+	TCHAR	tchModuleName[MAX_PATH];
+	HWND	hWindow;
+	WNDPROC	lpfnWndProc;
+	BOOL	bCreateMassageLoop;
 } VOLUME_DETECTOR_INIT_ARGUMENTS, *PVOLUME_DETECTOR_INIT_ARGUMENTS, *LPVOLUME_DETECTOR_INIT_ARGUMENTS;
 
 typedef struct _VOLUME_DETECTOR_INTERNAL
 {
-	BOOL			bService;
-
-	union
-	{
-		struct
-		{
-			HANDLE		hService;
-			HDEVNOTIFY	hDevNotify;
-		} Service;
-
-		struct
-		{
-			HANDLE	hWindow;
-			WNDPROC	lpfnWndProc;
-			BOOL	bCreateMassageLoop;
-		} Window;
-	};
+	HWND	hWindow;
+	WNDPROC	lpfnWndProc;
+	BOOL	bCreateMassageLoop;
 } VOLUME_DETECTOR_INTERNAL, *PVOLUME_DETECTOR_INTERNAL, *LPVOLUME_DETECTOR_INTERNAL;
 
 class CVolumeDetector
@@ -86,7 +58,7 @@ public:
 private:
 	static VOLUME_DETECTOR_INTERNAL ms_VolumeDetectorInternal;
 
-	HANDLE
+	HWND
 		CreateWnd(
 		__in_opt LPTSTR		lpModuleName,
 		__in_opt HINSTANCE	hPrevInstance,

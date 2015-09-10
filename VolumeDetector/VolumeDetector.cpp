@@ -7,67 +7,45 @@ BOOL
 	__in LPVOLUME_DETECTOR_INIT_ARGUMENTS lpVolumeDetectorInitArguments
 	)
 {
-	BOOL							bRet				= FALSE;
-
-	DEV_BROADCAST_DEVICEINTERFACE	NotificationFilter	= {0};
-
-	CVolumeDetector					VolumeDetector;
+	BOOL bRet = FALSE;
 
 
 	__try
 	{
 		printfEx(MOD_VOLUME_DETECTOR, PRINTF_LEVEL_INFORMATION, "begin");
 
-		if (!ms_VolumeDetectorInternal.bService && !ms_VolumeDetectorInternal.Window.hWindow)
+		if (!lpVolumeDetectorInitArguments)
 		{
-			ms_VolumeDetectorInternal.bService = lpVolumeDetectorInitArguments->bService;
-			if (ms_VolumeDetectorInternal.bService)
+			printfEx(MOD_VOLUME_DETECTOR, PRINTF_LEVEL_ERROR, "input argument error");
+			__leave;
+		}
+
+		if (!ms_VolumeDetectorInternal.hWindow)
+		{
+			ms_VolumeDetectorInternal.hWindow = lpVolumeDetectorInitArguments->hWindow;
+			ms_VolumeDetectorInternal.lpfnWndProc = lpVolumeDetectorInitArguments->lpfnWndProc;
+			ms_VolumeDetectorInternal.bCreateMassageLoop = lpVolumeDetectorInitArguments->bCreateMassageLoop;
+
+			if (!ms_VolumeDetectorInternal.hWindow)
 			{
-				ms_VolumeDetectorInternal.Service.hService = lpVolumeDetectorInitArguments->Service.hService;
-				if (!ms_VolumeDetectorInternal.Service.hService)
+				ms_VolumeDetectorInternal.hWindow = CreateWnd(
+					_tcslen(lpVolumeDetectorInitArguments->tchModuleName) ? lpVolumeDetectorInitArguments->tchModuleName : NULL,
+					NULL,
+					ms_VolumeDetectorInternal.lpfnWndProc
+					);
+				if (!ms_VolumeDetectorInternal.hWindow)
 				{
-					printfEx(MOD_VOLUME_DETECTOR, PRINTF_LEVEL_ERROR, "input argument error");
-					__leave;
-				}
-
-				NotificationFilter.dbcc_size = sizeof(NotificationFilter);
-				NotificationFilter.dbcc_devicetype = DBT_DEVTYP_DEVICEINTERFACE;
-				NotificationFilter.dbcc_classguid = GUID_DEVINTERFACE_VOLUME;
-
-				ms_VolumeDetectorInternal.Service.hDevNotify = RegisterDeviceNotification(ms_VolumeDetectorInternal.Service.hService, &NotificationFilter, DEVICE_NOTIFY_SERVICE_HANDLE);
-				if (!ms_VolumeDetectorInternal.Service.hDevNotify)
-				{
-					printfEx(MOD_VOLUME_DETECTOR, PRINTF_LEVEL_ERROR, "RegisterDeviceNotification failed. (%d)", GetLastError());
+					printfEx(MOD_VOLUME_DETECTOR, PRINTF_LEVEL_ERROR, "CreateWnd failed");
 					__leave;
 				}
 			}
-			else
+
+			if (ms_VolumeDetectorInternal.bCreateMassageLoop)
 			{
-				ms_VolumeDetectorInternal.Window.hWindow = lpVolumeDetectorInitArguments->Window.hWindow;
-				ms_VolumeDetectorInternal.Window.lpfnWndProc = lpVolumeDetectorInitArguments->Window.lpfnWndProc;
-				ms_VolumeDetectorInternal.Window.bCreateMassageLoop = lpVolumeDetectorInitArguments->Window.bCreateMassageLoop;
-
-				if (!ms_VolumeDetectorInternal.Window.hWindow)
+				if (!MessageLoop())
 				{
-					ms_VolumeDetectorInternal.Window.hWindow = CreateWnd(
-						_tcslen(lpVolumeDetectorInitArguments->tchModuleName) ? lpVolumeDetectorInitArguments->tchModuleName : NULL,
-						NULL,
-						ms_VolumeDetectorInternal.Window.lpfnWndProc
-						);
-					if (!ms_VolumeDetectorInternal.Window.hWindow)
-					{
-						printfEx(MOD_VOLUME_DETECTOR, PRINTF_LEVEL_ERROR, "CreateWnd failed");
-						__leave;
-					}
-				}
-
-				if (ms_VolumeDetectorInternal.Window.bCreateMassageLoop)
-				{
-					if (!VolumeDetector.MessageLoop())
-					{
-						printfEx(MOD_VOLUME_DETECTOR, PRINTF_LEVEL_ERROR, "VolumeDetector.MessageLoop failed");
-						__leave;
-					}
+					printfEx(MOD_VOLUME_DETECTOR, PRINTF_LEVEL_ERROR, "MessageLoop failed");
+					__leave;
 				}
 			}
 		}
@@ -92,21 +70,8 @@ BOOL
 	{
 		printfEx(MOD_VOLUME_DETECTOR, PRINTF_LEVEL_INFORMATION, "begin");
 
-		if (ms_VolumeDetectorInternal.bService)
-		{
-			if (ms_VolumeDetectorInternal.Service.hDevNotify)
-			{
-				if (!UnregisterDeviceNotification(ms_VolumeDetectorInternal.Service.hDevNotify))
-					printfEx(MOD_VOLUME_DETECTOR, PRINTF_LEVEL_ERROR, "UnregisterDeviceNotification failed. (%d)", GetLastError());
-
-				ms_VolumeDetectorInternal.Service.hDevNotify = NULL;
-			}
-		}
-		else
-		{
-			if (ms_VolumeDetectorInternal.Window.hWindow)
-				SendMessage((HWND)ms_VolumeDetectorInternal.Window.hWindow, WM_CLOSE, 0, 0);
-		}
+		if (ms_VolumeDetectorInternal.hWindow)
+			SendMessage(ms_VolumeDetectorInternal.hWindow, WM_CLOSE, 0, 0);
 
 		bRet = TRUE;
 	}
@@ -153,7 +118,7 @@ BOOL
 	return bRet;
 }
 
-HANDLE
+HWND
 	CVolumeDetector::CreateWnd(
 	__in_opt LPTSTR		lpModuleName,
 	__in_opt HINSTANCE	hPrevInstance,
@@ -233,7 +198,13 @@ HANDLE
 	__finally
 	{
 		if (!bResult)
-			hRet = NULL;
+		{
+			if (hRet)
+			{
+				SendMessage(hRet, WM_CLOSE, 0, 0);
+				hRet = NULL;
+			}
+		}
 	}
 
 	return hRet;
@@ -431,7 +402,7 @@ ULONG
 			{
 				if (1 != dwRemainder)
 				{
-					printfEx(MOD_VOLUME_DETECTOR, PRINTF_LEVEL_ERROR, "dwPower error. %I64D %d", dwPower, ulBase);
+					printfEx(MOD_VOLUME_DETECTOR, PRINTF_LEVEL_ERROR, "dwPower error. %I64d %d", dwPower, ulBase);
 					__leave;
 				}
 

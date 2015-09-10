@@ -10,6 +10,7 @@ HANDLE								CService::ms_hSvcStopEvent				= NULL;
 DWORD								CService::ms_dwCheckPoint				= 1;
 INITMOD								CService::ms_InitMod					= NULL;
 UNLOADMOD							CService::ms_UnloadMod					= NULL;
+INIT_MOD_ARGUMENTS					CService::ms_InitModArguments			= {0};
 
 BOOL
 	CService::Install(
@@ -674,9 +675,10 @@ BOOL
 
 BOOL
 	CService::Register(
-	__in LPTSTR		lpServiceName,
-	__in INITMOD	InitMod,
-	__in UNLOADMOD	UnloadMod
+	__in		LPTSTR					lpServiceName,
+	__in		INITMOD					InitMod,
+	__in_opt	LPINIT_MOD_ARGUMENTS	lpInitModArguments,
+	__in		UNLOADMOD				UnloadMod
 	)
 {
 	BOOL					bRet				= FALSE;
@@ -700,6 +702,16 @@ BOOL
 
 		ms_InitMod = InitMod;
 		ms_UnloadMod = UnloadMod;
+
+		if (lpInitModArguments)
+		{
+			if (_tcslen(lpInitModArguments->tchModuleName))
+				_tcscat_s(ms_InitModArguments.tchModuleName, _countof(ms_InitModArguments.tchModuleName), lpInitModArguments->tchModuleName);
+
+			ms_InitModArguments.hWindow = lpInitModArguments->hWindow;
+			ms_InitModArguments.lpfnWndProc = lpInitModArguments->lpfnWndProc;
+			ms_InitModArguments.bCreateMassageLoop = lpInitModArguments->bCreateMassageLoop;
+		}
 
 		_tcscat_s(ms_tchServiceName, _countof(ms_tchServiceName), lpServiceName);
 
@@ -741,10 +753,7 @@ DWORD
 	_In_ LPVOID	lpContext
 	)
 {
-	DWORD							dwRet				= NO_ERROR;
-
-	PDEV_BROADCAST_DEVICEINTERFACE	pDevBroadcastVolume	= NULL;
-	TCHAR							tchName[MAX_PATH]	= {0};
+	DWORD dwRet = NO_ERROR;
 
 
 	__try
@@ -756,7 +765,8 @@ DWORD
 			{
 				printfEx(MOD_SERVICE, PRINTF_LEVEL_INFORMATION, "SERVICE_CONTROL_STOP");
 
-				ms_UnloadMod();
+				if (!ms_UnloadMod())
+					printfEx(MOD_SERVICE, PRINTF_LEVEL_ERROR, "ms_UnloadMod failed");
 
 				ReportSvcStatus(SERVICE_STOP_PENDING, NO_ERROR, 0);
 
@@ -779,91 +789,7 @@ DWORD
 		case SERVICE_CONTROL_NETBINDREMOVE:
 		case SERVICE_CONTROL_NETBINDENABLE:
 		case SERVICE_CONTROL_NETBINDDISABLE:
-			break;
 		case SERVICE_CONTROL_DEVICEEVENT:
-			{
-				pDevBroadcastVolume = (PDEV_BROADCAST_DEVICEINTERFACE)lpEventData;
-				if (!pDevBroadcastVolume)
-					break;
-
-// 				if (!CVolumeDetector::BinaryToVolume(pDevBroadcastVolume->dbcv_unitmask, tchName, _countof(tchName)))
-// 				{
-// 					printfEx(MOD_VOLUME_DETECTOR, PRINTF_LEVEL_INFORMATION, "BinaryToVolume failed. %I64d", pDevBroadcastVolume->dbcv_unitmask);
-// 					break;
-// 				}
-
-				_tcscat_s(tchName, _countof(tchName), pDevBroadcastVolume->dbcc_name);
-
-				switch (dwEventType)
-				{
-				case DBT_DEVICEARRIVAL:
-					{
-						printfEx(MOD_SERVICE, PRINTF_LEVEL_INFORMATION, "system detected a new device. %S", tchName);
-						break;
-					}
-				case DBT_DEVICEQUERYREMOVE:
-					{
-						printfEx(MOD_SERVICE, PRINTF_LEVEL_INFORMATION, "wants to remove, may fail. %S", tchName);
-						break;
-					}
-				case DBT_DEVICEQUERYREMOVEFAILED:
-					{
-						printfEx(MOD_SERVICE, PRINTF_LEVEL_INFORMATION, "removal aborted. %S", tchName);
-						break;
-					}
-				case DBT_DEVICEREMOVEPENDING:
-					{
-						printfEx(MOD_SERVICE, PRINTF_LEVEL_INFORMATION, "about to remove, still avail. %S", tchName);
-						break;
-					}
-				case DBT_DEVICEREMOVECOMPLETE:
-					{
-						printfEx(MOD_SERVICE, PRINTF_LEVEL_INFORMATION, "device is gone. %S", tchName);
-						break;
-					}
-				case DBT_DEVICETYPESPECIFIC:
-					{
-						printfEx(MOD_SERVICE, PRINTF_LEVEL_INFORMATION, "type specific event. %S", tchName);
-						break;
-					}
-#if (WINVER >= 0x040A)
-				case DBT_CUSTOMEVENT:
-					{
-						printfEx(MOD_SERVICE, PRINTF_LEVEL_INFORMATION, "user-defined event. %S", tchName);
-						break;
-					}
-#endif
-#if (WINVER >= _WIN32_WINNT_WIN7)
-				case DBT_DEVINSTENUMERATED:
-					{
-						printfEx(MOD_SERVICE, PRINTF_LEVEL_INFORMATION, "[>= _WIN32_WINNT_WIN7] system detected a new device. %S", tchName);
-						break;
-					}
-				case DBT_DEVINSTSTARTED:
-					{
-						printfEx(MOD_SERVICE, PRINTF_LEVEL_INFORMATION, "[>= _WIN32_WINNT_WIN7] device installed and started. %S", tchName);
-						break;
-					}
-				case DBT_DEVINSTREMOVED:
-					{
-						printfEx(MOD_SERVICE, PRINTF_LEVEL_INFORMATION, "[>= _WIN32_WINNT_WIN7] device removed from system. %S", tchName);
-						break;
-					}
-				case DBT_DEVINSTPROPERTYCHANGED:
-					{
-						printfEx(MOD_SERVICE, PRINTF_LEVEL_INFORMATION, "[>= _WIN32_WINNT_WIN7] a property on the device changed. %S", tchName);
-						break;
-					}
-#endif
-				default:
-					{
-						printfEx(MOD_SERVICE, PRINTF_LEVEL_ERROR, "wParam error. 0x%08x", dwEventType);
-						__leave;
-					}
-				}
-
-				break;
-			}
 		case SERVICE_CONTROL_HARDWAREPROFILECHANGE:
 			break;
 		case SERVICE_CONTROL_POWEREVENT:
@@ -1022,9 +948,7 @@ BOOL
 	LPTSTR *	lpszArgv
 	)
 {
-	BOOL				bRet				= FALSE;
-
-	INIT_MOD_ARGUMENTS	InitModArguments	= {0};
+	BOOL bRet = FALSE;
 
 
 	__try
@@ -1050,10 +974,7 @@ BOOL
 		ReportSvcStatus(SERVICE_RUNNING, NO_ERROR, 0);
 
 		// TO_DO: Perform work until service stops.
-		InitModArguments.bService = TRUE;
-		InitModArguments.Service.hService = ms_SvcStatusHandle;
-
-		if (!ms_InitMod(&InitModArguments))
+		if (!ms_InitMod(&ms_InitModArguments))
 		{
 			printfEx(MOD_SERVICE, PRINTF_LEVEL_ERROR, "ms_Test failed");
 			__leave;

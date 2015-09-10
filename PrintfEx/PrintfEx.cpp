@@ -1,7 +1,7 @@
 #include "PrintfEx.h"
 
 BOOL CPrintfEx::ms_bUseStackBackTrace = FALSE;
-BOOL CPrintfEx::ms_bOutputDebugString = TRUE;
+BOOL CPrintfEx::ms_bOutputDebugString = FALSE;
 
 VOID
 	CPrintfEx::PrintfInternal(
@@ -26,6 +26,10 @@ VOID
 
 	__try
 	{
+#ifdef _DEBUG
+		setlocale(LC_ALL, "");
+#endif
+
 		va_start(Args, lpFmt);
 
 		// Ê±¼ä
@@ -58,8 +62,12 @@ VOID
 
 				printf(chLog);
 
+#ifdef _DEBUG
+				OutputDebugStringA(chLog);
+#else
 				if (ms_bOutputDebugString)
 					OutputDebugStringA(chLog);
+#endif
 
 				break;
 			}
@@ -70,8 +78,12 @@ VOID
 
 				printf(chLog);
 
+#ifdef _DEBUG
+				OutputDebugStringA(chLog);
+#else
 				if (ms_bOutputDebugString)
 					OutputDebugStringA(chLog);
+#endif
 
 				break;
 			}
@@ -82,8 +94,12 @@ VOID
 
 				printf(chLog);
 
+#ifdef _DEBUG
+				OutputDebugStringA(chLog);
+#else
 				if (ms_bOutputDebugString)
 					OutputDebugStringA(chLog);
+#endif
 
 				if (ms_bUseStackBackTrace)
 				{
@@ -189,7 +205,7 @@ BOOL
 				ms_bUseStackBackTrace = TRUE;
 		}
 
-		// ms_bOutputDebugString = bOutputDebugString;
+		ms_bOutputDebugString = bOutputDebugString;
 
 		setlocale(LC_ALL, "");
 

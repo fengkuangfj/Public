@@ -9,30 +9,16 @@
 
 typedef struct _INIT_MOD_ARGUMENTS
 {
-	TCHAR			tchModuleName[MAX_PATH];
-
-	BOOL			bService;
-
-	union
-	{
-		struct 
-		{
-			HANDLE	hService;
-		} Service;
-
-		struct 
-		{
-			HANDLE	hWindow;
-			WNDPROC	lpfnWndProc;
-			BOOL	bCreateMassageLoop;
-		} Window;
-	};
+	TCHAR	tchModuleName[MAX_PATH];
+	HWND	hWindow;
+	WNDPROC	lpfnWndProc;
+	BOOL	bCreateMassageLoop;
 } INIT_MOD_ARGUMENTS, *PINIT_MOD_ARGUMENTS, *LPINIT_MOD_ARGUMENTS;
 
 typedef
 	BOOL
 	(* INITMOD)(
-	__in LPINIT_MOD_ARGUMENTS lpInitModArguments
+	__in_opt LPINIT_MOD_ARGUMENTS lpInitModArguments
 	);
 
 typedef
@@ -87,9 +73,10 @@ public:
 
 	BOOL
 		Register(
-		__in LPTSTR		lpServiceName,
-		__in INITMOD	InitMod,
-		__in UNLOADMOD	UnloadMod
+		__in		LPTSTR					lpServiceName,
+		__in		INITMOD					InitMod,
+		__in_opt	LPINIT_MOD_ARGUMENTS	lpInitModArguments,
+		__in		UNLOADMOD				UnloadMod
 		);
 
 private:
@@ -100,6 +87,7 @@ private:
 	static DWORD					ms_dwCheckPoint;
 	static INITMOD					ms_InitMod;
 	static UNLOADMOD				ms_UnloadMod;
+	static INIT_MOD_ARGUMENTS		ms_InitModArguments;
 
 	static
 		VOID
