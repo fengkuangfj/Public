@@ -1022,7 +1022,9 @@ BOOL
 	LPTSTR *	lpszArgv
 	)
 {
-	BOOL bRet = FALSE;
+	BOOL				bRet				= FALSE;
+
+	INIT_MOD_ARGUMENTS	InitModArguments	= {0};
 
 
 	__try
@@ -1048,7 +1050,10 @@ BOOL
 		ReportSvcStatus(SERVICE_RUNNING, NO_ERROR, 0);
 
 		// TO_DO: Perform work until service stops.
-		if (!ms_InitMod(TRUE, FALSE, FALSE))
+		InitModArguments.bService = TRUE;
+		InitModArguments.Service.hService = ms_SvcStatusHandle;
+
+		if (!ms_InitMod(&InitModArguments))
 		{
 			printfEx(MOD_SERVICE, PRINTF_LEVEL_ERROR, "ms_Test failed");
 			__leave;

@@ -1,16 +1,10 @@
 ﻿#include "VolumeDetector.h"
 
-HANDLE		CVolumeDetector::ms_hWindowOrService	= NULL;
-BOOL		CVolumeDetector::ms_bService			= FALSE;
-HDEVNOTIFY	CVolumeDetector::ms_hDevNotify			= NULL;
+VOLUME_DETECTOR_INTERNAL CVolumeDetector::ms_VolumeDetectorInternal = {0};
 
 BOOL
 	CVolumeDetector::Init(
-	__in_opt	LPTSTR	lpModuleName,
-	__in		HANDLE	hWindowOrService,
-	__in		BOOL	bService,
-	__in		BOOL	bCreateMassageLoop,
-	__in		BOOL	bCreateMassageLoopThread
+	__in LPVOLUME_DETECTOR_INIT_ARGUMENTS lpVolumeDetectorInitArguments
 	)
 {
 	BOOL							bRet				= FALSE;
@@ -19,30 +13,29 @@ BOOL
 
 	CVolumeDetector					VolumeDetector;
 
-	// https://msdn.microsoft.com/en-us/library/aa363432(v=VS.85).aspx
+
 	__try
 	{
 		printfEx(MOD_VOLUME_DETECTOR, PRINTF_LEVEL_INFORMATION, "begin");
 
-		if (!ms_hWindowOrService)
+		if (!ms_VolumeDetectorInternal.bService && !ms_VolumeDetectorInternal.Window.hWindow)
 		{
-			ms_hWindowOrService = hWindowOrService;
-			ms_bService = bService;
-
-			if (ms_bService)
+			ms_VolumeDetectorInternal.bService = lpVolumeDetectorInitArguments->bService;
+			if (ms_VolumeDetectorInternal.bService)
 			{
-				if (!ms_hWindowOrService)
+				ms_VolumeDetectorInternal.Service.hService = lpVolumeDetectorInitArguments->Service.hService;
+				if (!ms_VolumeDetectorInternal.Service.hService)
 				{
 					printfEx(MOD_VOLUME_DETECTOR, PRINTF_LEVEL_ERROR, "input argument error");
 					__leave;
 				}
-				
+
 				NotificationFilter.dbcc_size = sizeof(NotificationFilter);
 				NotificationFilter.dbcc_devicetype = DBT_DEVTYP_DEVICEINTERFACE;
 				NotificationFilter.dbcc_classguid = GUID_DEVINTERFACE_VOLUME;
-	
-				ms_hDevNotify = RegisterDeviceNotification(ms_hWindowOrService, &NotificationFilter, DEVICE_NOTIFY_SERVICE_HANDLE);
-				if (!ms_hDevNotify)
+
+				ms_VolumeDetectorInternal.Service.hDevNotify = RegisterDeviceNotification(ms_VolumeDetectorInternal.Service.hService, &NotificationFilter, DEVICE_NOTIFY_SERVICE_HANDLE);
+				if (!ms_VolumeDetectorInternal.Service.hDevNotify)
 				{
 					printfEx(MOD_VOLUME_DETECTOR, PRINTF_LEVEL_ERROR, "RegisterDeviceNotification failed. (%d)", GetLastError());
 					__leave;
@@ -50,19 +43,27 @@ BOOL
 			}
 			else
 			{
-				if (!ms_hWindowOrService)
+				ms_VolumeDetectorInternal.Window.hWindow = lpVolumeDetectorInitArguments->Window.hWindow;
+				ms_VolumeDetectorInternal.Window.lpfnWndProc = lpVolumeDetectorInitArguments->Window.lpfnWndProc;
+				ms_VolumeDetectorInternal.Window.bCreateMassageLoop = lpVolumeDetectorInitArguments->Window.bCreateMassageLoop;
+
+				if (!ms_VolumeDetectorInternal.Window.hWindow)
 				{
-					ms_hWindowOrService = CreateWnd(lpModuleName, NULL);
-					if (!ms_hWindowOrService)
+					ms_VolumeDetectorInternal.Window.hWindow = CreateWnd(
+						_tcslen(lpVolumeDetectorInitArguments->tchModuleName) ? lpVolumeDetectorInitArguments->tchModuleName : NULL,
+						NULL,
+						ms_VolumeDetectorInternal.Window.lpfnWndProc
+						);
+					if (!ms_VolumeDetectorInternal.Window.hWindow)
 					{
 						printfEx(MOD_VOLUME_DETECTOR, PRINTF_LEVEL_ERROR, "CreateWnd failed");
 						__leave;
 					}
 				}
 
-				if (!bCreateMassageLoop)
+				if (ms_VolumeDetectorInternal.Window.bCreateMassageLoop)
 				{
-					if (!VolumeDetector.MessageLoop(bCreateMassageLoopThread))
+					if (!VolumeDetector.MessageLoop())
 					{
 						printfEx(MOD_VOLUME_DETECTOR, PRINTF_LEVEL_ERROR, "VolumeDetector.MessageLoop failed");
 						__leave;
@@ -91,93 +92,26 @@ BOOL
 	{
 		printfEx(MOD_VOLUME_DETECTOR, PRINTF_LEVEL_INFORMATION, "begin");
 
-		if (!ms_bService && ms_hWindowOrService)
-			SendMessage((HWND)ms_hWindowOrService, WM_CLOSE, 0, 0);
-
-		if (ms_hDevNotify)
+		if (ms_VolumeDetectorInternal.bService)
 		{
-			if (!UnregisterDeviceNotification(ms_hDevNotify))
-				printfEx(MOD_VOLUME_DETECTOR, PRINTF_LEVEL_ERROR, "UnregisterDeviceNotification failed. (%d)", GetLastError());
-
-			ms_hDevNotify = NULL;
-		}
-
-		bRet = TRUE;
-	}
-	__finally
-	{
-		printfEx(MOD_VOLUME_DETECTOR, PRINTF_LEVEL_INFORMATION, "end");
-	}
-
-	return bRet;
-}
-
-unsigned int
-	__stdcall
-	CVolumeDetector::MessageLoopWorkThread(
-	__in void * lpParameter
-	)
-{
-	__try
-	{
-		printfEx(MOD_VOLUME_DETECTOR, PRINTF_LEVEL_INFORMATION, "begin");
-
-		if (!MessageLoopInternal())
-		{
-			printfEx(MOD_VOLUME_DETECTOR, PRINTF_LEVEL_ERROR, "MessageLoopInternal failed");
-			__leave;
-		}
-	}
-	__finally
-	{
-		printfEx(MOD_VOLUME_DETECTOR, PRINTF_LEVEL_INFORMATION, "end");
-	}
-
-	return 0;
-}
-
-BOOL
-	CVolumeDetector::MessageLoop(
-	__in BOOL bCreateThread
-	)
-{
-	BOOL	bRet	= FALSE;
-
-	HANDLE	hThread = NULL;
-
-
-	__try
-	{
-		printfEx(MOD_VOLUME_DETECTOR, PRINTF_LEVEL_INFORMATION, "begin");
-
-		if (bCreateThread)
-		{
-			hThread = (HANDLE)_beginthreadex(NULL, 0, MessageLoopWorkThread, NULL, 0, NULL);
-			if (!hThread)
+			if (ms_VolumeDetectorInternal.Service.hDevNotify)
 			{
-				printfEx(MOD_VOLUME_DETECTOR, PRINTF_LEVEL_ERROR, "_beginthreadex failed. (%d)", GetLastError());
-				__leave;
+				if (!UnregisterDeviceNotification(ms_VolumeDetectorInternal.Service.hDevNotify))
+					printfEx(MOD_VOLUME_DETECTOR, PRINTF_LEVEL_ERROR, "UnregisterDeviceNotification failed. (%d)", GetLastError());
+
+				ms_VolumeDetectorInternal.Service.hDevNotify = NULL;
 			}
 		}
 		else
 		{
-			if (!MessageLoopInternal())
-			{
-				printfEx(MOD_VOLUME_DETECTOR, PRINTF_LEVEL_ERROR, "MessageLoopInternal failed");
-				__leave;
-			}
+			if (ms_VolumeDetectorInternal.Window.hWindow)
+				SendMessage((HWND)ms_VolumeDetectorInternal.Window.hWindow, WM_CLOSE, 0, 0);
 		}
 
 		bRet = TRUE;
 	}
 	__finally
 	{
-		if (hThread)
-		{
-			CloseHandle(hThread);
-			hThread = NULL;
-		}
-
 		printfEx(MOD_VOLUME_DETECTOR, PRINTF_LEVEL_INFORMATION, "end");
 	}
 
@@ -185,7 +119,7 @@ BOOL
 }
 
 BOOL
-	CVolumeDetector::MessageLoopInternal()
+	CVolumeDetector::MessageLoop()
 {
 	BOOL	bRet	= FALSE;
 
@@ -222,13 +156,15 @@ BOOL
 HANDLE
 	CVolumeDetector::CreateWnd(
 	__in_opt LPTSTR		lpModuleName,
-	__in_opt HINSTANCE	hPrevInstance
+	__in_opt HINSTANCE	hPrevInstance,
+	__in_opt WNDPROC	lpfnWndProc
 	)
 {
 	HWND		hRet		= NULL;
 
 	HINSTANCE	hInstance	= NULL;
 	WNDCLASS	WndClass	= {0};
+	BOOL		bResult		= FALSE;
 
 
 	__try
@@ -245,7 +181,7 @@ HANDLE
 		{
 			WndClass.style = CS_OWNDC | CS_HREDRAW | CS_VREDRAW;
 			WndClass.hInstance = hInstance;
-			WndClass.lpfnWndProc = (WNDPROC)WndProc;
+			WndClass.lpfnWndProc = lpfnWndProc ? lpfnWndProc : WndProc;
 			WndClass.cbClsExtra = 0;
 			WndClass.cbWndExtra = 0;
 			WndClass.hIcon = LoadIcon(NULL, IDI_APPLICATION);
@@ -285,11 +221,19 @@ HANDLE
 
 		// Show the window and paint its contents. 
 		ShowWindow(hRet, SW_HIDE); 
-		UpdateWindow(hRet); 
+		
+		if (!UpdateWindow(hRet))
+		{
+			printfEx(MOD_VOLUME_DETECTOR, PRINTF_LEVEL_ERROR, "UpdateWindow failed. (%d)", GetLastError());
+			__leave;
+		}
+
+		bResult = TRUE;
 	}
 	__finally
 	{
-		;
+		if (!bResult)
+			hRet = NULL;
 	}
 
 	return hRet;

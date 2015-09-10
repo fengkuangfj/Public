@@ -7,12 +7,32 @@
 
 #define MOD_SERVICE _T("·þÎñ")
 
+typedef struct _INIT_MOD_ARGUMENTS
+{
+	TCHAR			tchModuleName[MAX_PATH];
+
+	BOOL			bService;
+
+	union
+	{
+		struct 
+		{
+			HANDLE	hService;
+		} Service;
+
+		struct 
+		{
+			HANDLE	hWindow;
+			WNDPROC	lpfnWndProc;
+			BOOL	bCreateMassageLoop;
+		} Window;
+	};
+} INIT_MOD_ARGUMENTS, *PINIT_MOD_ARGUMENTS, *LPINIT_MOD_ARGUMENTS;
+
 typedef
 	BOOL
 	(* INITMOD)(
-	__in BOOL bService,
-	__in BOOL bCreateMassageLoop,
-	__in BOOL bCreateMassageLoopThread
+	__in LPINIT_MOD_ARGUMENTS lpInitModArguments
 	);
 
 typedef
@@ -34,8 +54,6 @@ typedef
 class CService
 {
 public:
-	static SERVICE_STATUS_HANDLE ms_SvcStatusHandle;
-
 	BOOL
 		Install(
 		__in		LPWSTR	lpServiceName,
@@ -75,6 +93,7 @@ public:
 		);
 
 private:
+	static SERVICE_STATUS_HANDLE	ms_SvcStatusHandle;
 	static TCHAR					ms_tchServiceName[MAX_PATH];
 	static SERVICE_STATUS			ms_SvcStatus;
 	static HANDLE					ms_hSvcStopEvent;

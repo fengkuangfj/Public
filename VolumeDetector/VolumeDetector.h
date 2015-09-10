@@ -4,7 +4,6 @@
 
 #include <Windows.h>
 #include <Dbt.h>
-#include <process.h>
 
 #include "..\\PrintfEx\\PrintfEx.h"
 
@@ -19,28 +18,62 @@ LRESULT
 	LPARAM	lParam
 	);
 
+typedef struct _VOLUME_DETECTOR_INIT_ARGUMENTS
+{
+	TCHAR			tchModuleName[MAX_PATH];
+
+	BOOL			bService;
+
+	union
+	{
+		struct
+		{
+			HANDLE	hService;
+		} Service;
+
+		struct
+		{
+			HANDLE	hWindow;
+			WNDPROC lpfnWndProc;
+			BOOL	bCreateMassageLoop;
+		} Window;
+	};
+} VOLUME_DETECTOR_INIT_ARGUMENTS, *PVOLUME_DETECTOR_INIT_ARGUMENTS, *LPVOLUME_DETECTOR_INIT_ARGUMENTS;
+
+typedef struct _VOLUME_DETECTOR_INTERNAL
+{
+	BOOL			bService;
+
+	union
+	{
+		struct
+		{
+			HANDLE		hService;
+			HDEVNOTIFY	hDevNotify;
+		} Service;
+
+		struct
+		{
+			HANDLE	hWindow;
+			WNDPROC	lpfnWndProc;
+			BOOL	bCreateMassageLoop;
+		} Window;
+	};
+} VOLUME_DETECTOR_INTERNAL, *PVOLUME_DETECTOR_INTERNAL, *LPVOLUME_DETECTOR_INTERNAL;
+
 class CVolumeDetector
 {
 public:
-	static HANDLE	ms_hWindowOrService;
-	static BOOL		ms_bService;
-
 	BOOL
 		Init(
-		__in_opt	LPTSTR	lpModuleName,
-		__in		HANDLE	hWindowOrService,
-		__in		BOOL	bService,
-		__in		BOOL	bCreateMassageLoop,
-		__in		BOOL	bCreateMassageLoopThread
+		__in LPVOLUME_DETECTOR_INIT_ARGUMENTS lpVolumeDetectorInitArguments
 		);
 
 	BOOL
 		Unload();
 
 	BOOL
-		MessageLoop(
-		__in BOOL bCreateThread
-		);
+		MessageLoop();
 
 	static
 		BOOL
@@ -51,12 +84,13 @@ public:
 		);
 
 private:
-	static HDEVNOTIFY ms_hDevNotify;
+	static VOLUME_DETECTOR_INTERNAL ms_VolumeDetectorInternal;
 
 	HANDLE
 		CreateWnd(
 		__in_opt LPTSTR		lpModuleName,
-		__in_opt HINSTANCE	hPrevInstance
+		__in_opt HINSTANCE	hPrevInstance,
+		__in_opt WNDPROC	lpfnWndProc
 		);
 
 	static
@@ -64,16 +98,5 @@ private:
 		GetIndex(
 		__in DWORD dwPower,
 		__in ULONG ulBase
-		);
-
-	static
-		BOOL
-		MessageLoopInternal();
-
-	static
-		unsigned int
-		__stdcall
-		MessageLoopWorkThread(
-		__in void * lpParameter
 		);
 };
