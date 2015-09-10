@@ -769,7 +769,7 @@ DWORD
 				printfEx(MOD_SERVICE, PRINTF_LEVEL_INFORMATION, "SERVICE_CONTROL_STOP");
 
 				if (!ms_UnloadMod())
-					printfEx(MOD_SERVICE, PRINTF_LEVEL_ERROR, "ms_UnloadMod failed");
+					printfEx(MOD_SERVICE, PRINTF_LEVEL_ERROR, "[SERVICE_CONTROL_STOP] ms_UnloadMod failed");
 
 				ReportSvcStatus(SERVICE_STOP_PENDING, NO_ERROR, 0);
 
@@ -785,6 +785,10 @@ DWORD
 		case SERVICE_CONTROL_SHUTDOWN:
 			{
 				printfEx(MOD_SERVICE, PRINTF_LEVEL_INFORMATION, "SERVICE_CONTROL_SHUTDOWN");
+
+				if (!ms_UnloadMod())
+					printfEx(MOD_SERVICE, PRINTF_LEVEL_ERROR, "[SERVICE_CONTROL_SHUTDOWN] ms_UnloadMod failed");
+
 				break;
 			}
 		case SERVICE_CONTROL_PARAMCHANGE:
@@ -805,6 +809,10 @@ DWORD
 		case SERVICE_CONTROL_PRESHUTDOWN:
 			{
 				printfEx(MOD_SERVICE, PRINTF_LEVEL_INFORMATION, "SERVICE_CONTROL_PRESHUTDOWN");
+
+				if (!ms_UnloadMod())
+					printfEx(MOD_SERVICE, PRINTF_LEVEL_ERROR, "[SERVICE_CONTROL_PRESHUTDOWN] ms_UnloadMod failed");
+
 				break;
 			}
 		case SERVICE_CONTROL_TIMECHANGE:
