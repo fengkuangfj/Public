@@ -402,6 +402,9 @@ BOOL
 			break;
 		default:
 			{
+				if (SERVICE_WIN32_OWN_PROCESS & dwServiceType || SERVICE_WIN32_SHARE_PROCESS & dwServiceType)
+					break;
+
 				printfEx(MOD_SERVICE, PRINTF_LEVEL_ERROR, "dwServiceType error. 0x%08x", dwServiceType);
 				__leave;
 			}
