@@ -4,6 +4,7 @@
 
 #include "..\\PrintfEx\\PrintfEx.h"
 #include "..\\VolumeDetector\\\VolumeDetector.h"
+#include "..\\OperationSystemVersion\\OperationSystemVersion.h"
 
 #define MOD_SERVICE _T("·þÎñ")
 

@@ -247,7 +247,7 @@ LRESULT
 				{
 				case DBT_DEVICEARRIVAL:
 					{
-						printfEx(MOD_VOLUME_DETECTOR, PRINTF_LEVEL_INFORMATION, "system detected a new device. %S", tchName);
+						printfEx(MOD_VOLUME_DETECTOR, PRINTF_LEVEL_INFORMATION, "[DBT_DEVICEARRIVAL] system detected a new device. %S", tchName);
 						break;
 					}
 				case DBT_DEVICEQUERYREMOVE:
@@ -275,35 +275,31 @@ LRESULT
 						printfEx(MOD_VOLUME_DETECTOR, PRINTF_LEVEL_INFORMATION, "type specific event. %S", tchName);
 						break;
 					}
-#if (WINVER >= 0x040A)
 				case DBT_CUSTOMEVENT:
 					{
 						printfEx(MOD_VOLUME_DETECTOR, PRINTF_LEVEL_INFORMATION, "user-defined event. %S", tchName);
 						break;
 					}
-#endif
-#if (WINVER >= _WIN32_WINNT_WIN7)
 				case DBT_DEVINSTENUMERATED:
 					{
-						printfEx(MOD_VOLUME_DETECTOR, PRINTF_LEVEL_INFORMATION, "[>= _WIN32_WINNT_WIN7] system detected a new device. %S", tchName);
+						printfEx(MOD_VOLUME_DETECTOR, PRINTF_LEVEL_INFORMATION, "[DBT_DEVINSTENUMERATED] system detected a new device. %S", tchName);
 						break;
 					}
 				case DBT_DEVINSTSTARTED:
 					{
-						printfEx(MOD_VOLUME_DETECTOR, PRINTF_LEVEL_INFORMATION, "[>= _WIN32_WINNT_WIN7] device installed and started. %S", tchName);
+						printfEx(MOD_VOLUME_DETECTOR, PRINTF_LEVEL_INFORMATION, "device installed and started. %S", tchName);
 						break;
 					}
 				case DBT_DEVINSTREMOVED:
 					{
-						printfEx(MOD_VOLUME_DETECTOR, PRINTF_LEVEL_INFORMATION, "[>= _WIN32_WINNT_WIN7] device removed from system. %S", tchName);
+						printfEx(MOD_VOLUME_DETECTOR, PRINTF_LEVEL_INFORMATION, "device removed from system. %S", tchName);
 						break;
 					}
 				case DBT_DEVINSTPROPERTYCHANGED:
 					{
-						printfEx(MOD_VOLUME_DETECTOR, PRINTF_LEVEL_INFORMATION, "[>= _WIN32_WINNT_WIN7] a property on the device changed. %S", tchName);
+						printfEx(MOD_VOLUME_DETECTOR, PRINTF_LEVEL_INFORMATION, "a property on the device changed. %S", tchName);
 						break;
 					}
-#endif
 				default:
 					{
 						printfEx(MOD_VOLUME_DETECTOR, PRINTF_LEVEL_ERROR, "wParam error. 0x%08x", wParam);

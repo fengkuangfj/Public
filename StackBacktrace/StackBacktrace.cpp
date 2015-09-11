@@ -78,15 +78,15 @@ BOOL
 				__leave;
 			}
 
-			if (!SymInitializeW(ms_hProcess, lpSymDir, TRUE))
-			{
-				printf("SymInitialize failed. (%d) \n", GetLastError());
-				__leave;
-			}
-
-			dwOptions = SymGetOptions();
-			dwOptions |= SYMOPT_LOAD_LINES;
-			SymSetOptions(dwOptions);
+// 			if (!SymInitializeW(ms_hProcess, lpSymDir, TRUE))
+// 			{
+// 				printf("SymInitialize failed. (%d) \n", GetLastError());
+// 				__leave;
+// 			}
+// 
+// 			dwOptions = SymGetOptions();
+// 			dwOptions |= SYMOPT_LOAD_LINES;
+// 			SymSetOptions(dwOptions);
 		}
 
 		bRet = TRUE;
@@ -116,11 +116,11 @@ BOOL
 
 	__try
 	{
-		if (ms_hProcess)
-		{
-			SymCleanup(ms_hProcess);
-			ms_hProcess = NULL;
-		}
+// 		if (ms_hProcess)
+// 		{
+// 			SymCleanup(ms_hProcess);
+// 			ms_hProcess = NULL;
+// 		}
 
 		ms_RtlWalkFrameChain = NULL;
 

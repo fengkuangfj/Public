@@ -23,19 +23,22 @@ BOOL
 	__in_opt	LPWSTR	lpDependencies
 	)
 {
-	BOOL		bRet							= FALSE;
+	BOOL					bRet							= FALSE;
 
-	SC_HANDLE	hScManager						= NULL;
-	SC_HANDLE	hService						= NULL;
-	WCHAR		wchTemp[MAX_PATH]				= {0};
-	HKEY		hkResult						= NULL;
-	DWORD		dwData							= 0;
-	LONG		lResult							= 0;
-	WCHAR		wchPath[MAX_PATH]				= {0};
-	LPWSTR		lpPosition						= NULL;
-	PVOID		pOldValue						= NULL;
-	BOOL		bWow64DisableWow64FsRedirection = FALSE;
-	HMODULE		hModule							= NULL;
+	SC_HANDLE				hScManager						= NULL;
+	SC_HANDLE				hService						= NULL;
+	WCHAR					wchTemp[MAX_PATH]				= {0};
+	HKEY					hkResult						= NULL;
+	DWORD					dwData							= 0;
+	LONG					lResult							= 0;
+	WCHAR					wchPath[MAX_PATH]				= {0};
+	LPWSTR					lpPosition						= NULL;
+	PVOID					pOldValue						= NULL;
+	BOOL					bWow64DisableWow64FsRedirection = FALSE;
+	HMODULE					hModule							= NULL;
+	OS_PROC_TYPE			OsProcType						= OS_PROC_TYPE_UNKNOWN;
+
+	COperationSystemVersion	OperationSystemVersion;
 
 
 	__try
@@ -54,25 +57,41 @@ BOOL
 			__leave;
 		}
 
-		if (!g_Wow64DisableWow64FsRedirection)
+		OsProcType = OperationSystemVersion.GetOSProcType();
+		switch (OsProcType)
 		{
-			g_Wow64DisableWow64FsRedirection = (WOW64_DISABLE_WOW64_FS_REDIRECTION)GetProcAddress(hModule, "Wow64DisableWow64FsRedirection");
-			if (g_Wow64DisableWow64FsRedirection)
+		case OS_PROC_TYPE_X86:
+			break;
+		case OS_PROC_TYPE_X64:
 			{
-				if (!g_Wow64DisableWow64FsRedirection(&pOldValue))
+				if (!g_Wow64DisableWow64FsRedirection)
 				{
-					printfEx(MOD_SERVICE, PRINTF_LEVEL_ERROR, "Wow64DisableWow64FsRedirection failed. (%d)", GetLastError());
-					__leave;
+					g_Wow64DisableWow64FsRedirection = (WOW64_DISABLE_WOW64_FS_REDIRECTION)GetProcAddress(hModule, "Wow64DisableWow64FsRedirection");
+					if (g_Wow64DisableWow64FsRedirection)
+					{
+						if (!g_Wow64DisableWow64FsRedirection(&pOldValue))
+						{
+							printfEx(MOD_SERVICE, PRINTF_LEVEL_ERROR, "Wow64DisableWow64FsRedirection failed. (%d)", GetLastError());
+							__leave;
+						}
+
+						bWow64DisableWow64FsRedirection = TRUE;
+
+						g_Wow64RevertWow64FsRedirection = (WOW64_REVERT_WOW64_FS_REDIRECTION)GetProcAddress(hModule, "Wow64RevertWow64FsRedirection");
+						if (!g_Wow64RevertWow64FsRedirection)
+						{
+							printfEx(MOD_SERVICE, PRINTF_LEVEL_ERROR, "GetProcAddress failed. (%d)", GetLastError());
+							__leave;
+						}
+					}
 				}
 
-				bWow64DisableWow64FsRedirection = TRUE;
-
-				g_Wow64RevertWow64FsRedirection = (WOW64_REVERT_WOW64_FS_REDIRECTION)GetProcAddress(hModule, "Wow64RevertWow64FsRedirection");
-				if (!g_Wow64RevertWow64FsRedirection)
-				{
-					printfEx(MOD_SERVICE, PRINTF_LEVEL_ERROR, "GetProcAddress failed. (%d)", GetLastError());
-					__leave;
-				}
+				break;
+			}
+		default:
+			{
+				printfEx(MOD_SERVICE, PRINTF_LEVEL_ERROR, "OsProcType error. %d", OsProcType);
+				__leave;
 			}
 		}
 
@@ -179,6 +198,7 @@ BOOL
 		{
 		case SERVICE_KERNEL_DRIVER:
 			{
+				/*
 				dwData = sizeof(wchTemp);
 				lResult = RegGetValue(
 					HKEY_LOCAL_MACHINE,
@@ -187,7 +207,7 @@ BOOL
 					RRF_RT_REG_MULTI_SZ,
 					NULL,
 					wchTemp,
-					&dwData				
+					&dwData
 					);
 				if (ERROR_SUCCESS != lResult)
 				{
@@ -237,6 +257,7 @@ BOOL
 					printfEx(MOD_SERVICE, PRINTF_LEVEL_ERROR, "RegFlushKey failed. (0x%08x)", lResult);
 					__leave;
 				}
+				*/
 
 				break;
 			}
@@ -774,7 +795,9 @@ DWORD
 				ReportSvcStatus(SERVICE_STOP_PENDING, NO_ERROR, 0);
 
 				// Signal the service to stop.
-				SetEvent(ms_hSvcStopEvent);
+				if (!SetEvent(ms_hSvcStopEvent))
+					printfEx(MOD_SERVICE, PRINTF_LEVEL_ERROR, "[SERVICE_CONTROL_STOP] SetEvent failed. (%d)", GetLastError());
+
 				ReportSvcStatus(ms_SvcStatus.dwCurrentState, NO_ERROR, 0);
 				break;
 			}
@@ -789,7 +812,8 @@ DWORD
 				if (!ms_UnloadMod())
 					printfEx(MOD_SERVICE, PRINTF_LEVEL_ERROR, "[SERVICE_CONTROL_SHUTDOWN] ms_UnloadMod failed");
 
-				SetEvent(ms_hSvcStopEvent);
+				if (!SetEvent(ms_hSvcStopEvent))
+					printfEx(MOD_SERVICE, PRINTF_LEVEL_ERROR, "[SERVICE_CONTROL_SHUTDOWN] SetEvent failed. (%d)", GetLastError());
 
 				break;
 			}
@@ -815,7 +839,8 @@ DWORD
 				if (!ms_UnloadMod())
 					printfEx(MOD_SERVICE, PRINTF_LEVEL_ERROR, "[SERVICE_CONTROL_PRESHUTDOWN] ms_UnloadMod failed");
 
-				SetEvent(ms_hSvcStopEvent);
+				if (!SetEvent(ms_hSvcStopEvent))
+					printfEx(MOD_SERVICE, PRINTF_LEVEL_ERROR, "[SERVICE_CONTROL_PRESHUTDOWN] SetEvent failed. (%d)", GetLastError());
 
 				break;
 			}
@@ -857,6 +882,11 @@ VOID
 	DWORD dwWaitHint
 	)
 {
+	OS_VER_AND_PROC_TYPE	OsVerAndProcType		= OS_VER_AND_PROC_TYPE_UNKNOWN;
+
+	COperationSystemVersion OperationSystemVersion;
+
+
 	__try
 	{
 		// Fill in the SERVICE_STATUS structure.
@@ -867,18 +897,49 @@ VOID
 		if (SERVICE_START_PENDING == dwCurrentState)
 			ms_SvcStatus.dwControlsAccepted = 0;
 		else
-			ms_SvcStatus.dwControlsAccepted =
-			SERVICE_ACCEPT_STOP                  |  // 0x00000001
-			SERVICE_ACCEPT_PAUSE_CONTINUE        |  // 0x00000002
-			SERVICE_ACCEPT_SHUTDOWN              |  // 0x00000004
-			SERVICE_ACCEPT_PARAMCHANGE           |  // 0x00000008
-			SERVICE_ACCEPT_NETBINDCHANGE         |  // 0x00000010
-			SERVICE_ACCEPT_HARDWAREPROFILECHANGE |  // 0x00000020
-			SERVICE_ACCEPT_POWEREVENT            |  // 0x00000040
-			SERVICE_ACCEPT_SESSIONCHANGE         |  // 0x00000080
-			SERVICE_ACCEPT_PRESHUTDOWN           |  // 0x00000100
-			SERVICE_ACCEPT_TIMECHANGE            |  // 0x00000200
-			SERVICE_ACCEPT_TRIGGEREVENT;            // 0x00000400
+		{
+			OsVerAndProcType = OperationSystemVersion.GetOsVerAndProcType();
+			switch (OsVerAndProcType)
+			{
+			case OS_VER_AND_PROC_TYPE_WINDOWS_XP_X86:
+				{
+					ms_SvcStatus.dwControlsAccepted =
+						SERVICE_ACCEPT_STOP                  |  // 0x00000001
+						SERVICE_ACCEPT_PAUSE_CONTINUE        |  // 0x00000002
+						SERVICE_ACCEPT_SHUTDOWN              |  // 0x00000004
+						SERVICE_ACCEPT_PARAMCHANGE           |  // 0x00000008
+						SERVICE_ACCEPT_NETBINDCHANGE         |  // 0x00000010
+						SERVICE_ACCEPT_HARDWAREPROFILECHANGE |  // 0x00000020
+						SERVICE_ACCEPT_POWEREVENT            |  // 0x00000040
+						SERVICE_ACCEPT_SESSIONCHANGE;           // 0x00000080
+
+					break;
+				}
+			case OS_VER_AND_PROC_TYPE_WINDOWS_7_X86:
+			case OS_VER_AND_PROC_TYPE_WINDOWS_7_X64:
+				{
+					ms_SvcStatus.dwControlsAccepted =
+						SERVICE_ACCEPT_STOP                  |  // 0x00000001
+						SERVICE_ACCEPT_PAUSE_CONTINUE        |  // 0x00000002
+						SERVICE_ACCEPT_SHUTDOWN              |  // 0x00000004
+						SERVICE_ACCEPT_PARAMCHANGE           |  // 0x00000008
+						SERVICE_ACCEPT_NETBINDCHANGE         |  // 0x00000010
+						SERVICE_ACCEPT_HARDWAREPROFILECHANGE |  // 0x00000020
+						SERVICE_ACCEPT_POWEREVENT            |  // 0x00000040
+						SERVICE_ACCEPT_SESSIONCHANGE         |  // 0x00000080
+						SERVICE_ACCEPT_PRESHUTDOWN           |  // 0x00000100
+						SERVICE_ACCEPT_TIMECHANGE            |  // 0x00000200
+						SERVICE_ACCEPT_TRIGGEREVENT;            // 0x00000400
+
+					break;
+				}
+			default:
+				{
+					printfEx(MOD_SERVICE, PRINTF_LEVEL_ERROR, "OsVerAndProcType error. %d", OsVerAndProcType);
+					__leave;
+				}
+			}
+		}
 
 		if ((SERVICE_RUNNING == dwCurrentState) || (SERVICE_STOPPED == dwCurrentState))
 			ms_SvcStatus.dwCheckPoint = 0;
@@ -886,7 +947,11 @@ VOID
 			ms_SvcStatus.dwCheckPoint = ms_dwCheckPoint++;
 
 		// Report the status of the service to the SCM.
-		SetServiceStatus(ms_SvcStatusHandle, &ms_SvcStatus);
+		if (!SetServiceStatus(ms_SvcStatusHandle, &ms_SvcStatus))
+		{
+			printfEx(MOD_SERVICE, PRINTF_LEVEL_ERROR, "SetServiceStatus failed. (%d)", GetLastError());
+			__leave;
+		}
 	}
 	__finally
 	{
