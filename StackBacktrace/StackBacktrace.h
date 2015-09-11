@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <Dbghelp.h>
 #include <Shlwapi.h>
+#include <strsafe.h>
 
 #pragma comment(lib, "Dbghelp.lib")
 #pragma comment(lib, "Shlwapi.lib")
@@ -43,6 +44,79 @@ typedef
 	__in	ULONG	Flags
 	);
 
+typedef
+	LPAPI_VERSION
+	(WINAPI * IMAGEHLPAPIVERSION)(
+	VOID
+	);
+
+typedef
+	BOOL
+	(WINAPI * SYMINITIALIZE)(
+	__in		HANDLE	hProcess,
+	__in_opt	PCWSTR	UserSearchPath,
+	__in		BOOL	fInvadeProcess
+	);
+
+typedef
+	BOOL
+	(WINAPI * SYMCLEANUP)(
+	__in HANDLE hProcess
+	);
+
+typedef
+	DWORD
+	(WINAPI * SYMSETOPTIONS)(
+	__in DWORD SymOptions
+	);
+
+typedef
+	DWORD
+	(WINAPI * SYMGETOPTIONS)(
+	VOID
+	);
+
+typedef
+	BOOL
+	(WINAPI * STACKWALK64)(
+	__in		DWORD								MachineType,
+	__in		HANDLE								hProcess,
+	__in		HANDLE								hThread,
+	__inout		LPSTACKFRAME64						StackFrame,
+	__inout		PVOID								ContextRecord,
+	__in_opt	PREAD_PROCESS_MEMORY_ROUTINE64		ReadMemoryRoutine,
+	__in_opt	PFUNCTION_TABLE_ACCESS_ROUTINE64	FunctionTableAccessRoutine,
+	__in_opt	PGET_MODULE_BASE_ROUTINE64			GetModuleBaseRoutine,
+	__in_opt	PTRANSLATE_ADDRESS_ROUTINE64		TranslateAddress
+	);
+
+typedef
+	BOOL
+	(WINAPI * SYMFROMADDR)(
+	__in		HANDLE			hProcess,
+	__in		DWORD64			Address,
+	__out_opt	PDWORD64		Displacement,
+	__inout		PSYMBOL_INFO	Symbol
+	);
+
+typedef
+	DWORD
+	(WINAPI * UNDECORATESYMBOLNAME)(
+	__in							PCSTR	name,
+	__out_ecount(maxStringLength)	PSTR	outputString,
+	__in							DWORD	maxStringLength,
+	__in							DWORD	flags
+	);
+
+typedef
+	BOOL
+	(WINAPI * SYMGETLINEFROMADDR64)(
+	__in	HANDLE				hProcess,
+	__in	DWORD64				qwAddr,
+	__out	PDWORD				pdwDisplacement,
+	__out	PIMAGEHLP_LINE64	Line64
+	);
+
 BOOL
 	CALLBACK
 	ReadProcessMemoryProc64(
@@ -70,7 +144,20 @@ public:
 	BOOL
 		WalkFrameChaim();
 
+	BOOL
+		StackBacktraceSym();
+
 private:
 	static RTLWALKFRAMECHAIN	ms_RtlWalkFrameChain;
 	static HANDLE				ms_hProcess;
+	static BOOL					ms_bCanUseStackBacktraceSym;
+	static IMAGEHLPAPIVERSION	ms_ImagehlpApiVersion;
+	static SYMINITIALIZE		ms_SymInitialize;
+	static SYMCLEANUP			ms_SymCleanup;
+	static SYMSETOPTIONS		ms_SymSetOptions;
+	static SYMGETOPTIONS		ms_SymGetOptions;
+	static STACKWALK64			ms_StackWalk64;
+	static SYMFROMADDR			ms_SymFromAddr;
+	static UNDECORATESYMBOLNAME ms_UnDecorateSymbolName;
+	static SYMGETLINEFROMADDR64 ms_SymGetLineFromAddr64;
 };

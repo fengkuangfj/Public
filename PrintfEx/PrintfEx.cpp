@@ -213,7 +213,11 @@ BOOL
 	}
 	__finally
 	{
-		;
+		if (!bRet)
+		{
+			if (!Unload())
+				printf("Unload failed \n");
+		}
 	}
 
 	return bRet;
@@ -234,6 +238,9 @@ BOOL
 			printf("StackBackTrace.Unload failed \n");
 			__leave;
 		}
+
+		ms_bUseStackBackTrace = FALSE;
+		ms_bOutputDebugString = FALSE;
 
 		bRet = TRUE;
 	}

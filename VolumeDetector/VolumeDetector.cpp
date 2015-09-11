@@ -9,11 +9,10 @@ BOOL
 {
 	BOOL bRet = FALSE;
 
+	printfEx(MOD_VOLUME_DETECTOR, PRINTF_LEVEL_INFORMATION, "begin");
 
 	__try
 	{
-		printfEx(MOD_VOLUME_DETECTOR, PRINTF_LEVEL_INFORMATION, "begin");
-
 		if (!lpVolumeDetectorInitArguments)
 		{
 			printfEx(MOD_VOLUME_DETECTOR, PRINTF_LEVEL_ERROR, "input argument error");
@@ -54,8 +53,10 @@ BOOL
 	}
 	__finally
 	{
-		printfEx(MOD_VOLUME_DETECTOR, PRINTF_LEVEL_INFORMATION, "end");
+		;
 	}
+
+	printfEx(MOD_VOLUME_DETECTOR, PRINTF_LEVEL_INFORMATION, "end");
 
 	return bRet;
 }
@@ -65,11 +66,10 @@ BOOL
 {
 	BOOL bRet = FALSE;
 
+	printfEx(MOD_VOLUME_DETECTOR, PRINTF_LEVEL_INFORMATION, "begin");
 
 	__try
 	{
-		printfEx(MOD_VOLUME_DETECTOR, PRINTF_LEVEL_INFORMATION, "begin");
-
 		if (ms_VolumeDetectorInternal.hWindow)
 			SendMessage(ms_VolumeDetectorInternal.hWindow, WM_CLOSE, 0, 0);
 
@@ -77,8 +77,10 @@ BOOL
 	}
 	__finally
 	{
-		printfEx(MOD_VOLUME_DETECTOR, PRINTF_LEVEL_INFORMATION, "end");
+		;
 	}
+
+	printfEx(MOD_VOLUME_DETECTOR, PRINTF_LEVEL_INFORMATION, "end");
 
 	return bRet;
 }
@@ -90,11 +92,10 @@ BOOL
 
 	MSG		msg		= {0};
 
+	printfEx(MOD_VOLUME_DETECTOR, PRINTF_LEVEL_INFORMATION, "begin");
 
 	__try
 	{
-		printfEx(MOD_VOLUME_DETECTOR, PRINTF_LEVEL_INFORMATION, "begin");
-
 		// Start the message loop. 
 		while (0 != (bRet = GetMessage(&msg, NULL, 0, 0)))
 		{
@@ -112,8 +113,10 @@ BOOL
 	}
 	__finally
 	{
-		printfEx(MOD_VOLUME_DETECTOR, PRINTF_LEVEL_INFORMATION, "end");
+		;
 	}
+
+	printfEx(MOD_VOLUME_DETECTOR, PRINTF_LEVEL_INFORMATION, "end");
 
 	return bRet;
 }

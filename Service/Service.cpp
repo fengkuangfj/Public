@@ -713,11 +713,10 @@ BOOL
 		{NULL, NULL}
 	};
 
+	printfEx(MOD_SERVICE, PRINTF_LEVEL_INFORMATION, "begin");
 
 	__try
 	{
-		printfEx(MOD_SERVICE, PRINTF_LEVEL_INFORMATION, "begin");
-
 		if (!lpServiceName || !InitMod || !UnloadMod)
 		{
 			printfEx(MOD_SERVICE, PRINTF_LEVEL_ERROR, "input arguments error. 0x%08p 0x%08p 0x%08p",lpServiceName, InitMod, UnloadMod);
@@ -751,8 +750,10 @@ BOOL
 	}
 	__finally
 	{
-		printfEx(MOD_SERVICE, PRINTF_LEVEL_INFORMATION, "end");
+		;
 	}
+
+	printfEx(MOD_SERVICE, PRINTF_LEVEL_INFORMATION, "end");
 
 	return bRet;
 }
@@ -949,7 +950,9 @@ VOID
 		// Report the status of the service to the SCM.
 		if (!SetServiceStatus(ms_SvcStatusHandle, &ms_SvcStatus))
 		{
-			printfEx(MOD_SERVICE, PRINTF_LEVEL_ERROR, "SetServiceStatus failed. (%d)", GetLastError());
+			if (6 != GetLastError())
+				printfEx(MOD_SERVICE, PRINTF_LEVEL_ERROR, "SetServiceStatus failed. (%d)", GetLastError());
+
 			__leave;
 		}
 	}
@@ -985,11 +988,10 @@ VOID
 	HANDLE			hRpcServer			=	NULL;
 	CHAR			DbPath[MAX_PATH]	=	{0};
 
+	printfEx(MOD_SERVICE, PRINTF_LEVEL_INFORMATION, "begin");
 
 	__try
 	{
-		printfEx(MOD_SERVICE, PRINTF_LEVEL_INFORMATION, "begin");
-
 		// Register the handler function for the service
 		ms_SvcStatusHandle = RegisterServiceCtrlHandlerEx(ms_tchServiceName, CtrlHandler, NULL);
 		if (!ms_SvcStatusHandle )
@@ -1014,8 +1016,10 @@ VOID
 	}
 	__finally
 	{
-		printfEx(MOD_SERVICE, PRINTF_LEVEL_INFORMATION, "end");
+		;
 	}
+
+	printfEx(MOD_SERVICE, PRINTF_LEVEL_INFORMATION, "end");
 
 	return ;
 }
@@ -1041,11 +1045,10 @@ BOOL
 {
 	BOOL bRet = FALSE;
 
+	printfEx(MOD_SERVICE, PRINTF_LEVEL_INFORMATION, "begin");
 
 	__try
 	{
-		printfEx(MOD_SERVICE, PRINTF_LEVEL_INFORMATION, "begin");
-
 		// TO_DO: Declare and set any required variables.
 		//   Be sure to periodically call ReportSvcStatus() with 
 		//   SERVICE_START_PENDING. If initialization fails, call
@@ -1086,8 +1089,10 @@ BOOL
 	}
 	__finally
 	{
-		printfEx(MOD_SERVICE, PRINTF_LEVEL_INFORMATION, "end");
+		;
 	}
+
+	printfEx(MOD_SERVICE, PRINTF_LEVEL_INFORMATION, "end");
 
 	return bRet;
 }
