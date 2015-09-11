@@ -123,78 +123,75 @@ BOOL
 					__leave;
 				}
 
-				if (5 <= lpApiVersion->MajorVersion)
+				if (5 <= lpApiVersion->MajorVersion && 1 <= lpApiVersion->MinorVersion)
 				{
-					if (1 <= lpApiVersion->MinorVersion)
+					ms_bCanUseStackBacktraceSym = TRUE;
+
+					ms_SymInitialize = (SYMINITIALIZE)GetProcAddress(hModuleDbghelp, "SymInitializeW");
+					if (!ms_SymInitialize)
 					{
-						ms_bCanUseStackBacktraceSym = TRUE;
-
-						ms_SymInitialize = (SYMINITIALIZE)GetProcAddress(hModuleDbghelp, "SymInitializeW");
-						if (!ms_SymInitialize)
-						{
-							printf("[SymInitializeW] GetProcAddress failed. (%d) \n", GetLastError());
-							__leave;
-						}
-
-						ms_SymCleanup = (SYMCLEANUP)GetProcAddress(hModuleDbghelp, "SymCleanup");
-						if (!ms_SymCleanup)
-						{
-							printf("[SymCleanup] GetProcAddress failed. (%d) \n", GetLastError());
-							__leave;
-						}
-
-						ms_SymSetOptions = (SYMSETOPTIONS)GetProcAddress(hModuleDbghelp, "SymSetOptions");
-						if (!ms_SymSetOptions)
-						{
-							printf("[SymSetOptions] GetProcAddress failed. (%d) \n", GetLastError());
-							__leave;
-						}
-
-						ms_SymGetOptions = (SYMGETOPTIONS)GetProcAddress(hModuleDbghelp, "SymGetOptions");
-						if (!ms_SymGetOptions)
-						{
-							printf("[SymGetOptions] GetProcAddress failed. (%d) \n", GetLastError());
-							__leave;
-						}
-
-						ms_StackWalk64 = (STACKWALK64)GetProcAddress(hModuleDbghelp, "StackWalk64");
-						if (!ms_StackWalk64)
-						{
-							printf("[StackWalk64] GetProcAddress failed. (%d) \n", GetLastError());
-							__leave;
-						}
-
-						ms_SymFromAddr = (SYMFROMADDR)GetProcAddress(hModuleDbghelp, "SymFromAddr");
-						if (!ms_SymFromAddr)
-						{
-							printf("[SymFromAddr] GetProcAddress failed. (%d) \n", GetLastError());
-							__leave;
-						}
-
-						ms_UnDecorateSymbolName = (UNDECORATESYMBOLNAME)GetProcAddress(hModuleDbghelp, "UnDecorateSymbolName");
-						if (!ms_UnDecorateSymbolName)
-						{
-							printf("[UnDecorateSymbolName] GetProcAddress failed. (%d) \n", GetLastError());
-							__leave;
-						}
-
-						ms_SymGetLineFromAddr64 = (SYMGETLINEFROMADDR64)GetProcAddress(hModuleDbghelp, "SymGetLineFromAddr64");
-						if (!ms_SymGetLineFromAddr64)
-						{
-							printf("[SymGetOptions] GetProcAddress failed. (%d) \n", GetLastError());
-							__leave;
-						}
-
-						if (!ms_SymInitialize(ms_hProcess, lpSymDir, TRUE))
-						{
-							printf("SymInitialize failed. (%d) \n", GetLastError());
-							__leave;
-						}
-
-						dwOptions = ms_SymGetOptions();
-						dwOptions |= SYMOPT_LOAD_LINES;
-						ms_SymSetOptions(dwOptions);
+						printf("[SymInitializeW] GetProcAddress failed. (%d) \n", GetLastError());
+						__leave;
 					}
+
+					ms_SymCleanup = (SYMCLEANUP)GetProcAddress(hModuleDbghelp, "SymCleanup");
+					if (!ms_SymCleanup)
+					{
+						printf("[SymCleanup] GetProcAddress failed. (%d) \n", GetLastError());
+						__leave;
+					}
+
+					ms_SymSetOptions = (SYMSETOPTIONS)GetProcAddress(hModuleDbghelp, "SymSetOptions");
+					if (!ms_SymSetOptions)
+					{
+						printf("[SymSetOptions] GetProcAddress failed. (%d) \n", GetLastError());
+						__leave;
+					}
+
+					ms_SymGetOptions = (SYMGETOPTIONS)GetProcAddress(hModuleDbghelp, "SymGetOptions");
+					if (!ms_SymGetOptions)
+					{
+						printf("[SymGetOptions] GetProcAddress failed. (%d) \n", GetLastError());
+						__leave;
+					}
+
+					ms_StackWalk64 = (STACKWALK64)GetProcAddress(hModuleDbghelp, "StackWalk64");
+					if (!ms_StackWalk64)
+					{
+						printf("[StackWalk64] GetProcAddress failed. (%d) \n", GetLastError());
+						__leave;
+					}
+
+					ms_SymFromAddr = (SYMFROMADDR)GetProcAddress(hModuleDbghelp, "SymFromAddr");
+					if (!ms_SymFromAddr)
+					{
+						printf("[SymFromAddr] GetProcAddress failed. (%d) \n", GetLastError());
+						__leave;
+					}
+
+					ms_UnDecorateSymbolName = (UNDECORATESYMBOLNAME)GetProcAddress(hModuleDbghelp, "UnDecorateSymbolName");
+					if (!ms_UnDecorateSymbolName)
+					{
+						printf("[UnDecorateSymbolName] GetProcAddress failed. (%d) \n", GetLastError());
+						__leave;
+					}
+
+					ms_SymGetLineFromAddr64 = (SYMGETLINEFROMADDR64)GetProcAddress(hModuleDbghelp, "SymGetLineFromAddr64");
+					if (!ms_SymGetLineFromAddr64)
+					{
+						printf("[SymGetLineFromAddr64] GetProcAddress failed. (%d) \n", GetLastError());
+						__leave;
+					}
+
+					if (!ms_SymInitialize(ms_hProcess, lpSymDir, TRUE))
+					{
+						printf("SymInitialize failed. (%d) \n", GetLastError());
+						__leave;
+					}
+
+					dwOptions = ms_SymGetOptions();
+					dwOptions |= SYMOPT_LOAD_LINES;
+					ms_SymSetOptions(dwOptions);
 				}
 			}
 		}
