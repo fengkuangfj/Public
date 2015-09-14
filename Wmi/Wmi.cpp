@@ -1,7 +1,10 @@
 #include "Wmi.h"
 
 BOOL
-	CWmi::Query()
+	CWmi::Query(
+	__in LPSTR	lpClass,
+	__in LPTSTR lpContent
+	)
 {
 	BOOL					bRet					= FALSE;
 
@@ -14,16 +17,23 @@ BOOL
 	ULONG					ulReturned				= 0;
 	VARIANT					Variant					= {0};
 	BOOL					bBreakByFailed			= TRUE;
+	CHAR					chSql[MAX_PATH]			= {0};
 
 
 	do 
 	{
+		if (!lpClass || !lpContent)
+		{
+			printfEx(MOD_WMI, PRINTF_LEVEL_ERROR, "input arguments error. 0x%08p 0x%08p", lpClass, lpContent);
+			break;
+		}
+
 		// Step 1: --------------------------------------------------
 		// Initialize COM. ------------------------------------------
 		hResult = CoInitializeEx(NULL, COINIT_MULTITHREADED);
 		if (FAILED(hResult))
 		{
-			printf("[QueryWMI] : CoInitializeEx failed. (%d) \n", hResult);
+			printfEx(MOD_WMI, PRINTF_LEVEL_ERROR, "CoInitializeEx failed. (%d)", hResult);
 			break;
 		}
 
@@ -31,7 +41,6 @@ BOOL
 
 		// Step 2: --------------------------------------------------
 		// Set general COM security levels --------------------------
-		hResult = S_FALSE;
 		hResult = CoInitializeSecurity(
 			NULL,
 			-1,
@@ -45,13 +54,12 @@ BOOL
 			);
 		if (FAILED(hResult))
 		{
-			printf("[QueryWMI] : CoInitializeSecurity failed. (%d) \n", hResult);
+			printfEx(MOD_WMI, PRINTF_LEVEL_ERROR, "CoInitializeSecurity failed. (%d)", hResult);
 			break;
 		}
 
 		// Step 3: ---------------------------------------------------
 		// Obtain the initial locator to WMI -------------------------
-		hResult = S_FALSE;
 		hResult = CoCreateInstance(
 			CLSID_WbemLocator,
 			NULL,
@@ -61,13 +69,12 @@ BOOL
 			);
 		if (FAILED(hResult))
 		{
-			printf("[QueryWMI] : CoCreateInstance failed. (%d) \n", hResult);
+			printfEx(MOD_WMI, PRINTF_LEVEL_ERROR, "CoCreateInstance failed. (%d)", hResult);
 			break;
 		}
 
 		// Step 4: -----------------------------------------------------
 		// Connect to WMI through the IWbemLocator::ConnectServer method
-		hResult = S_FALSE;
 		hResult = pIWbemLocator->ConnectServer(
 			_bstr_t(L"ROOT\\CIMV2"),
 			NULL,
@@ -80,13 +87,12 @@ BOOL
 			);
 		if (FAILED(hResult))
 		{
-			printf("[QueryWMI] : ConnectServer failed. (%d) \n", hResult);
+			printfEx(MOD_WMI, PRINTF_LEVEL_ERROR, "pIWbemLocator->ConnectServer failed. (%d)", hResult);
 			break;
 		}
 
 		// Step 5: --------------------------------------------------
 		// Set security levels on the proxy -------------------------
-		hResult = S_FALSE;
 		hResult = CoSetProxyBlanket(
 			pIWbemServices,
 			RPC_C_AUTHN_WINNT,
@@ -99,23 +105,25 @@ BOOL
 			);
 		if (FAILED(hResult))
 		{
-			printf("[QueryWMI] : CoSetProxyBlanket failed. (%d) \n", hResult);
+			printfEx(MOD_WMI, PRINTF_LEVEL_ERROR, "CoSetProxyBlanket failed. (%d)", hResult);
 			break;
 		}
 
 		// Step 6: --------------------------------------------------
 		// Use the IWbemServices pointer to make requests of WMI ----
-		hResult = S_FALSE;
+		strcat_s(chSql, _countof(chSql), "SELECT * FROM ");
+		strcat_s(chSql, _countof(chSql), lpClass);
+
 		hResult = pIWbemServices->ExecQuery(
 			bstr_t("WQL"),
-			bstr_t("SELECT * FROM Win32_DiskDrive"),
+			bstr_t(chSql),
 			WBEM_FLAG_FORWARD_ONLY | WBEM_FLAG_RETURN_IMMEDIATELY,
 			NULL,
 			&pIEnumWbemClassObject
 			);
 		if (FAILED(hResult))
 		{
-			printf("[QueryWMI] : ExecQuery failed. (%d) \n", hResult);
+			printfEx(MOD_WMI, PRINTF_LEVEL_ERROR, "pIWbemServices->ExecQuery failed. (%d)", hResult);
 			break;
 		}
 
@@ -125,7 +133,6 @@ BOOL
 		{
 			do 
 			{
-				hResult = S_FALSE;
 				hResult = pIEnumWbemClassObject->Next(
 					WBEM_INFINITE,
 					1,
@@ -134,7 +141,7 @@ BOOL
 					);
 				if (FAILED(hResult))
 				{
-					printf("[QueryWMI] : Next failed. (%d) \n", hResult);
+					printfEx(MOD_WMI, PRINTF_LEVEL_ERROR, "pIEnumWbemClassObject->Next failed. (%d)", hResult);
 					break;
 				}
 				else
@@ -146,9 +153,8 @@ BOOL
 					}
 				}
 
-				hResult = S_FALSE;
 				hResult = pIWbemClassObject->Get(
-					L"Caption",
+					lpContent,
 					0,
 					&Variant,
 					NULL,
@@ -156,14 +162,14 @@ BOOL
 					);
 				if (FAILED(hResult))
 				{
-					printf("[QueryWMI] : Get failed. (%d) \n", hResult);
+					printfEx(MOD_WMI, PRINTF_LEVEL_ERROR, "pIWbemClassObject->Get failed. (%d)", hResult);
 					break;
 				}
 
 				if (Variant.bstrVal)
-					printf("[QueryWMI] : Win32_DiskDrive - %S \n", Variant.bstrVal);
+					printfEx(MOD_WMI, PRINTF_LEVEL_INFORMATION, "[%s][%S] %S ", lpClass, lpContent, Variant.bstrVal);
 				else
-					printf("[QueryWMI] : Win32_DiskDrive - \n");
+					printfEx(MOD_WMI, PRINTF_LEVEL_INFORMATION, "[%s][%S] NULL", lpClass, lpContent);
 
 				VariantClear(&Variant);
 				if (pIWbemClassObject)

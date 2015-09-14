@@ -132,7 +132,7 @@ BOOL
 			NULL,
 			0,
 			&VolumeDiskExtents,
-			sizeof(VolumeDiskExtents),
+			sizeof(VOLUME_DISK_EXTENTS),
 			&dwBytesReturned,
 			NULL
 			);  
@@ -142,7 +142,7 @@ BOOL
 			__leave;
 		}
 
-		printfEx(MOD_STORAGE_DEVICE, PRINTF_LEVEL_INFORMATION, "%S - %d - %d", lpPath, VolumeDiskExtents.NumberOfDiskExtents, VolumeDiskExtents.Extents->DiskNumber);
+		printfEx(MOD_STORAGE_DEVICE, PRINTF_LEVEL_INFORMATION, "%S - %d", lpPath, VolumeDiskExtents.Extents->DiskNumber);
 	}
 	__finally
 	{
