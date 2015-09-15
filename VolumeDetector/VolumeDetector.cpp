@@ -7,7 +7,9 @@ BOOL
 	__in LPVOLUME_DETECTOR_INIT_ARGUMENTS lpVolumeDetectorInitArguments
 	)
 {
-	BOOL bRet = FALSE;
+	BOOL	bRet = FALSE;
+
+	CWmi	Wmi;
 
 	printfEx(MOD_VOLUME_DETECTOR, PRINTF_LEVEL_INFORMATION, "begin");
 
@@ -16,6 +18,12 @@ BOOL
 		if (!lpVolumeDetectorInitArguments)
 		{
 			printfEx(MOD_VOLUME_DETECTOR, PRINTF_LEVEL_ERROR, "input argument error");
+			__leave;
+		}
+
+		if (!Wmi.Init())
+		{
+			printfEx(MOD_VOLUME_DETECTOR, PRINTF_LEVEL_ERROR, "Wmi.Init failed");
 			__leave;
 		}
 
@@ -53,7 +61,11 @@ BOOL
 	}
 	__finally
 	{
-		;
+		if (!bRet)
+		{
+			if (!Wmi.Unload())
+				printfEx(MOD_VOLUME_DETECTOR, PRINTF_LEVEL_ERROR, "Wmi.Unload failed");
+		}
 	}
 
 	printfEx(MOD_VOLUME_DETECTOR, PRINTF_LEVEL_INFORMATION, "end");
@@ -64,7 +76,9 @@ BOOL
 BOOL
 	CVolumeDetector::Unload()
 {
-	BOOL bRet = FALSE;
+	BOOL	bRet = FALSE;
+
+	CWmi	Wmi;
 
 	printfEx(MOD_VOLUME_DETECTOR, PRINTF_LEVEL_INFORMATION, "begin");
 
@@ -72,6 +86,9 @@ BOOL
 	{
 		if (ms_VolumeDetectorInternal.hWindow)
 			SendMessage(ms_VolumeDetectorInternal.hWindow, WM_CLOSE, 0, 0);
+
+		if (!Wmi.Unload())
+			printfEx(MOD_VOLUME_DETECTOR, PRINTF_LEVEL_ERROR, "Wmi.Unload failed");
 
 		bRet = TRUE;
 	}

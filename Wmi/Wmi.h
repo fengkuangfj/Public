@@ -13,6 +13,12 @@
 class CWmi
 {
 public:
+	BOOL
+		Init();
+
+	BOOL
+		Unload();
+
 	static
 		BOOL
 		Query(
@@ -20,11 +26,15 @@ public:
 		__in LPTSTR lpContent
 		);
 
-	static
-		BOOL
+	BOOL
 		QueryCaption(
 		__in	ULONG	ulDiskNumber,
 		__out	LPTSTR	lpOutBuf,
 		__in	ULONG	ulOutBufSizeCh
 		);
+
+private:
+	static IWbemLocator		*	ms_pIWbemLocator;
+	static IWbemServices	*	ms_pIWbemServices;
+	static BOOL					ms_bNeedCoUnInit;
 };

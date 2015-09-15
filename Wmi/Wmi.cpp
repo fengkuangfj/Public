@@ -1,5 +1,9 @@
 #include "Wmi.h"
 
+IWbemLocator	*	CWmi::ms_pIWbemLocator	= NULL;
+IWbemServices	*	CWmi::ms_pIWbemServices	= NULL;
+BOOL				CWmi::ms_bNeedCoUnInit	= FALSE;
+
 BOOL
 	CWmi::Query(
 	__in LPSTR	lpClass,
@@ -215,9 +219,7 @@ BOOL
 	BOOL					bRet					= FALSE;
 
 	HRESULT					hResult					= S_FALSE;
-	BOOL					bNeedCoUnInit			= FALSE;
-	IWbemLocator*			pIWbemLocator			= NULL;
-	IWbemServices*			pIWbemServices			= NULL;
+
 	IEnumWbemClassObject*	pIEnumWbemClassObject	= NULL;
 	IWbemClassObject*		pIWbemClassObject		= NULL;
 	ULONG					ulReturned				= 0;
@@ -233,90 +235,9 @@ BOOL
 			break;
 		}
 
-		// Step 1: --------------------------------------------------
-		// Initialize COM. ------------------------------------------
-		hResult = CoInitializeEx(NULL, COINIT_MULTITHREADED);
-		if (FAILED(hResult))
-		{
-			printfEx(MOD_WMI, PRINTF_LEVEL_ERROR, "CoInitializeEx failed. (%d)", hResult);
-			break;
-		}
-
-		bNeedCoUnInit = TRUE;
-
-		// Step 2: --------------------------------------------------
-		// Set general COM security levels --------------------------
-		hResult = CoInitializeSecurity(
-			NULL,
-			-1,
-			NULL,
-			NULL,
-			RPC_C_AUTHN_LEVEL_DEFAULT,
-			RPC_C_IMP_LEVEL_IMPERSONATE,
-			NULL,
-			EOAC_NONE,
-			NULL
-			);
-		if (FAILED(hResult))
-		{
-			printfEx(MOD_WMI, PRINTF_LEVEL_ERROR, "CoInitializeSecurity failed. (%d)", hResult);
-			break;
-		}
-
-		// Step 3: ---------------------------------------------------
-		// Obtain the initial locator to WMI -------------------------
-		hResult = CoCreateInstance(
-			CLSID_WbemLocator,
-			NULL,
-			CLSCTX_INPROC_SERVER,
-			IID_IWbemLocator,
-			(LPVOID *)&pIWbemLocator
-			);
-		if (FAILED(hResult))
-		{
-			printfEx(MOD_WMI, PRINTF_LEVEL_ERROR, "CoCreateInstance failed. (%d)", hResult);
-			break;
-		}
-
-		// Step 4: -----------------------------------------------------
-		// Connect to WMI through the IWbemLocator::ConnectServer method
-		hResult = pIWbemLocator->ConnectServer(
-			_bstr_t(L"ROOT\\CIMV2"),
-			NULL,
-			NULL,
-			NULL,
-			0,
-			NULL,
-			NULL,
-			&pIWbemServices
-			);
-		if (FAILED(hResult))
-		{
-			printfEx(MOD_WMI, PRINTF_LEVEL_ERROR, "pIWbemLocator->ConnectServer failed. (%d)", hResult);
-			break;
-		}
-
-		// Step 5: --------------------------------------------------
-		// Set security levels on the proxy -------------------------
-		hResult = CoSetProxyBlanket(
-			pIWbemServices,
-			RPC_C_AUTHN_WINNT,
-			RPC_C_AUTHZ_NONE,
-			NULL,
-			RPC_C_AUTHN_LEVEL_CALL,
-			RPC_C_IMP_LEVEL_IMPERSONATE,
-			NULL,
-			EOAC_NONE
-			);
-		if (FAILED(hResult))
-		{
-			printfEx(MOD_WMI, PRINTF_LEVEL_ERROR, "CoSetProxyBlanket failed. (%d)", hResult);
-			break;
-		}
-
 		// Step 6: --------------------------------------------------
 		// Use the IWbemServices pointer to make requests of WMI ----
-		hResult = pIWbemServices->ExecQuery(
+		hResult = ms_pIWbemServices->ExecQuery(
 			bstr_t("WQL"),
 			bstr_t("SELECT * FROM Win32_DiskDrive"),
 			WBEM_FLAG_FORWARD_ONLY | WBEM_FLAG_RETURN_IMMEDIATELY,
@@ -339,20 +260,18 @@ BOOL
 					WBEM_INFINITE,
 					1,
 					&pIWbemClassObject,
-					&ulReturned			
+					&ulReturned
 					);
 				if (FAILED(hResult))
 				{
 					printfEx(MOD_WMI, PRINTF_LEVEL_ERROR, "pIEnumWbemClassObject->Next failed. (%d)", hResult);
 					break;
 				}
-				else
+
+				if (!ulReturned)
 				{
-					if (!ulReturned)
-					{
-						bBreakByFailed = FALSE;
-						break;
-					}
+					bBreakByFailed = FALSE;
+					break;
 				}
 
 				hResult = pIWbemClassObject->Get(
@@ -395,6 +314,7 @@ BOOL
 					pIWbemClassObject->Release();
 					pIWbemClassObject = NULL;
 				}
+
 				ulReturned = 0;
 			} while (TRUE);
 
@@ -406,19 +326,158 @@ BOOL
 	} while (FALSE);
 
 	if (pIWbemClassObject)
+	{
 		pIWbemClassObject->Release();
+		pIWbemClassObject = NULL;
+	}
 
 	if (pIEnumWbemClassObject)
+	{
 		pIEnumWbemClassObject->Release();
+		pIEnumWbemClassObject = NULL;
+	}
 
-	if (pIWbemServices)
-		pIWbemServices->Release();
+	return bRet;
+}
 
-	if (pIWbemLocator)
-		pIWbemLocator->Release();
+BOOL
+	CWmi::Init()
+{
+	BOOL	bRet	= FALSE;
 
-	if (bNeedCoUnInit)
-		CoUninitialize();
+	HRESULT	hResult	= S_FALSE;
+
+	printfEx(MOD_WMI, PRINTF_LEVEL_INFORMATION, "begin");
+
+	do 
+	{
+		// Step 1: --------------------------------------------------
+		// Initialize COM. ------------------------------------------
+		hResult = CoInitializeEx(NULL, COINIT_MULTITHREADED);
+		if (FAILED(hResult))
+		{
+			printfEx(MOD_WMI, PRINTF_LEVEL_ERROR, "CoInitializeEx failed. (%d)", hResult);
+			break;
+		}
+
+		ms_bNeedCoUnInit = TRUE;
+
+		// Step 2: --------------------------------------------------
+		// Set general COM security levels --------------------------
+		hResult = CoInitializeSecurity(
+			NULL,
+			-1,
+			NULL,
+			NULL,
+			RPC_C_AUTHN_LEVEL_DEFAULT,
+			RPC_C_IMP_LEVEL_IMPERSONATE,
+			NULL,
+			EOAC_NONE,
+			NULL
+			);
+		if (FAILED(hResult))
+		{
+			printfEx(MOD_WMI, PRINTF_LEVEL_ERROR, "CoInitializeSecurity failed. (%d)", hResult);
+			break;
+		}
+
+		// Step 3: ---------------------------------------------------
+		// Obtain the initial locator to WMI -------------------------
+		hResult = CoCreateInstance(
+			CLSID_WbemLocator,
+			NULL,
+			CLSCTX_INPROC_SERVER,
+			IID_IWbemLocator,
+			(LPVOID *)&ms_pIWbemLocator
+			);
+		if (FAILED(hResult))
+		{
+			printfEx(MOD_WMI, PRINTF_LEVEL_ERROR, "CoCreateInstance failed. (%d)", hResult);
+			break;
+		}
+
+		// Step 4: -----------------------------------------------------
+		// Connect to WMI through the IWbemLocator::ConnectServer method
+		hResult = ms_pIWbemLocator->ConnectServer(
+			_bstr_t(L"ROOT\\CIMV2"),
+			NULL,
+			NULL,
+			NULL,
+			0,
+			NULL,
+			NULL,
+			&ms_pIWbemServices
+			);
+		if (FAILED(hResult))
+		{
+			printfEx(MOD_WMI, PRINTF_LEVEL_ERROR, "pIWbemLocator->ConnectServer failed. (%d)", hResult);
+			break;
+		}
+
+		// Step 5: --------------------------------------------------
+		// Set security levels on the proxy -------------------------
+		hResult = CoSetProxyBlanket(
+			ms_pIWbemServices,
+			RPC_C_AUTHN_WINNT,
+			RPC_C_AUTHZ_NONE,
+			NULL,
+			RPC_C_AUTHN_LEVEL_CALL,
+			RPC_C_IMP_LEVEL_IMPERSONATE,
+			NULL,
+			EOAC_NONE
+			);
+		if (FAILED(hResult))
+		{
+			printfEx(MOD_WMI, PRINTF_LEVEL_ERROR, "CoSetProxyBlanket failed. (%d)", hResult);
+			break;
+		}
+
+		bRet = TRUE;
+	} while (FALSE);
+
+	if (!bRet)
+	{
+		if (!Unload())
+			printfEx(MOD_WMI, PRINTF_LEVEL_ERROR, "Unload failed");
+	}
+
+	printfEx(MOD_WMI, PRINTF_LEVEL_INFORMATION, "end");
+
+	return bRet;
+}
+
+BOOL
+	CWmi::Unload()
+{
+	BOOL bRet = FALSE;
+
+	printfEx(MOD_WMI, PRINTF_LEVEL_INFORMATION, "begin");
+
+	__try
+	{
+		if (ms_pIWbemServices)
+		{
+			ms_pIWbemServices->Release();
+			ms_pIWbemServices = NULL;
+		}
+
+		if (ms_pIWbemLocator)
+		{
+			ms_pIWbemLocator->Release();
+			ms_pIWbemLocator = NULL;
+		}
+
+		if (ms_bNeedCoUnInit)
+			CoUninitialize();
+
+		bRet = TRUE;
+	}
+	__finally
+	{
+		;
+	}
+
+	printfEx(MOD_WMI, PRINTF_LEVEL_INFORMATION, "end");
 
 	return bRet;
 }
