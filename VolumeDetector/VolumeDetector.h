@@ -6,6 +6,7 @@
 #include <Dbt.h>
 
 #include "..\\PrintfEx\\PrintfEx.h"
+#include "..\\StorageDevice\\StorageDevice.h"
 
 #define WND_CLASS_NAME _T("DeviceDetectorWindowClass")
 

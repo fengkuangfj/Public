@@ -19,4 +19,12 @@ public:
 		__in LPSTR	lpClass,
 		__in LPTSTR lpContent
 		);
+
+	static
+		BOOL
+		QueryCaption(
+		__in	ULONG	ulDiskNumber,
+		__out	LPTSTR	lpOutBuf,
+		__in	ULONG	ulOutBufSizeCh
+		);
 };

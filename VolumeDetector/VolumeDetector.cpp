@@ -222,10 +222,11 @@ LRESULT
 	LPARAM	lParam
 	)
 {
-	LRESULT					lRet				= 1;
+	LRESULT					lRet					= 1;
 
-	PDEV_BROADCAST_VOLUME	pDevBroadcastVolume	= NULL;
-	TCHAR					tchName[MAX_PATH]	= {0};
+	PDEV_BROADCAST_VOLUME	pDevBroadcastVolume		= NULL;
+	TCHAR					tchName[MAX_PATH]		= {0};
+	TCHAR					tchCaption[MAX_PATH]	= {0};
 
 
 	__try
@@ -250,7 +251,14 @@ LRESULT
 				{
 				case DBT_DEVICEARRIVAL:
 					{
-						printfEx(MOD_VOLUME_DETECTOR, PRINTF_LEVEL_INFORMATION, "[DBT_DEVICEARRIVAL] system detected a new device. %S", tchName);
+						if (!CStorageDevice::QueryCaption(tchName, tchCaption, _countof(tchCaption)))
+						{
+							printfEx(MOD_VOLUME_DETECTOR, PRINTF_LEVEL_INFORMATION, "[DBT_DEVINSTENUMERATED] CStorageDevice::QueryCaption failed");
+							__leave;
+						}
+
+						printfEx(MOD_VOLUME_DETECTOR, PRINTF_LEVEL_INFORMATION, "[DBT_DEVICEARRIVAL] system detected a new device. %S - %S", tchName, tchCaption);
+
 						break;
 					}
 				case DBT_DEVICEQUERYREMOVE:
@@ -285,7 +293,14 @@ LRESULT
 					}
 				case DBT_DEVINSTENUMERATED:
 					{
-						printfEx(MOD_VOLUME_DETECTOR, PRINTF_LEVEL_INFORMATION, "[DBT_DEVINSTENUMERATED] system detected a new device. %S", tchName);
+						if (!CStorageDevice::QueryCaption(tchName, tchCaption, _countof(tchCaption)))
+						{
+							printfEx(MOD_VOLUME_DETECTOR, PRINTF_LEVEL_INFORMATION, "[DBT_DEVINSTENUMERATED] CStorageDevice::QueryCaption failed");
+							__leave;
+						}
+
+						printfEx(MOD_VOLUME_DETECTOR, PRINTF_LEVEL_INFORMATION, "[DBT_DEVINSTENUMERATED] system detected a new device. %S- %S", tchName, tchCaption);
+
 						break;
 					}
 				case DBT_DEVINSTSTARTED:

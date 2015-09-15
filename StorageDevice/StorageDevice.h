@@ -4,6 +4,7 @@
 #include <tchar.h>
 
 #include "..\\PrintfEx\\PrintfEx.h"
+#include "..\\Wmi\\Wmi.h"
 
 #define MOD_STORAGE_DEVICE _T("¥Ê¥¢…Ë±∏")
 
@@ -27,7 +28,16 @@ public:
 
 	static
 		BOOL
-		GetVolumePhysicalLlocation(  
-		__in LPTSTR lpPath
+		GetVolumePhysicalLlocation(
+		__in	LPTSTR lpPath,
+		__out	PULONG pDiskNumber
+		);
+
+	static
+		BOOL
+		QueryCaption(
+		__in	LPTSTR	lpInBuf,
+		__out	LPTSTR	lpOutBuf,
+		__in	ULONG	ulOutBufSizeCh
 		);
 };

@@ -84,8 +84,9 @@ BOOL
 }
 
 BOOL
-	CStorageDevice::GetVolumePhysicalLlocation(  
-	__in LPTSTR lpPath
+	CStorageDevice::GetVolumePhysicalLlocation(
+	__in	LPTSTR lpPath,
+	__out	PULONG pDiskNumber
 	)
 {
 	BOOL				bRet					= FALSE;
@@ -99,9 +100,9 @@ BOOL
 
 	__try
 	{
-		if (!lpPath)
+		if (!lpPath || !pDiskNumber)
 		{
-			printfEx(MOD_STORAGE_DEVICE, PRINTF_LEVEL_ERROR, "input argument error");
+			printfEx(MOD_STORAGE_DEVICE, PRINTF_LEVEL_ERROR, "input arguments error. 0x%08p 0x%08p", lpPath, pDiskNumber);
 			__leave;
 		}
 
@@ -142,7 +143,7 @@ BOOL
 			__leave;
 		}
 
-		printfEx(MOD_STORAGE_DEVICE, PRINTF_LEVEL_INFORMATION, "%S - %d", lpPath, VolumeDiskExtents.Extents->DiskNumber);
+		*pDiskNumber = VolumeDiskExtents.Extents->DiskNumber;
 	}
 	__finally
 	{
@@ -151,6 +152,48 @@ BOOL
 			CloseHandle(hVolume);
 			hVolume = INVALID_HANDLE_VALUE;
 		}
+	}
+
+	return bRet;
+}
+
+BOOL
+	CStorageDevice::QueryCaption(
+	__in	LPTSTR	lpInBuf,
+	__out	LPTSTR	lpOutBuf,
+	__in	ULONG	ulOutBufSizeCh
+	)
+{
+	BOOL bRet = FALSE;
+
+	ULONG ulDiskNumber = 0;
+
+
+	__try
+	{
+		if (!lpInBuf || !lpOutBuf || !ulOutBufSizeCh)
+		{
+			printfEx(MOD_STORAGE_DEVICE, PRINTF_LEVEL_ERROR, "input arguments error. 0x%08p 0x%08p %d", lpInBuf, lpOutBuf, ulOutBufSizeCh);
+			__leave;
+		}
+
+		if (!GetVolumePhysicalLlocation(lpInBuf, &ulDiskNumber))
+		{
+			printfEx(MOD_STORAGE_DEVICE, PRINTF_LEVEL_ERROR, "GetVolumePhysicalLlocation failed");
+			__leave;
+		}
+
+		if (!CWmi::QueryCaption(ulDiskNumber, lpOutBuf, ulOutBufSizeCh))
+		{
+			printfEx(MOD_STORAGE_DEVICE, PRINTF_LEVEL_ERROR, "CWmi::QueryCaption failed");
+			__leave;
+		}
+
+		bRet = TRUE;
+	}
+	__finally
+	{
+		;
 	}
 
 	return bRet;
