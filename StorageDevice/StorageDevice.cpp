@@ -109,7 +109,7 @@ BOOL
 		_tcscat_s(tchPathSym, _countof(tchPathSym), _T("\\\\.\\"));
 		_tcscat_s(tchPathSym, _countof(tchPathSym), lpPath);
 
-		 CopyMemory(tchVolumeSym, tchPathSym, 5 * sizeof(TCHAR));
+		CopyMemory(tchVolumeSym, tchPathSym, 5 * sizeof(TCHAR));
 		_tcscat_s(tchVolumeSym, _countof(tchVolumeSym), _T(":"));
 
 		hVolume = CreateFile(

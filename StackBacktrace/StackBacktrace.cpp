@@ -219,7 +219,7 @@ BOOL
 		{
 			if (ms_SymCleanup)
 				ms_SymCleanup(ms_hProcess);
-	
+
 			ms_hProcess = NULL;
 		}
 

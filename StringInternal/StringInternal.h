@@ -11,7 +11,7 @@ class CStringInternal
 {
 public:
 	static
-	BOOL
+		BOOL
 		ASCIIToUNICODE(
 		__in	LPSTR	lpInBuf,
 		__out	LPTSTR	lpOutBuf,

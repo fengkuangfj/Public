@@ -189,7 +189,7 @@ HWND
 
 		// Show the window and paint its contents. 
 		ShowWindow(hRet, SW_HIDE); 
-		
+
 		if (!UpdateWindow(hRet))
 		{
 			printfEx(MOD_VOLUME_DETECTOR, PRINTF_LEVEL_ERROR, "UpdateWindow failed. (%d)", GetLastError());

@@ -141,12 +141,6 @@ public:
 	BOOL
 		StackBacktrace();
 
-	BOOL
-		WalkFrameChaim();
-
-	BOOL
-		StackBacktraceSym();
-
 private:
 	static RTLWALKFRAMECHAIN	ms_RtlWalkFrameChain;
 	static HANDLE				ms_hProcess;
@@ -160,4 +154,10 @@ private:
 	static SYMFROMADDR			ms_SymFromAddr;
 	static UNDECORATESYMBOLNAME ms_UnDecorateSymbolName;
 	static SYMGETLINEFROMADDR64 ms_SymGetLineFromAddr64;
+
+	BOOL
+		WalkFrameChaim();
+
+	BOOL
+		StackBacktraceSym();
 };

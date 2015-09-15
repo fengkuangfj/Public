@@ -75,11 +75,11 @@ BOOL
 	BOOL			bRet							= FALSE;
 
 	HANDLE			hFile							= INVALID_HANDLE_VALUE;
- 	TCHAR			tchLog[MAX_PATH]				= {0};
- 	TCHAR			Tmp[MAX_PATH]					= {0};
- 	CHAR			chLog[MAX_PATH * sizeof(TCHAR)] = {0};
- 	LARGE_INTEGER	FileSize						= {0};
- 	DWORD			dwWrite							= 0;
+	TCHAR			tchLog[MAX_PATH]				= {0};
+	TCHAR			Tmp[MAX_PATH]					= {0};
+	CHAR			chLog[MAX_PATH * sizeof(TCHAR)] = {0};
+	LARGE_INTEGER	FileSize						= {0};
+	DWORD			dwWrite							= 0;
 	time_t			rawTime							= 0;
 	tm				timeInfo						= {0};
 	LPTSTR			lpPositon						= NULL;
@@ -164,7 +164,7 @@ BOOL
 
 		// 日志
 		if (lpFmt)
-	 		StringCbVPrintf(Tmp, sizeof(Tmp), lpFmt, Args);
+			StringCbVPrintf(Tmp, sizeof(Tmp), lpFmt, Args);
 		else
 			StringCbPrintf(Tmp, sizeof(Tmp), _T("参数非法"));
 		_tcscat_s(tchLog, _countof(tchLog), Tmp);
