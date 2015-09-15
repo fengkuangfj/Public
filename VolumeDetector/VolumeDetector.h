@@ -53,7 +53,8 @@ public:
 		BinaryToVolume(
 		__in	DWORD	dwBinary,
 		__out	LPTSTR	lpInBuf,
-		__in	ULONG	ulInBufSizeCh
+		__inout	PULONG	ulCount,
+		__in	ULONG	ulPerSizeCh
 		);
 
 private:
@@ -71,5 +72,13 @@ private:
 		GetIndex(
 		__in DWORD dwPower,
 		__in ULONG ulBase
+		);
+
+	static
+		BOOL
+		BinaryToVolumeInternal(
+		__in	DWORD	dwBinary,
+		__out	LPTSTR	lpInBuf,
+		__in	ULONG	ulInBufSizeCh
 		);
 };

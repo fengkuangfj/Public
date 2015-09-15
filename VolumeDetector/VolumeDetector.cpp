@@ -225,8 +225,10 @@ LRESULT
 	LRESULT					lRet					= 1;
 
 	PDEV_BROADCAST_VOLUME	pDevBroadcastVolume		= NULL;
-	TCHAR					tchName[MAX_PATH]		= {0};
+	TCHAR					tchName[26][MAX_PATH]	= {0};
 	TCHAR					tchCaption[MAX_PATH]	= {0};
+	ULONG					ulCount					= 0;
+	ULONG					i						= 0;
 
 
 	__try
@@ -241,88 +243,94 @@ LRESULT
 				if (!pDevBroadcastVolume)
 					break;
 
-				if (!CVolumeDetector::BinaryToVolume(pDevBroadcastVolume->dbcv_unitmask, tchName, _countof(tchName)))
+				ulCount = 26;
+				if (!CVolumeDetector::BinaryToVolume(pDevBroadcastVolume->dbcv_unitmask, (LPTSTR)tchName, &ulCount, MAX_PATH))
 				{
-					printfEx(MOD_VOLUME_DETECTOR, PRINTF_LEVEL_INFORMATION, "BinaryToVolume failed. %I64d", pDevBroadcastVolume->dbcv_unitmask);
+					printfEx(MOD_VOLUME_DETECTOR, PRINTF_LEVEL_INFORMATION, "BinaryToVolume failed. 0x%08x", pDevBroadcastVolume->dbcv_unitmask);
 					break;
 				}
 
-				switch (LOWORD(wParam) | 0x8000)
+				for (; i < ulCount; i++)
 				{
-				case DBT_DEVICEARRIVAL:
+					switch (LOWORD(wParam) | 0x8000)
 					{
-						if (!CStorageDevice::QueryCaption(tchName, tchCaption, _countof(tchCaption)))
+					case DBT_DEVICEARRIVAL:
 						{
-							printfEx(MOD_VOLUME_DETECTOR, PRINTF_LEVEL_INFORMATION, "[DBT_DEVINSTENUMERATED] CStorageDevice::QueryCaption failed");
+							if (!CStorageDevice::QueryCaption(tchName[i], tchCaption, _countof(tchCaption)))
+							{
+								printfEx(MOD_VOLUME_DETECTOR, PRINTF_LEVEL_INFORMATION, "[DBT_DEVINSTENUMERATED] CStorageDevice::QueryCaption failed");
+								__leave;
+							}
+
+							printfEx(MOD_VOLUME_DETECTOR, PRINTF_LEVEL_INFORMATION, "[DBT_DEVICEARRIVAL] system detected a new device. %S - %S", tchName[i], tchCaption);
+
+							break;
+						}
+					case DBT_DEVICEQUERYREMOVE:
+						{
+							printfEx(MOD_VOLUME_DETECTOR, PRINTF_LEVEL_INFORMATION, "wants to remove, may fail. %S", tchName[i]);
+							break;
+						}
+					case DBT_DEVICEQUERYREMOVEFAILED:
+						{
+							printfEx(MOD_VOLUME_DETECTOR, PRINTF_LEVEL_INFORMATION, "removal aborted. %S", tchName[i]);
+							break;
+						}
+					case DBT_DEVICEREMOVEPENDING:
+						{
+							printfEx(MOD_VOLUME_DETECTOR, PRINTF_LEVEL_INFORMATION, "about to remove, still avail. %S", tchName[i]);
+							break;
+						}
+					case DBT_DEVICEREMOVECOMPLETE:
+						{
+							printfEx(MOD_VOLUME_DETECTOR, PRINTF_LEVEL_INFORMATION, "device is gone. %S", tchName[i]);
+							break;
+						}
+					case DBT_DEVICETYPESPECIFIC:
+						{
+							printfEx(MOD_VOLUME_DETECTOR, PRINTF_LEVEL_INFORMATION, "type specific event. %S", tchName[i]);
+							break;
+						}
+					case DBT_CUSTOMEVENT:
+						{
+							printfEx(MOD_VOLUME_DETECTOR, PRINTF_LEVEL_INFORMATION, "user-defined event. %S", tchName[i]);
+							break;
+						}
+					case DBT_DEVINSTENUMERATED:
+						{
+							if (!CStorageDevice::QueryCaption(tchName[i], tchCaption, _countof(tchCaption)))
+							{
+								printfEx(MOD_VOLUME_DETECTOR, PRINTF_LEVEL_INFORMATION, "[DBT_DEVINSTENUMERATED] CStorageDevice::QueryCaption failed");
+								__leave;
+							}
+
+							printfEx(MOD_VOLUME_DETECTOR, PRINTF_LEVEL_INFORMATION, "[DBT_DEVINSTENUMERATED] system detected a new device. %S- %S", tchName[i], tchCaption);
+
+							break;
+						}
+					case DBT_DEVINSTSTARTED:
+						{
+							printfEx(MOD_VOLUME_DETECTOR, PRINTF_LEVEL_INFORMATION, "device installed and started. %S", tchName[i]);
+							break;
+						}
+					case DBT_DEVINSTREMOVED:
+						{
+							printfEx(MOD_VOLUME_DETECTOR, PRINTF_LEVEL_INFORMATION, "device removed from system. %S", tchName[i]);
+							break;
+						}
+					case DBT_DEVINSTPROPERTYCHANGED:
+						{
+							printfEx(MOD_VOLUME_DETECTOR, PRINTF_LEVEL_INFORMATION, "a property on the device changed. %S", tchName[i]);
+							break;
+						}
+					default:
+						{
+							printfEx(MOD_VOLUME_DETECTOR, PRINTF_LEVEL_ERROR, "wParam error. 0x%08x", wParam);
 							__leave;
 						}
+					}
 
-						printfEx(MOD_VOLUME_DETECTOR, PRINTF_LEVEL_INFORMATION, "[DBT_DEVICEARRIVAL] system detected a new device. %S - %S", tchName, tchCaption);
-
-						break;
-					}
-				case DBT_DEVICEQUERYREMOVE:
-					{
-						printfEx(MOD_VOLUME_DETECTOR, PRINTF_LEVEL_INFORMATION, "wants to remove, may fail. %S", tchName);
-						break;
-					}
-				case DBT_DEVICEQUERYREMOVEFAILED:
-					{
-						printfEx(MOD_VOLUME_DETECTOR, PRINTF_LEVEL_INFORMATION, "removal aborted. %S", tchName);
-						break;
-					}
-				case DBT_DEVICEREMOVEPENDING:
-					{
-						printfEx(MOD_VOLUME_DETECTOR, PRINTF_LEVEL_INFORMATION, "about to remove, still avail. %S", tchName);
-						break;
-					}
-				case DBT_DEVICEREMOVECOMPLETE:
-					{
-						printfEx(MOD_VOLUME_DETECTOR, PRINTF_LEVEL_INFORMATION, "device is gone. %S", tchName);
-						break;
-					}
-				case DBT_DEVICETYPESPECIFIC:
-					{
-						printfEx(MOD_VOLUME_DETECTOR, PRINTF_LEVEL_INFORMATION, "type specific event. %S", tchName);
-						break;
-					}
-				case DBT_CUSTOMEVENT:
-					{
-						printfEx(MOD_VOLUME_DETECTOR, PRINTF_LEVEL_INFORMATION, "user-defined event. %S", tchName);
-						break;
-					}
-				case DBT_DEVINSTENUMERATED:
-					{
-						if (!CStorageDevice::QueryCaption(tchName, tchCaption, _countof(tchCaption)))
-						{
-							printfEx(MOD_VOLUME_DETECTOR, PRINTF_LEVEL_INFORMATION, "[DBT_DEVINSTENUMERATED] CStorageDevice::QueryCaption failed");
-							__leave;
-						}
-
-						printfEx(MOD_VOLUME_DETECTOR, PRINTF_LEVEL_INFORMATION, "[DBT_DEVINSTENUMERATED] system detected a new device. %S- %S", tchName, tchCaption);
-
-						break;
-					}
-				case DBT_DEVINSTSTARTED:
-					{
-						printfEx(MOD_VOLUME_DETECTOR, PRINTF_LEVEL_INFORMATION, "device installed and started. %S", tchName);
-						break;
-					}
-				case DBT_DEVINSTREMOVED:
-					{
-						printfEx(MOD_VOLUME_DETECTOR, PRINTF_LEVEL_INFORMATION, "device removed from system. %S", tchName);
-						break;
-					}
-				case DBT_DEVINSTPROPERTYCHANGED:
-					{
-						printfEx(MOD_VOLUME_DETECTOR, PRINTF_LEVEL_INFORMATION, "a property on the device changed. %S", tchName);
-						break;
-					}
-				default:
-					{
-						printfEx(MOD_VOLUME_DETECTOR, PRINTF_LEVEL_ERROR, "wParam error. 0x%08x", wParam);
-						__leave;
-					}
+					ZeroMemory(tchCaption, sizeof(tchCaption));
 				}
 
 				break;
@@ -353,7 +361,7 @@ LRESULT
 }
 
 BOOL
-	CVolumeDetector::BinaryToVolume(
+	CVolumeDetector::BinaryToVolumeInternal(
 	__in	DWORD	dwBinary,
 	__out	LPTSTR	lpInBuf,
 	__in	ULONG	ulInBufSizeCh
@@ -368,7 +376,7 @@ BOOL
 	{
 		if (!dwBinary || !lpInBuf || !ulInBufSizeCh)
 		{
-			printfEx(MOD_VOLUME_DETECTOR, PRINTF_LEVEL_ERROR, "input arguments error. %I64d 0x%08p %d", dwBinary, lpInBuf, ulInBufSizeCh);
+			printfEx(MOD_VOLUME_DETECTOR, PRINTF_LEVEL_ERROR, "input arguments error. 0x%08x 0x%08p %d", dwBinary, lpInBuf, ulInBufSizeCh);
 			__leave;
 		}
 
@@ -404,7 +412,7 @@ ULONG
 	{
 		if (!dwPower || (1 == dwPower && 1 == ulBase))
 		{
-			printfEx(MOD_VOLUME_DETECTOR, PRINTF_LEVEL_ERROR, "input arguments error. %I64d %d", dwPower, ulBase);
+			printfEx(MOD_VOLUME_DETECTOR, PRINTF_LEVEL_ERROR, "input arguments error. 0x%08x %d", dwPower, ulBase);
 			__leave;
 		}
 
@@ -416,7 +424,7 @@ ULONG
 			{
 				if (1 != dwRemainder)
 				{
-					printfEx(MOD_VOLUME_DETECTOR, PRINTF_LEVEL_ERROR, "dwPower error. %I64d %d", dwPower, ulBase);
+					printfEx(MOD_VOLUME_DETECTOR, PRINTF_LEVEL_ERROR, "dwPower error. 0x%08x %d", dwPower, ulBase);
 					__leave;
 				}
 
@@ -432,4 +440,52 @@ ULONG
 	}
 
 	return ulRet;
+}
+
+BOOL
+	CVolumeDetector::BinaryToVolume(
+	__in	DWORD	dwBinary,
+	__out	LPTSTR	lpInBuf,
+	__inout	PULONG	ulCount,
+	__in	ULONG	ulPerSizeCh
+	)
+{
+	BOOL	bRet	= FALSE;
+
+	ULONG	i		= 25;
+	ULONG	j		= 0;
+
+
+	__try
+	{
+		if (!dwBinary || !lpInBuf || !ulCount || !ulPerSizeCh)
+		{
+			printfEx(MOD_VOLUME_DETECTOR, PRINTF_LEVEL_ERROR, "input arguments error. 0x%08x 0x%08p 0x%08p %d", dwBinary, lpInBuf, ulCount, ulPerSizeCh);
+			__leave;
+		}
+
+		for (; i > 0; i--)
+		{
+			if (1 == dwBinary >> i)
+			{
+				if (!BinaryToVolumeInternal(1 << i, lpInBuf + (j++) * ulPerSizeCh, ulPerSizeCh))
+				{
+					printfEx(MOD_VOLUME_DETECTOR, PRINTF_LEVEL_INFORMATION, "BinaryToVolumeInternal failed. 0x%08x - 0x%08x", dwBinary, 1 << i);
+					break;
+				}
+
+				dwBinary &= ~(1 << i);
+			}
+		}
+
+		*ulCount = j;
+
+		bRet = TRUE;
+	}
+	__finally
+	{
+		;
+	}
+
+	return bRet;
 }

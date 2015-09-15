@@ -13,6 +13,12 @@
 class CWmi
 {
 public:
+// 	BOOL
+// 		Init();
+// 
+// 	BOOL
+// 		Unload();
+
 	static
 		BOOL
 		Query(

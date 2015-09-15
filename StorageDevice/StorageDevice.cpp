@@ -164,9 +164,9 @@ BOOL
 	__in	ULONG	ulOutBufSizeCh
 	)
 {
-	BOOL bRet = FALSE;
+	BOOL	bRet			= FALSE;
 
-	ULONG ulDiskNumber = 0;
+	ULONG	ulDiskNumber	= 0;
 
 
 	__try
