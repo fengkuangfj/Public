@@ -4,6 +4,7 @@
 
 #include <Windows.h>
 #include <Dbt.h>
+#include <process.h>
 
 #include "..\\PrintfEx\\PrintfEx.h"
 #include "..\\StorageDevice\\StorageDevice.h"
@@ -34,6 +35,12 @@ typedef struct _VOLUME_DETECTOR_INTERNAL
 	BOOL	bCreateMassageLoop;
 } VOLUME_DETECTOR_INTERNAL, *PVOLUME_DETECTOR_INTERNAL, *LPVOLUME_DETECTOR_INTERNAL;
 
+typedef struct _WM_DEVICECHANGE_WORKTHREAD_ARGUMENTS
+{
+	DEV_BROADCAST_VOLUME	DevBroadcastVolume;
+	WPARAM					wParam;
+} WM_DEVICECHANGE_WORKTHREAD_ARGUMENTS, *PWM_DEVICECHANGE_WORKTHREAD_ARGUMENTS, *LPWM_DEVICECHANGE_WORKTHREAD_ARGUMENTS;
+
 class CVolumeDetector
 {
 public:
@@ -55,6 +62,13 @@ public:
 		__out	LPTSTR	lpInBuf,
 		__inout	PULONG	ulCount,
 		__in	ULONG	ulPerSizeCh
+		);
+
+	static
+		unsigned int
+		__stdcall
+		WmDeviceChangeWorkThread(
+		__in void * lpParameter
 		);
 
 private:
