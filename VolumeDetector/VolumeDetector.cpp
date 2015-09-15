@@ -122,7 +122,9 @@ BOOL
 				__leave;
 			}
 
-			TranslateMessage(&msg);
+			if (!TranslateMessage(&msg))
+				printfEx(MOD_VOLUME_DETECTOR, PRINTF_LEVEL_ERROR, "TranslateMessage failed. (%d)", GetLastError());
+
 			DispatchMessage(&msg);
 		}
 
@@ -254,6 +256,9 @@ LRESULT
 			break;
 		case WM_DEVICECHANGE:
 			{
+				if (!lParam)
+					break;
+
 				lpWmDevicechangeWorkthreadArguments = (LPWM_DEVICECHANGE_WORKTHREAD_ARGUMENTS)calloc(1, sizeof(WM_DEVICECHANGE_WORKTHREAD_ARGUMENTS));
 				if (!lpWmDevicechangeWorkthreadArguments)
 				{

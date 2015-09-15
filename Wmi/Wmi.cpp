@@ -12,7 +12,7 @@ BOOL
 {
 	BOOL					bRet					= FALSE;
 
-	HRESULT					hResult					= S_FALSE;
+	HRESULT					hResult					= E_UNEXPECTED;
 	BOOL					bNeedCoUnInit			= FALSE;
 	IWbemLocator*			pIWbemLocator			= NULL;
 	IWbemServices*			pIWbemServices			= NULL;
@@ -218,7 +218,7 @@ BOOL
 {
 	BOOL					bRet					= FALSE;
 
-	HRESULT					hResult					= S_FALSE;
+	HRESULT					hResult					= E_UNEXPECTED;
 
 	IEnumWbemClassObject*	pIEnumWbemClassObject	= NULL;
 	IWbemClassObject*		pIWbemClassObject		= NULL;
@@ -345,7 +345,7 @@ BOOL
 {
 	BOOL	bRet	= FALSE;
 
-	HRESULT	hResult	= S_FALSE;
+	HRESULT	hResult	= E_UNEXPECTED;
 
 	printfEx(MOD_WMI, PRINTF_LEVEL_INFORMATION, "begin");
 

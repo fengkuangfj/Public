@@ -334,7 +334,7 @@ BOOL
 {
 	BOOL	bRet								= FALSE;
 
-	HRESULT	hResult								= S_FALSE;
+	HRESULT	hResult								= E_UNEXPECTED;
 	TCHAR	tchCmdLine[RESTART_MAX_CMD_LINE]	= {0};
 
 
@@ -679,7 +679,7 @@ BOOL
 {
 	BOOL						bRet						= FALSE;
 
-	HRESULT						hResult						= S_FALSE;
+	HRESULT						hResult						= E_UNEXPECTED;
 	WER_REPORT_INFORMATION		WerReportInfo				= {0};
 	HREPORT						hReport						= NULL;
 	WER_EXCEPTION_INFORMATION	WerExceptionInfo			= {0};

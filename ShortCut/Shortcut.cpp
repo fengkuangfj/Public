@@ -8,7 +8,7 @@ BOOL
 {
 	BOOL				bRet					= FALSE;
 
-	HRESULT				hResult					= S_FALSE;
+	HRESULT				hResult					= E_UNEXPECTED;
 	LPITEMIDLIST		lpItemIdList			= NULL;
 	TCHAR				tchLnkPath[MAX_PATH]	= {0};
 	IShellLink		*	pIShellLink				= NULL;
