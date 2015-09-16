@@ -44,6 +44,8 @@ public:
 	BOOL
 		Install(
 		__in		LPWSTR	lpServiceName,
+		__in_opt	LPWSTR	lpDisplayName,
+		__in_opt	LPWSTR	lpDescription,
 		__in		DWORD	dwServiceType,
 		__in		DWORD	dwStartType,
 		__in_opt	DWORD	dwErrorControl,

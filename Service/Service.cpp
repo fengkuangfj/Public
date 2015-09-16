@@ -15,6 +15,8 @@ INIT_MOD_ARGUMENTS					CService::ms_InitModArguments			= {0};
 BOOL
 	CService::Install(
 	__in		LPWSTR	lpServiceName,
+	__in_opt	LPWSTR	lpDisplayName,
+	__in_opt	LPWSTR	lpDescription,
 	__in		DWORD	dwServiceType,
 	__in		DWORD	dwStartType,
 	__in_opt	DWORD	dwErrorControl,
@@ -37,6 +39,7 @@ BOOL
 	BOOL					bWow64DisableWow64FsRedirection = FALSE;
 	HMODULE					hModule							= NULL;
 	OS_PROC_TYPE			OsProcType						= OS_PROC_TYPE_UNKNOWN;
+	WCHAR					wchSubKey[MAX_PATH]				= {0};
 
 	COperationSystemVersion	OperationSystemVersion;
 
@@ -176,7 +179,7 @@ BOOL
 		hService = CreateService(
 			hScManager,
 			lpServiceName,
-			lpServiceName,
+			lpDisplayName ? lpDisplayName : lpServiceName,
 			SERVICE_ALL_ACCESS,
 			dwServiceType,
 			dwStartType,
@@ -419,12 +422,101 @@ BOOL
 			}
 		case SERVICE_WIN32_OWN_PROCESS:
 		case SERVICE_WIN32_SHARE_PROCESS:
-		case SERVICE_INTERACTIVE_PROCESS:
-			break;
+			{
+				wcscat_s(wchSubKey, _countof(wchSubKey), L"SYSTEM\\CurrentControlSet\\services\\");
+				wcscat_s(wchSubKey, _countof(wchSubKey), lpServiceName);
+
+				lResult = RegOpenKeyEx(
+					HKEY_LOCAL_MACHINE,
+					wchSubKey,
+					0,
+					KEY_ALL_ACCESS,
+					&hkResult
+					);
+				if (ERROR_SUCCESS != lResult)
+				{
+					printfEx(MOD_SERVICE, PRINTF_LEVEL_ERROR, "RegOpenKeyEx failed. (0x%08x)", lResult);
+					__leave;
+				}
+
+				if (!hkResult)
+				{
+					printfEx(MOD_SERVICE, PRINTF_LEVEL_ERROR, "hkResult error");
+					__leave;
+				}
+
+				lResult = RegSetValueEx(
+					hkResult,
+					L"Description",
+					0,
+					REG_SZ,
+					(const BYTE *)(lpDescription ? lpDescription : (lpDisplayName ? lpDisplayName : lpServiceName)),
+					wcslen(lpDescription ? lpDescription : (lpDisplayName ? lpDisplayName : lpServiceName)) * sizeof(WCHAR)
+					);
+				if (ERROR_SUCCESS != lResult)
+				{
+					printfEx(MOD_SERVICE, PRINTF_LEVEL_ERROR, "RegSetValueEx failed. (0x%08x)", lResult);
+					__leave;
+				}
+
+				lResult = RegFlushKey(hkResult);
+				if (ERROR_SUCCESS != lResult)
+				{
+					printfEx(MOD_SERVICE, PRINTF_LEVEL_ERROR, "RegFlushKey failed. (0x%08x)", lResult);
+					__leave;
+				}
+
+				break;
+			}
 		default:
 			{
 				if (SERVICE_WIN32_OWN_PROCESS & dwServiceType || SERVICE_WIN32_SHARE_PROCESS & dwServiceType)
+				{
+					wcscat_s(wchSubKey, _countof(wchSubKey), L"SYSTEM\\CurrentControlSet\\services\\");
+					wcscat_s(wchSubKey, _countof(wchSubKey), lpServiceName);
+
+					lResult = RegOpenKeyEx(
+						HKEY_LOCAL_MACHINE,
+						wchSubKey,
+						0,
+						KEY_ALL_ACCESS,
+						&hkResult
+						);
+					if (ERROR_SUCCESS != lResult)
+					{
+						printfEx(MOD_SERVICE, PRINTF_LEVEL_ERROR, "RegOpenKeyEx failed. (0x%08x)", lResult);
+						__leave;
+					}
+
+					if (!hkResult)
+					{
+						printfEx(MOD_SERVICE, PRINTF_LEVEL_ERROR, "hkResult error");
+						__leave;
+					}
+
+					lResult = RegSetValueEx(
+						hkResult,
+						L"Description",
+						0,
+						REG_SZ,
+						(const BYTE *)(lpDescription ? lpDescription : (lpDisplayName ? lpDisplayName : lpServiceName)),
+						wcslen(lpDescription ? lpDescription : (lpDisplayName ? lpDisplayName : lpServiceName)) * sizeof(WCHAR)
+						);
+					if (ERROR_SUCCESS != lResult)
+					{
+						printfEx(MOD_SERVICE, PRINTF_LEVEL_ERROR, "RegSetValueEx failed. (0x%08x)", lResult);
+						__leave;
+					}
+
+					lResult = RegFlushKey(hkResult);
+					if (ERROR_SUCCESS != lResult)
+					{
+						printfEx(MOD_SERVICE, PRINTF_LEVEL_ERROR, "RegFlushKey failed. (0x%08x)", lResult);
+						__leave;
+					}
+
 					break;
+				}
 
 				printfEx(MOD_SERVICE, PRINTF_LEVEL_ERROR, "dwServiceType error. 0x%08x", dwServiceType);
 				__leave;
