@@ -12,6 +12,7 @@ public:
 		BOOL
 		Execute(
 		__in LPTSTR	lpCmdLine,
-		__in BOOL	bWaitUntilCmdExit
+		__in BOOL	bWaitUntilCmdExit,
+		__in BOOL	bCreateNewConsole
 		);
 };

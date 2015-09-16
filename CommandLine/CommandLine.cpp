@@ -3,7 +3,8 @@
 BOOL
 	CCommandLine::Execute(
 	__in LPTSTR	lpCmdLine,
-	__in BOOL	bWaitUntilCmdExit
+	__in BOOL	bWaitUntilCmdExit,
+	__in BOOL	bCreateNewConsole
 	)
 {
 	BOOL				bRet				= FALSE;
@@ -36,7 +37,7 @@ BOOL
 			NULL,
 			NULL,
 			FALSE,
-			CREATE_NEW_CONSOLE,
+			bCreateNewConsole ? CREATE_NEW_CONSOLE : 0,
 			NULL,
 			NULL,
 			&StartupInfo,
