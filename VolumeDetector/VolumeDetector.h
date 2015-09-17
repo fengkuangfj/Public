@@ -5,6 +5,7 @@
 #include <Windows.h>
 #include <Dbt.h>
 #include <process.h>
+#include <math.h>
 
 #include "..\\PrintfEx\\PrintfEx.h"
 #include "..\\StorageDevice\\StorageDevice.h"
@@ -79,13 +80,6 @@ private:
 		__in_opt LPTSTR		lpModuleName,
 		__in_opt HINSTANCE	hPrevInstance,
 		__in_opt WNDPROC	lpfnWndProc
-		);
-
-	static
-		ULONG
-		GetIndex(
-		__in DWORD dwPower,
-		__in ULONG ulBase
 		);
 
 	static

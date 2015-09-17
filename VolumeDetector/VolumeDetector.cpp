@@ -341,7 +341,7 @@ BOOL
 			__leave;
 		}
 
-		ulIndex = GetIndex(dwBinary, 2);
+		ulIndex = (ULONG)(log10((double)dwBinary) / log10(2.0) + 0.5);
 
 		ZeroMemory(lpInBuf, ulInBufSizeCh * sizeof(TCHAR));
 		_tcscat_s(lpInBuf, ulInBufSizeCh, _T("A:"));
@@ -356,51 +356,6 @@ BOOL
 	}
 
 	return bRet;
-}
-
-ULONG
-	CVolumeDetector::GetIndex(
-	__in DWORD dwPower,
-	__in ULONG ulBase
-	)
-{
-	ULONG	ulRet		= 0;
-
-	DWORD	dwRemainder = 0;
-
-
-	__try
-	{
-		if (!dwPower || (1 == dwPower && 1 == ulBase))
-		{
-			printfEx(MOD_VOLUME_DETECTOR, PRINTF_LEVEL_ERROR, "input arguments error. 0x%08x %d", dwPower, ulBase);
-			__leave;
-		}
-
-		do 
-		{
-			dwRemainder = dwPower % ulBase;
-			dwPower /= ulBase;
-			if (dwRemainder)
-			{
-				if (1 != dwRemainder)
-				{
-					printfEx(MOD_VOLUME_DETECTOR, PRINTF_LEVEL_ERROR, "dwPower error. 0x%08x %d", dwPower, ulBase);
-					__leave;
-				}
-
-				break;
-			}
-
-			ulRet++;
-		} while (TRUE);
-	}
-	__finally
-	{
-		;
-	}
-
-	return ulRet;
 }
 
 BOOL
