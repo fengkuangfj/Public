@@ -413,8 +413,9 @@ BOOL
 {
 	BOOL	bRet	= FALSE;
 
-	ULONG	i		= 25;
+	ULONG	i		= 0;
 	ULONG	j		= 0;
+	DWORD	dwTemp	= 0;
 
 
 	__try
@@ -425,17 +426,19 @@ BOOL
 			__leave;
 		}
 
-		for (; i > 0; i--)
+		for (; i < 26; i++)
 		{
-			if (1 == dwBinary >> i)
+			if (BitTest((const LONG *)&dwBinary, i))
 			{
-				if (!BinaryToVolumeInternal(1 << i, lpInBuf + (j++) * ulPerSizeCh, ulPerSizeCh))
+				BitTestAndSet((LONG *)&dwTemp, i);
+
+				if (!BinaryToVolumeInternal(dwTemp, lpInBuf + (j++) * ulPerSizeCh, ulPerSizeCh))
 				{
 					printfEx(MOD_VOLUME_DETECTOR, PRINTF_LEVEL_INFORMATION, "BinaryToVolumeInternal failed. 0x%08x - 0x%08x", dwBinary, 1 << i);
 					break;
 				}
 
-				dwBinary &= ~(1 << i);
+				dwTemp = 0;
 			}
 		}
 
