@@ -57,15 +57,6 @@ public:
 		MessageLoop();
 
 	static
-		BOOL
-		BinaryToVolume(
-		__in	DWORD	dwBinary,
-		__out	LPTSTR	lpInBuf,
-		__inout	PULONG	ulCount,
-		__in	ULONG	ulPerSizeCh
-		);
-
-	static
 		unsigned int
 		__stdcall
 		WmDeviceChangeWorkThread(
@@ -84,7 +75,7 @@ private:
 
 	static
 		BOOL
-		BinaryToVolumeInternal(
+		BinaryToVolume(
 		__in	DWORD	dwBinary,
 		__out	LPTSTR	lpInBuf,
 		__in	ULONG	ulInBufSizeCh
