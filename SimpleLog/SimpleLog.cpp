@@ -58,7 +58,7 @@ __in LPTSTR lpLogPath
 			CloseHandle(hFile);
 
 		if (bRet)
-			CSimpleLogWrite(MOD_SIMPLE_LOG, _T("日志模块初始化成功"));
+			CSimpleLogWrite(MOD_SIMPLE_LOG, _T("初始化成功"));
 	}
 
 	return bRet;
