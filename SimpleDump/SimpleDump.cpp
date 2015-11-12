@@ -1,53 +1,30 @@
 #include "SimpleDump.h"
 
-MINIDUMP_TYPE					CSimpleDump::ms_MinidumpType						= MiniDumpNormal;
-BOOL							CSimpleDump::ms_bRestart							= FALSE;
-HMODULE							CSimpleDump::ms_hModule								= NULL;
-APPLICATION_TYPE				CSimpleDump::ms_ApplicationType						= APPLICATION_TYPE_UNKNOWN;
-PROGRAM_TYPE					CSimpleDump::ms_ProgramType							= PROGRAM_TYPE_TYPE_UNKNOWN;
-LPTSTR							CSimpleDump::ms_lpCmdLine							= NULL;
-TCHAR							CSimpleDump::ms_tchRestartTag[MAX_PATH]				= {0};
+MINIDUMP_TYPE					CSimpleDump::ms_MinidumpType = MiniDumpNormal;
+BOOL							CSimpleDump::ms_bRestart = FALSE;
+HMODULE							CSimpleDump::ms_hModule = NULL;
+APPLICATION_TYPE				CSimpleDump::ms_ApplicationType = APPLICATION_TYPE_UNKNOWN;
+PROGRAM_TYPE					CSimpleDump::ms_ProgramType = PROGRAM_TYPE_TYPE_UNKNOWN;
+LPTSTR							CSimpleDump::ms_lpCmdLine = NULL;
+TCHAR							CSimpleDump::ms_tchRestartTag[MAX_PATH] = { 0 };
 
-RESTART							CSimpleDump::ms_Restart								= NULL;
+RESTART							CSimpleDump::ms_Restart = NULL;
 
-HMODULE							CSimpleDump::ms_hModuleKernel32Dll					= NULL;
-BOOL							CSimpleDump::ms_bCanUseGetOSVersionByIsOrGreater	= FALSE;
-IS_WINDOWS_SERVER				CSimpleDump::IsWindowsServer						= NULL;
-IS_WINDOWS_10_OR_GREATER		CSimpleDump::IsWindows1OrGreater					= NULL;
-IS_WINDOWS_8_POINT_1_OR_GREATER	CSimpleDump::IsWindows8Point1OrGreater				= NULL;
-IS_WINDOWS_8_OR_GREATER			CSimpleDump::IsWindows8OrGreater					= NULL;
-IS_WINDOWS_7_SP_1_OR_GREATER	CSimpleDump::IsWindows7SP1OrGreater					= NULL;
-IS_WINDOWS_7_OR_GREATER			CSimpleDump::IsWindows7OrGreater					= NULL;
-IS_WINDOWS_VISTA_SP2_OR_GREATER	CSimpleDump::IsWindowsVistaSP2OrGreater				= NULL;
-IS_WINDOWS_VISTA_SP1_OR_GREATER	CSimpleDump::IsWindowsVistaSP1OrGreater				= NULL;
-IS_WINDOWS_VISTA_OR_GREATER		CSimpleDump::IsWindowsVistaOrGreater				= NULL;
-IS_WINDOWS_XP_SP3_OR_GREATER	CSimpleDump::IsWindowsXPSP3OrGreater				= NULL;
-IS_WINDOWS_XP_SP2_OR_GREATER	CSimpleDump::IsWindowsXPSP2OrGreater				= NULL;
-IS_WINDOWS_XP_SP1_OR_GREATER	CSimpleDump::IsWindowsXPSP1OrGreater				= NULL;
-IS_WINDOWS_XP_OR_GREATER		CSimpleDump::IsWindowsXPOrGreater					= NULL;
-
-BOOL							CSimpleDump::ms_bCanUseRegisterRestart				= FALSE;
-REGISTER_APPLICATION_RESTART	CSimpleDump::RegisterApplicationRestart				= NULL;
-
-HMODULE							CSimpleDump::ms_hModuleWerDll						= NULL;
-BOOL							CSimpleDump::ms_bCanUseGenWerReport					= FALSE;
-WER_REPORT_CREATE				CSimpleDump::WerReportCreate						= NULL;
-WER_REPORT_SET_PARAMETER		CSimpleDump::WerReportSetParameter					= NULL;
-WER_REPORT_ADD_DUMP				CSimpleDump::WerReportAddDump						= NULL;
-WER_REPORT_SUBMIT				CSimpleDump::WerReportSubmit						= NULL;
-WER_REPORT_CLOSE_HANDLE			CSimpleDump::WerReportCloseHandle					= NULL;
+HMODULE							CSimpleDump::ms_hModuleKernel32Dll = NULL;
+BOOL							CSimpleDump::ms_bCanUseRegisterRestart = FALSE;
+REGISTER_APPLICATION_RESTART	CSimpleDump::RegisterApplicationRestart = NULL;
 
 
 BOOL
-	CSimpleDump::GenRestartCmdLine(
-	__inout LPTSTR	pCmdLine,
-	__in	ULONG	ulCharacters
-	)
+CSimpleDump::GenRestartCmdLine(
+__inout LPTSTR	pCmdLine,
+__in	ULONG	ulCharacters
+)
 {
-	BOOL	bRet				= FALSE;
+	BOOL	bRet = FALSE;
 
-	int		i					= 0;
-	TCHAR	tchArgv[MAX_PATH]	= {0};
+	int		i = 0;
+	TCHAR	tchArgv[MAX_PATH] = { 0 };
 
 
 	__try
@@ -56,7 +33,7 @@ BOOL
 			__leave;
 
 		if (APPLICATION_TYPE_NOT_CONSOLE == ms_ApplicationType)
-			_tcscat_s(pCmdLine, ulCharacters, _T(" "));	
+			_tcscat_s(pCmdLine, ulCharacters, _T(" "));
 
 		if (ms_lpCmdLine && _tcslen(ms_lpCmdLine))
 		{
@@ -80,14 +57,14 @@ BOOL
 *默认重启客户端处理函数
 */
 VOID
-	CSimpleDump::DefaultRestartFunc()
+CSimpleDump::DefaultRestartFunc()
 {
-	STARTUPINFO			si						= {0};
-	PROCESS_INFORMATION pi						= {0};
-	TCHAR				tchProcPath[MAX_PATH]	= {0};
-	TCHAR				tchInfo[MAX_PATH]		= {0};
-	LPTSTR				lpProcName				= NULL;
-	LPTSTR				lpCmdLine				= NULL;
+	STARTUPINFO			si = { 0 };
+	PROCESS_INFORMATION pi = { 0 };
+	TCHAR				tchProcPath[MAX_PATH] = { 0 };
+	TCHAR				tchInfo[MAX_PATH] = { 0 };
+	LPTSTR				lpProcName = NULL;
+	LPTSTR				lpCmdLine = NULL;
 
 
 	__try
@@ -155,17 +132,17 @@ VOID
 }
 
 BOOL
-	CSimpleDump::BeenRunningMinimum60Seconds()
+CSimpleDump::BeenRunningMinimum60Seconds()
 {
-	BOOL		bRet				= FALSE;
+	BOOL		bRet = FALSE;
 
-	FILETIME	CreationTime		= {0};
-	FILETIME	ExitTime			= {0};
-	FILETIME	KernelTime			= {0};
-	FILETIME	UserTime			= {0};
-	SYSTEMTIME	SystemTimeCreate	= {0};
-	SYSTEMTIME	SystemTimeNow		= {0};
-	WORD		wMilliseconds		= 0;
+	FILETIME	CreationTime = { 0 };
+	FILETIME	ExitTime = { 0 };
+	FILETIME	KernelTime = { 0 };
+	FILETIME	UserTime = { 0 };
+	SYSTEMTIME	SystemTimeCreate = { 0 };
+	SYSTEMTIME	SystemTimeNow = { 0 };
+	WORD		wMilliseconds = 0;
 
 
 	__try
@@ -233,16 +210,14 @@ BOOL
 }
 
 LONG
-	WINAPI
-	CSimpleDump::ExceptionHandler(
-	_In_ struct _EXCEPTION_POINTERS* pExceptionInfo
-	)
+WINAPI
+CSimpleDump::ExceptionHandler(
+_In_ struct _EXCEPTION_POINTERS* pExceptionInfo
+)
 {
 	PEXCEPTION_RECORD	pExceptionRecored = NULL;
 
-#ifdef _CORE_
-	CCommUm				CommUm;
-#endif
+	COsVersion			OsVersion;
 
 
 	__try
@@ -252,26 +227,19 @@ LONG
 
 		pExceptionRecored = pExceptionInfo->ExceptionRecord;
 
-		do 
+		do
 		{
 			__try
 			{
 				// 过滤4个RPC异常和一个调试处理异常(OutputDebugString)
-				if (RPC_S_SERVER_UNAVAILABLE	== pExceptionRecored->ExceptionCode ||
-					RPC_S_SERVER_TOO_BUSY		== pExceptionRecored->ExceptionCode ||
-					RPC_S_CALL_FAILED_DNE		== pExceptionRecored->ExceptionCode ||
-					RPC_S_CALL_FAILED			== pExceptionRecored->ExceptionCode ||
-					DBG_PRINTEXCEPTION_C		== pExceptionRecored->ExceptionCode)
+				if (RPC_S_SERVER_UNAVAILABLE == pExceptionRecored->ExceptionCode ||
+					RPC_S_SERVER_TOO_BUSY == pExceptionRecored->ExceptionCode ||
+					RPC_S_CALL_FAILED_DNE == pExceptionRecored->ExceptionCode ||
+					RPC_S_CALL_FAILED == pExceptionRecored->ExceptionCode ||
+					DBG_PRINTEXCEPTION_C == pExceptionRecored->ExceptionCode)
 					__leave;
 
-#ifdef _CORE_
-				CommUm.Stop();
-#endif
-
 				GenDump(pExceptionInfo);
-
-				if (ms_bCanUseGenWerReport)
-					GenWerReport(pExceptionInfo);
 			}
 			__finally
 			{
@@ -281,7 +249,7 @@ LONG
 			pExceptionRecored = pExceptionRecored->ExceptionRecord;
 		} while (pExceptionRecored);
 
-		if (OS_VERSION_WINDOWS_VISTA > GetOSVersion())
+		if (OS_VERSION_WINDOWS_VISTA > OsVersion.GetOSVersion())
 		{
 			if (ms_bRestart)
 			{
@@ -313,12 +281,6 @@ LONG
 			ms_hModuleKernel32Dll = NULL;
 		}
 
-		if (ms_hModuleWerDll)
-		{
-			FreeLibrary(ms_hModuleWerDll);
-			ms_hModuleWerDll = NULL;
-		}
-
 		if (ms_lpCmdLine)
 		{
 			free(ms_lpCmdLine);
@@ -330,12 +292,12 @@ LONG
 }
 
 BOOL
-	CSimpleDump::RegisterRestart()
+CSimpleDump::RegisterRestart()
 {
-	BOOL	bRet								= FALSE;
+	BOOL	bRet = FALSE;
 
-	HRESULT	hResult								= E_UNEXPECTED;
-	TCHAR	tchCmdLine[RESTART_MAX_CMD_LINE]	= {0};
+	HRESULT	hResult = E_UNEXPECTED;
+	TCHAR	tchCmdLine[RESTART_MAX_CMD_LINE] = { 0 };
 
 
 	__try
@@ -357,17 +319,17 @@ BOOL
 }
 
 BOOL
-	CSimpleDump::InitCmdLine(
-	__in_opt int	nArgc,
-	__in_opt TCHAR*	pArgv[],
-	__in_opt LPTSTR	lpCmdLine
-	)
+CSimpleDump::InitCmdLine(
+__in_opt int	nArgc,
+__in_opt TCHAR*	pArgv[],
+__in_opt LPTSTR	lpCmdLine
+)
 {
-	BOOL	bRet		= FALSE;
+	BOOL	bRet = FALSE;
 
-	ULONG	ulLen		= 0;
-	int		i			= 0;
-	LPTSTR	lpPosition	= NULL;
+	ULONG	ulLen = 0;
+	int		i = 0;
+	LPTSTR	lpPosition = NULL;
 
 
 	__try
@@ -450,20 +412,25 @@ BOOL
 *	Handler			重启客户端回调的函数名
 *		NULL	调用本.h文件中的DefaultRestartClient重启客户端
 *		函数名	调用用户自定义重启客户端回调
-*			
+*
 *返回值
 *	无
 */
 VOID
-	CSimpleDump::RegisterCrushHandler(
-	__in PCRUSH_HANDLER_INFO pCrushHandlerInfo
-	)
+CSimpleDump::RegisterCrushHandler(
+__in PCRUSH_HANDLER_INFO pCrushHandlerInfo
+)
 {
-	HANDLE hOutPut = INVALID_HANDLE_VALUE;
+	HANDLE		hOutPut = INVALID_HANDLE_VALUE;
+
+	COsVersion	OsVersion;
 
 
 	__try
 	{
+		if (!OsVersion.Init())
+			__leave;
+
 		if (!GetFunc())
 			__leave;
 
@@ -484,17 +451,17 @@ VOID
 
 			switch (pCrushHandlerInfo->EhType)
 			{
-			case EH_TYPE_S:
+				case EH_TYPE_S:
 				{
 					SetUnhandledExceptionFilter((PTOP_LEVEL_EXCEPTION_FILTER)ExceptionHandler);
 					break;
 				}
-			case EH_TYPE_V:
+				case EH_TYPE_V:
 				{
 					AddVectoredExceptionHandler(pCrushHandlerInfo->bFirstHandler ? 1 : 0, (PVECTORED_EXCEPTION_HANDLER)ExceptionHandler);
 					break;
 				}
-			default:
+				default:
 				{
 					AddVectoredExceptionHandler(1, (PVECTORED_EXCEPTION_HANDLER)ExceptionHandler);
 					// AddVectoredExceptionHandler(0, (PVECTORED_EXCEPTION_HANDLER)ExceptionHandler);
@@ -545,23 +512,23 @@ VOID
 }
 
 BOOL
-	CSimpleDump::CreateDumpFile(
-	__inout LPTSTR	lpDumpFilePath,
-	__in	ULONG	ulBufferLen
-	)
+CSimpleDump::CreateDumpFile(
+__inout LPTSTR	lpDumpFilePath,
+__in	ULONG	ulBufferLen
+)
 {
-	BOOL		bRet									= FALSE;
+	BOOL		bRet = FALSE;
 
-	TCHAR		tchModulePath[MAX_PATH]					= {0};
-	TCHAR		tchProcPath[MAX_PATH]					= {0};
-	TCHAR		tchDumpFilePath[MAX_PATH]				= {0};
-	TCHAR		tchTmp[MAX_PATH]						= {0};
-	TCHAR		tchDumpFilePathWithoutCount[MAX_PATH]	= {0};
-	TCHAR*		pModuleName								= NULL;
-	TCHAR*		pProcName								= NULL;
-	SYSTEMTIME	SystemTime								= {0};
-	HANDLE		hFile									= INVALID_HANDLE_VALUE;
-	ULONG		ulCount									= 0;
+	TCHAR		tchModulePath[MAX_PATH] = { 0 };
+	TCHAR		tchProcPath[MAX_PATH] = { 0 };
+	TCHAR		tchDumpFilePath[MAX_PATH] = { 0 };
+	TCHAR		tchTmp[MAX_PATH] = { 0 };
+	TCHAR		tchDumpFilePathWithoutCount[MAX_PATH] = { 0 };
+	TCHAR*		pModuleName = NULL;
+	TCHAR*		pProcName = NULL;
+	SYSTEMTIME	SystemTime = { 0 };
+	HANDLE		hFile = INVALID_HANDLE_VALUE;
+	ULONG		ulCount = 0;
 
 
 	__try
@@ -619,7 +586,7 @@ BOOL
 		StringCbPrintf(tchTmp, sizeof(tchTmp), _T("__%03d"), SystemTime.wMilliseconds);
 		_tcscat_s(tchDumpFilePathWithoutCount, _countof(tchDumpFilePathWithoutCount), tchTmp);
 
-		do 
+		do
 		{
 			_tcscat_s(tchDumpFilePath, _countof(tchDumpFilePath), tchDumpFilePathWithoutCount);
 
@@ -673,251 +640,15 @@ BOOL
 }
 
 BOOL
-	CSimpleDump::GenWerReport(
-	__in _EXCEPTION_POINTERS* pExceptionInfo
-	)
+CSimpleDump::GenDump(
+__in _EXCEPTION_POINTERS* pExceptionInfo
+)
 {
-	BOOL						bRet						= FALSE;
+	BOOL							bRet = FALSE;
 
-	HRESULT						hResult						= E_UNEXPECTED;
-	WER_REPORT_INFORMATION		WerReportInfo				= {0};
-	HREPORT						hReport						= NULL;
-	WER_EXCEPTION_INFORMATION	WerExceptionInfo			= {0};
-	WER_DUMP_CUSTOM_OPTIONS		WerDumpCustomOptions		= {0};
-	WER_SUBMIT_RESULT			WerSubmitResult				= (WER_SUBMIT_RESULT)0;
-	TCHAR						tchFileVersion[MAX_PATH]	= {0};
-	TCHAR						tchExceptionCode[MAX_PATH]	= {0};
-	TCHAR						tchModuleName[MAX_PATH]		= {0};
-	TCHAR						tchTid[MAX_PATH]			= {0};
-	TCHAR						tchPid[MAX_PATH]			= {0};
-
-
-	__try
-	{
-		if (!pExceptionInfo)
-			__leave;
-
-		WerReportInfo.dwSize = sizeof(WER_REPORT_INFORMATION);
-		WerReportInfo.hProcess = GetCurrentProcess();
-
-		if (!WerReportInfo.hProcess)
-			__leave;
-
-		_tcscat_s(WerReportInfo.wzConsentKey, _countof(WerReportInfo.wzConsentKey), L"Problem");
-		_tcscat_s(WerReportInfo.wzFriendlyEventName, _countof(WerReportInfo.wzFriendlyEventName), L"FriendlyEventName");
-		_tcscat_s(WerReportInfo.wzApplicationName, _countof(WerReportInfo.wzApplicationName), L"ApplicationName");
-
-		if (!GetModuleFileName(NULL, WerReportInfo.wzApplicationPath, _countof(WerReportInfo.wzApplicationPath)))
-			__leave;
-
-		hResult = WerReportCreate(
-			L"ProblemEventName",
-			WerReportCritical,
-			&WerReportInfo,
-			&hReport
-			);
-		if (FAILED(hResult))
-			__leave;
-
-		if (!hReport)
-			__leave;
-
-		StringCchPrintf(tchExceptionCode, _countof(tchExceptionCode), _T("%08x"), pExceptionInfo->ExceptionRecord->ExceptionCode);
-		_tcscat_s(WerReportInfo.wzDescription, _countof(WerReportInfo.wzDescription), L"Description");
-
-		hResult = WerReportSetParameter(
-			hReport,
-			WER_P0,
-			L"ExceptionCode",
-			tchExceptionCode
-			);
-		if (FAILED(hResult))
-			__leave;
-
-		hResult = WerReportSetParameter(
-			hReport,
-			WER_P1,
-			L"ApplicationName",
-			WerReportInfo.wzApplicationPath
-			);
-		if (FAILED(hResult))
-			__leave;
-
-		if (!GetApplicationVersion(
-			WerReportInfo.wzApplicationPath,
-			tchFileVersion,
-			sizeof(tchFileVersion)
-			))
-			__leave;
-
-		hResult = WerReportSetParameter(
-			hReport,
-			WER_P2,
-			L"ApplicationVersion",
-			tchFileVersion
-			);
-		if (FAILED(hResult))
-			__leave;
-
-		if (!GetModuleName(
-			pExceptionInfo->ExceptionRecord->ExceptionAddress,
-			tchModuleName,
-			sizeof(tchModuleName)
-			))
-			__leave;
-
-		hResult = WerReportSetParameter(
-			hReport,
-			WER_P3,
-			L"MoudleName",
-			tchModuleName
-			);
-		if (FAILED(hResult))
-			__leave;
-
-		StringCchPrintf(tchPid, _countof(tchPid), _T("%d"), GetCurrentProcessId());
-
-		hResult = WerReportSetParameter(
-			hReport,
-			WER_P4,
-			L"ProcessId",
-			tchPid
-			);
-		if (FAILED(hResult))
-			__leave;
-
-		StringCchPrintf(tchTid, _countof(tchTid), _T("%d"), GetCurrentThreadId());
-
-		hResult = WerReportSetParameter(
-			hReport,
-			WER_P5,
-			L"ThreadId",
-			tchTid
-			);
-		if (FAILED(hResult))
-			__leave;
-
-		WerExceptionInfo.pExceptionPointers = pExceptionInfo;
-		WerExceptionInfo.bClientPointers = FALSE;
-
-		WerDumpCustomOptions.dwSize = sizeof(WER_DUMP_CUSTOM_OPTIONS);
-		WerDumpCustomOptions.dwMask =
-			WER_DUMP_MASK_DUMPTYPE |
-			WER_DUMP_MASK_ONLY_THISTHREAD |
-			WER_DUMP_MASK_OTHER_MODULESFLAGS |
-			WER_DUMP_MASK_OTHERTHREADFLAGS |
-			WER_DUMP_MASK_OTHERTHREADFLAGS_EX |
-			WER_DUMP_MASK_PREFERRED_MODULE_LIST |
-			WER_DUMP_MASK_PREFERRED_MODULESFLAGS |
-			WER_DUMP_MASK_THREADFLAGS |
-			WER_DUMP_MASK_THREADFLAGS_EX;
-
-		WerDumpCustomOptions.dwDumpFlags = ms_MinidumpType;
-
-		WerDumpCustomOptions.dwExceptionThreadFlags =
-			ThreadWriteThread |
-			ThreadWriteStack |
-			ThreadWriteContext |
-			ThreadWriteBackingStore |
-			ThreadWriteInstructionWindow |
-			ThreadWriteThreadData |
-			ThreadWriteThreadInfo;
-
-		WerDumpCustomOptions.dwOtherThreadFlags =
-			ThreadWriteThread |
-			ThreadWriteStack |
-			ThreadWriteContext |
-			ThreadWriteBackingStore |
-			ThreadWriteInstructionWindow |
-			ThreadWriteThreadData |
-			ThreadWriteThreadInfo;
-
-		WerDumpCustomOptions.dwExceptionThreadExFlags =
-			ThreadWriteThread |
-			ThreadWriteStack |
-			ThreadWriteContext |
-			ThreadWriteBackingStore |
-			ThreadWriteInstructionWindow |
-			ThreadWriteThreadData |
-			ThreadWriteThreadInfo;
-
-		WerDumpCustomOptions.dwOtherThreadExFlags =
-			ThreadWriteThread |
-			ThreadWriteStack |
-			ThreadWriteContext |
-			ThreadWriteBackingStore |
-			ThreadWriteInstructionWindow |
-			ThreadWriteThreadData |
-			ThreadWriteThreadInfo;
-
-		WerDumpCustomOptions.dwPreferredModuleFlags =
-			ModuleWriteModule |
-			ModuleWriteDataSeg |
-			ModuleWriteMiscRecord |
-			ModuleWriteCvRecord |
-			ModuleReferencedByMemory |
-			ModuleWriteTlsData |
-			ModuleWriteCodeSegs;
-
-		WerDumpCustomOptions.dwOtherModuleFlags =
-			ModuleWriteModule |
-			ModuleWriteDataSeg |
-			ModuleWriteMiscRecord |
-			ModuleWriteCvRecord |
-			ModuleReferencedByMemory |
-			ModuleWriteTlsData |
-			ModuleWriteCodeSegs;
-
-		_tcscat_s(WerDumpCustomOptions.wzPreferredModuleList, _countof(WerDumpCustomOptions.wzPreferredModuleList), L"*\0\0");
-
-		hResult = WerReportAddDump(
-			hReport,
-			WerReportInfo.hProcess,
-			GetCurrentThread(),
-			WerDumpTypeHeapDump,
-			&WerExceptionInfo,
-			&WerDumpCustomOptions,
-			0
-			);
-		if (FAILED(hResult))
-			__leave;
-
-		hResult = WerReportSubmit(
-			hReport,
-			WerConsentAlwaysPrompt,
-			WER_SUBMIT_QUEUE | WER_SUBMIT_OUTOFPROCESS,
-			&WerSubmitResult
-			);
-		if (FAILED(hResult))
-			__leave;
-
-		if (WerReportQueued != WerSubmitResult)
-			__leave;
-
-		bRet = TRUE;
-	}
-	__finally
-	{
-		if (hReport)
-		{
-			WerReportCloseHandle(hReport);
-			hReport = NULL;
-		}
-	}
-
-	return bRet;
-}
-
-BOOL
-	CSimpleDump::GenDump(
-	__in _EXCEPTION_POINTERS* pExceptionInfo
-	)
-{
-	BOOL							bRet						= FALSE;
-
-	MINIDUMP_EXCEPTION_INFORMATION	MiniExceptionInfo			= {0};
-	HANDLE							hFile						= INVALID_HANDLE_VALUE;
-	TCHAR							tchDumpFilePath[MAX_PATH]	= {0};
+	MINIDUMP_EXCEPTION_INFORMATION	MiniExceptionInfo = { 0 };
+	HANDLE							hFile = INVALID_HANDLE_VALUE;
+	TCHAR							tchDumpFilePath[MAX_PATH] = { 0 };
 
 
 	__try
@@ -969,284 +700,20 @@ BOOL
 	return bRet;
 }
 
-OS_VERSION_USER_DEFINED
-	CSimpleDump::GetOSVersion()
-{
-	OS_VERSION_USER_DEFINED ret = OS_VERSION_UNKNOWN;
-
-
-	__try
-	{
-		if (ms_bCanUseGetOSVersionByIsOrGreater)
-		{
-			ret = GetOSVersionByIsOrGreater();
-			if (OS_VERSION_UNKNOWN != ret)
-				__leave;
-		}
-
-		ret = GetOSVersionByGetVersionEx();
-	}
-	__finally
-	{
-		;
-	}
-
-	return ret;
-}
-
-OS_VERSION_USER_DEFINED
-	CSimpleDump::GetOSVersionByIsOrGreater()
-
-{
-	OS_VERSION_USER_DEFINED	ret = OS_VERSION_UNKNOWN;
-
-
-	__try
-	{
-		if (IsWindowsServer())
-		{
-			ret = OS_VERSION_WINDOWS_SERVER;
-			__leave;
-		}
-
-		if (IsWindows1OrGreater())
-		{
-			ret = OS_VERSION_WINDOWS_10;
-			__leave;
-		}
-
-		if (IsWindows8Point1OrGreater())
-		{
-			ret = OS_VERSION_WINDOWS_8_POINT1;
-			__leave;
-		}
-
-		if (IsWindows8OrGreater())
-		{
-			ret = OS_VERSION_WINDOWS_8;
-			__leave;
-		}
-
-		if (IsWindows7SP1OrGreater())
-		{
-			ret = OS_VERSION_WINDOWS_7_SP1;
-			__leave;
-		}
-
-		if (IsWindows7OrGreater())
-		{
-			ret = OS_VERSION_WINDOWS_7;
-			__leave;
-		}
-
-		if (IsWindowsVistaSP2OrGreater())
-		{
-			ret = OS_VERSION_WINDOWS_VISTA_PS2;
-			__leave;
-		}
-
-		if (IsWindowsVistaSP1OrGreater())
-		{
-			ret = OS_VERSION_WINDOWS_VISTA_PS1;
-			__leave;
-		}
-
-		if (IsWindowsVistaOrGreater())
-		{
-			ret = OS_VERSION_WINDOWS_VISTA;
-			__leave;
-		}
-
-		if (IsWindowsXPSP3OrGreater())
-		{
-			ret = OS_VERSION_WINDOWS_XP_SP3;
-			__leave;
-		}
-
-		if (IsWindowsXPSP2OrGreater())
-		{
-			ret = OS_VERSION_WINDOWS_XP_SP2;
-			__leave;
-		}
-
-		if (IsWindowsXPSP1OrGreater())
-		{
-			ret = OS_VERSION_WINDOWS_XP_SP1;
-			__leave;
-		}
-
-		if (IsWindowsXPOrGreater())
-		{
-			ret = OS_VERSION_WINDOWS_XP;
-			__leave;
-		}
-	}
-	__finally
-	{
-		;
-	}
-
-	return ret;
-}
-
-OS_VERSION_USER_DEFINED
-	CSimpleDump::GetOSVersionByGetVersionEx()
-{
-	OS_VERSION_USER_DEFINED	ret				=  OS_VERSION_UNKNOWN;
-
-	OSVERSIONINFOEX			OsVersionInfoEx	= {0};
-
-
-	__try
-	{
-		OsVersionInfoEx.dwOSVersionInfoSize = sizeof(OSVERSIONINFOEX);
-		if (!GetVersionEx((LPOSVERSIONINFO)&OsVersionInfoEx))
-			__leave;
-
-		switch (OsVersionInfoEx.dwPlatformId)
-		{
-		case VER_PLATFORM_WIN32s:
-			break;
-		case VER_PLATFORM_WIN32_WINDOWS:
-			break;
-		case VER_PLATFORM_WIN32_NT:
-			{
-				switch (OsVersionInfoEx.dwMajorVersion)
-				{
-				case 5:
-					{
-						switch (OsVersionInfoEx.dwMinorVersion)
-						{
-						case 0:
-							{
-								ret = OS_VERSION_WINDOWS_2000;
-								break;
-							}
-						case 1:
-							{
-								ret = OS_VERSION_WINDOWS_XP;
-								break;
-							}
-						case 2:
-							{
-								if (VER_NT_WORKSTATION == OsVersionInfoEx.wProductType)
-									ret = OS_VERSION_WINDOWS_XP;
-								else
-								{
-									if (VER_SUITE_WH_SERVER == OsVersionInfoEx.wSuiteMask)
-										ret = OS_VERSION_WINDOWS_HOME_SERVER;
-									else
-										ret = OS_VERSION_WINDOWS_SERVER_2003;
-								}
-
-								break;
-							}
-						default:
-							break;
-						}
-
-						break;
-					}
-				case 6:
-					{
-						switch (OsVersionInfoEx.dwMinorVersion)
-						{
-						case 0:
-							{
-								if (VER_NT_WORKSTATION == OsVersionInfoEx.wProductType)
-									ret = OS_VERSION_WINDOWS_VISTA;
-								else
-									ret = OS_VERSION_WINDOWS_SERVER_2008;
-
-								break;
-							}
-						case 1:
-							{
-								if (VER_NT_WORKSTATION == OsVersionInfoEx.wProductType)
-									ret = OS_VERSION_WINDOWS_7;
-								else
-									ret = OS_VERSION_WINDOWS_SERVER_2008_R2;
-
-								break;
-							}
-						case 2:
-							{
-								ret = OS_VERSION_WINDOWS_8;
-								break;
-							}
-						default:
-							break;
-						}
-
-						break;
-					}
-				default:
-					break;
-				}
-
-				break;
-			}
-		default:
-			break;
-		}
-	}
-	__finally
-	{
-		;
-	}
-
-	return ret;
-}
-
-OS_PROCESSOR_TYPE_USER_DEFINED
-	CSimpleDump::GetOSProcessorType()
-{
-	OS_PROCESSOR_TYPE_USER_DEFINED	ret			= OS_PROCESSOR_TYPE_UNKNOWN;
-
-	SYSTEM_INFO						systemInfo	= {0};
-
-
-	__try
-	{
-		GetNativeSystemInfo(&systemInfo);
-		switch (systemInfo.wProcessorArchitecture)
-		{
-		case PROCESSOR_ARCHITECTURE_INTEL:
-			{
-				ret = OS_PROCESSOR_TYPE_X86;
-				break;
-			}
-		case PROCESSOR_ARCHITECTURE_AMD64:
-			{
-				ret = OS_PROCESSOR_TYPE_X64;
-				break;
-			}
-		default:
-			__leave;
-		}
-	}
-	__finally
-	{
-		;
-	}
-
-	return ret;
-}
-
 BOOL
-	CSimpleDump::GetApplicationVersion(
-	__in	LPTSTR	lpApplicationPath,
-	__inout LPTSTR	lpApplicationVersion,
-	__in	ULONG	ulApplicationVersionLen
-	)
+CSimpleDump::GetApplicationVersion(
+__in	LPTSTR	lpApplicationPath,
+__inout LPTSTR	lpApplicationVersion,
+__in	ULONG	ulApplicationVersionLen
+)
 {
-	BOOL				bRet				= FALSE;
+	BOOL				bRet = FALSE;
 
-	LPVOID				lpFileVerInfo		= NULL;
-	DWORD				dwFileVerInfoLen	= 0;
-	LPVOID				lpFileVersion		= NULL;
-	UINT				nFileVersionLen		= 0;
-	VS_FIXEDFILEINFO	VsFixedFileInfo		= {0};
+	LPVOID				lpFileVerInfo = NULL;
+	DWORD				dwFileVerInfoLen = 0;
+	LPVOID				lpFileVersion = NULL;
+	UINT				nFileVersionLen = 0;
+	VS_FIXEDFILEINFO	VsFixedFileInfo = { 0 };
 
 
 	__try
@@ -1301,17 +768,17 @@ BOOL
 }
 
 BOOL
-	CSimpleDump::GetModuleName(
-	__in	PVOID	pAddress,
-	__inout LPTSTR	lpModuleName,
-	__in	ULONG	ulModuleNameLen
-	)
+CSimpleDump::GetModuleName(
+__in	PVOID	pAddress,
+__inout LPTSTR	lpModuleName,
+__in	ULONG	ulModuleNameLen
+)
 {
-	BOOL		bRet		= FALSE;
+	BOOL		bRet = FALSE;
 
-	HMODULE*	phModule	= NULL;
-	DWORD		dwRet		= 0;
-	ULONG		ulIndex		= 0;
+	HMODULE*	phModule = NULL;
+	DWORD		dwRet = 0;
+	ULONG		ulIndex = 0;
 
 
 	__try
@@ -1371,14 +838,14 @@ BOOL
 }
 
 BOOL
-	CSimpleDump::GetModuleNameIndex(
-	__in	PVOID		pAddress,
-	__in	HMODULE*	phMoudle,
-	__in	ULONG		ulCount,
-	__inout ULONG*		pIndex
-	)
+CSimpleDump::GetModuleNameIndex(
+__in	PVOID		pAddress,
+__in	HMODULE*	phMoudle,
+__in	ULONG		ulCount,
+__inout ULONG*		pIndex
+)
 {
-	BOOL	bRet	= FALSE;
+	BOOL	bRet = FALSE;
 
 	ULONG	ulIndex = 0;
 
@@ -1407,16 +874,16 @@ BOOL
 }
 
 BOOL
-	CSimpleDump::SortModule(
-	__inout	HMODULE*	phMoudle,
-	__in	ULONG		ulCount
-	)
+CSimpleDump::SortModule(
+__inout	HMODULE*	phMoudle,
+__in	ULONG		ulCount
+)
 {
-	BOOL	bRet	= FALSE;
+	BOOL	bRet = FALSE;
 
-	ULONG	i		= 0;
+	ULONG	i = 0;
 	HMODULE hModule = NULL;
-	ULONG	ulLoop	= 0;
+	ULONG	ulLoop = 0;
 
 
 	__try
@@ -1448,16 +915,13 @@ BOOL
 }
 
 BOOL
-	CSimpleDump::GetFunc()
+CSimpleDump::GetFunc()
 {
 	BOOL bRet = FALSE;
 
 
 	__try
 	{
-		if (!GetWerDllFunc())
-			__leave;
-
 		if (!GetKernel32DllFunc())
 			__leave;
 
@@ -1472,7 +936,7 @@ BOOL
 }
 
 BOOL
-	CSimpleDump::GetKernel32DllFunc()
+CSimpleDump::GetKernel32DllFunc()
 {
 	BOOL bRet = FALSE;
 
@@ -1482,22 +946,6 @@ BOOL
 		ms_hModuleKernel32Dll = LoadLibrary(_T("Kernel32.dll"));
 		if (!ms_hModuleKernel32Dll)
 			__leave;
-
-		IsWindowsServer = (IS_WINDOWS_SERVER)GetProcAddress(ms_hModuleKernel32Dll, "IsWindowsServer");
-		IsWindows1OrGreater = (IS_WINDOWS_10_OR_GREATER)GetProcAddress(ms_hModuleKernel32Dll, "IsWindows1OrGreater");
-		IsWindows8Point1OrGreater = (IS_WINDOWS_8_POINT_1_OR_GREATER)GetProcAddress(ms_hModuleKernel32Dll, "IsWindows8Point1OrGreater");
-		IsWindows8OrGreater = (IS_WINDOWS_8_OR_GREATER)GetProcAddress(ms_hModuleKernel32Dll, "IsWindows8OrGreater");
-		IsWindows7SP1OrGreater = (IS_WINDOWS_7_SP_1_OR_GREATER)GetProcAddress(ms_hModuleKernel32Dll, "IsWindows7SP1OrGreater");
-		IsWindows7OrGreater = (IS_WINDOWS_7_OR_GREATER)GetProcAddress(ms_hModuleKernel32Dll, "IsWindows7OrGreater");
-		IsWindowsVistaSP2OrGreater = (IS_WINDOWS_VISTA_SP2_OR_GREATER)GetProcAddress(ms_hModuleKernel32Dll, "IsWindowsVistaSP2OrGreater");
-		IsWindowsVistaSP1OrGreater = (IS_WINDOWS_VISTA_SP1_OR_GREATER)GetProcAddress(ms_hModuleKernel32Dll, "IsWindowsVistaSP1OrGreater");
-		IsWindowsVistaOrGreater = (IS_WINDOWS_VISTA_OR_GREATER)GetProcAddress(ms_hModuleKernel32Dll, "IsWindowsVistaOrGreater");
-		IsWindowsXPSP3OrGreater = (IS_WINDOWS_XP_SP3_OR_GREATER)GetProcAddress(ms_hModuleKernel32Dll, "IsWindowsXPSP3OrGreater");
-		IsWindowsXPSP2OrGreater = (IS_WINDOWS_XP_SP2_OR_GREATER)GetProcAddress(ms_hModuleKernel32Dll, "IsWindowsXPSP2OrGreater");
-		IsWindowsXPSP1OrGreater = (IS_WINDOWS_XP_SP1_OR_GREATER)GetProcAddress(ms_hModuleKernel32Dll, "IsWindowsXPSP1OrGreater");
-		IsWindowsXPOrGreater = (IS_WINDOWS_XP_OR_GREATER)GetProcAddress(ms_hModuleKernel32Dll, "IsWindowsXPOrGreater");
-		if (IsWindowsXPOrGreater)
-			ms_bCanUseGetOSVersionByIsOrGreater = TRUE;
 
 		RegisterApplicationRestart = (REGISTER_APPLICATION_RESTART)GetProcAddress(ms_hModuleKernel32Dll, "RegisterApplicationRestart");
 		if (RegisterApplicationRestart)
@@ -1513,42 +961,12 @@ BOOL
 	return bRet;
 }
 
-BOOL
-	CSimpleDump::GetWerDllFunc()
-{
-	BOOL bRet = FALSE;
-
-
-	__try
-	{
-		ms_hModuleWerDll = LoadLibrary(_T("Wer.dll"));
-		if (!ms_hModuleWerDll)
-			__leave;
-
-		WerReportCreate = (WER_REPORT_CREATE)GetProcAddress(ms_hModuleWerDll, "WerReportCreate");
-		WerReportSetParameter = (WER_REPORT_SET_PARAMETER)GetProcAddress(ms_hModuleWerDll, "WerReportSetParameter");
-		WerReportAddDump = (WER_REPORT_ADD_DUMP)GetProcAddress(ms_hModuleWerDll, "WerReportAddDump");
-		WerReportSubmit = (WER_REPORT_SUBMIT)GetProcAddress(ms_hModuleWerDll, "WerReportSubmit");
-		WerReportCloseHandle = (WER_REPORT_CLOSE_HANDLE)GetProcAddress(ms_hModuleWerDll, "WerReportCloseHandle");
-		if (WerReportCloseHandle)
-			ms_bCanUseGenWerReport = TRUE;
-
-		bRet = TRUE;
-	}
-	__finally
-	{
-		;
-	}
-
-	return bRet;
-}
-
 APPLICATION_TYPE
-	CSimpleDump::GetApplicationType()
+CSimpleDump::GetApplicationType()
 {
 	APPLICATION_TYPE	ApplicationType = APPLICATION_TYPE_UNKNOWN;
 
-	HANDLE				hOutput			= INVALID_HANDLE_VALUE;
+	HANDLE				hOutput = INVALID_HANDLE_VALUE;
 
 
 	__try
@@ -1571,19 +989,19 @@ APPLICATION_TYPE
 }
 
 BOOL
-	CSimpleDump::InitArgCmdlineInfo(
-	__in		APPLICATION_TYPE	ApplicationType,
-	__in_opt	int					nArgc,
-	__in_opt	LPTSTR				lpArgv[],
-	__in_opt	LPTSTR				lpCmdLine,
-	__inout_opt	PARG_CMDLINE_INFO	pArgCmdLineInfo,
-	__inout		ULONG*				pulBufLen
-	)
+CSimpleDump::InitArgCmdlineInfo(
+__in		APPLICATION_TYPE	ApplicationType,
+__in_opt	int					nArgc,
+__in_opt	LPTSTR				lpArgv[],
+__in_opt	LPTSTR				lpCmdLine,
+__inout_opt	PARG_CMDLINE_INFO	pArgCmdLineInfo,
+__inout		ULONG*				pulBufLen
+)
 {
-	BOOL	bRet		= FALSE;
+	BOOL	bRet = FALSE;
 
-	ULONG	ulBufLen	= 0;
-	int		i			= 0;
+	ULONG	ulBufLen = 0;
+	int		i = 0;
 
 
 	__try
@@ -1591,7 +1009,7 @@ BOOL
 		// 计算大小
 		switch (ApplicationType)
 		{
-		case APPLICATION_TYPE_CONSOLE:
+			case APPLICATION_TYPE_CONSOLE:
 			{
 				if (nArgc && lpArgv)
 				{
@@ -1608,7 +1026,7 @@ BOOL
 
 				break;
 			}
-		case APPLICATION_TYPE_NOT_CONSOLE:
+			case APPLICATION_TYPE_NOT_CONSOLE:
 			{
 				if (lpCmdLine)
 				{
@@ -1622,8 +1040,8 @@ BOOL
 
 				break;
 			}
-		default:
-			__leave;
+			default:
+				__leave;
 		}
 
 		// 比较大小
@@ -1645,7 +1063,7 @@ BOOL
 		pArgCmdLineInfo->ApplicationType = ApplicationType;
 		switch (pArgCmdLineInfo->ApplicationType)
 		{
-		case APPLICATION_TYPE_CONSOLE:
+			case APPLICATION_TYPE_CONSOLE:
 			{
 				if (nArgc && lpArgv)
 				{
@@ -1668,7 +1086,7 @@ BOOL
 
 				break;
 			}
-		case APPLICATION_TYPE_NOT_CONSOLE:
+			case APPLICATION_TYPE_NOT_CONSOLE:
 			{
 				if (lpCmdLine)
 				{
@@ -1678,8 +1096,8 @@ BOOL
 
 				break;
 			}
-		default:
-			__leave;
+			default:
+				__leave;
 		}
 
 		bRet = TRUE;
@@ -1693,20 +1111,20 @@ BOOL
 }
 
 BOOL
-	CSimpleDump::ParseArgOrCmdLine(
-	__in		PARG_CMDLINE_INFO	pArgCmdlineInfo,
-	__inout_opt LPTSTR				lpResult,
-	__inout		ULONG*				pulBufLen
-	)
+CSimpleDump::ParseArgOrCmdLine(
+__in		PARG_CMDLINE_INFO	pArgCmdlineInfo,
+__inout_opt LPTSTR				lpResult,
+__inout		ULONG*				pulBufLen
+)
 {
-	BOOL	bRet				= FALSE;
+	BOOL	bRet = FALSE;
 
-	ULONG	ulBufLen			= 0;
-	int		i					= 0;
-	LPTSTR	lpPrePosition		= NULL;
-	LPTSTR	lpCurrentPosition	= NULL;
-	LPTSTR	lpTemp				= NULL;
-	ULONG	ulCalloc			= 0;
+	ULONG	ulBufLen = 0;
+	int		i = 0;
+	LPTSTR	lpPrePosition = NULL;
+	LPTSTR	lpCurrentPosition = NULL;
+	LPTSTR	lpTemp = NULL;
+	ULONG	ulCalloc = 0;
 
 
 	__try
@@ -1717,7 +1135,7 @@ BOOL
 		// 计算大小
 		switch (pArgCmdlineInfo->ApplicationType)
 		{
-		case APPLICATION_TYPE_CONSOLE:
+			case APPLICATION_TYPE_CONSOLE:
 			{
 				if (pArgCmdlineInfo->Console.nArgc)
 				{
@@ -1730,15 +1148,15 @@ BOOL
 
 				break;
 			}
-		case APPLICATION_TYPE_NOT_CONSOLE:
+			case APPLICATION_TYPE_NOT_CONSOLE:
 			{
 				ulBufLen = _tcslen(pArgCmdlineInfo->NotConsole.tchCmdLine) * sizeof(TCHAR);
 				ulBufLen += sizeof(TCHAR);
 
 				break;
 			}
-		default:
-			__leave;
+			default:
+				__leave;
 		}
 
 		// 比较大小
@@ -1759,7 +1177,7 @@ BOOL
 
 		switch (pArgCmdlineInfo->ApplicationType)
 		{
-		case APPLICATION_TYPE_CONSOLE:
+			case APPLICATION_TYPE_CONSOLE:
 			{
 				i = 0;
 				while (i < pArgCmdlineInfo->Console.nArgc)
@@ -1772,7 +1190,7 @@ BOOL
 
 				break;
 			}
-		case APPLICATION_TYPE_NOT_CONSOLE:
+			case APPLICATION_TYPE_NOT_CONSOLE:
 			{
 				lpPrePosition = pArgCmdlineInfo->NotConsole.tchCmdLine;
 				lpCurrentPosition = pArgCmdlineInfo->NotConsole.tchCmdLine;
@@ -1817,8 +1235,8 @@ BOOL
 
 				break;
 			}
-		default:
-			__leave;
+			default:
+				__leave;
 		}
 
 		bRet = TRUE;
