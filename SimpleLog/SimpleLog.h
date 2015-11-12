@@ -7,7 +7,9 @@
 #include <string.h>
 #include <Shlobj.h>
 
+#ifndef MOD_SIMPLE_LOG
 #define MOD_SIMPLE_LOG	_T("ºÚµ•»’÷æ")
+#endif
 
 #define CSimpleLogWrite(lpMod, FMT, ...) CSimpleLog::Write(lpMod, __FUNCTION__, FMT, __VA_ARGS__)
 

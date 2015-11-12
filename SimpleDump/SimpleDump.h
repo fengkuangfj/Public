@@ -17,9 +17,13 @@
 #pragma comment(lib, "Version.lib")
 #pragma comment(lib, "Psapi.lib")
 
+#ifndef MOD_SIMPLE_DUMP
 #define MOD_SIMPLE_DUMP							_T("简单转储")
+#endif
 
+#ifndef CMD_LINE_MAX_CHARS
 #define	CMD_LINE_MAX_CHARS 						32768
+#endif
 
 typedef enum _APPLICATION_TYPE
 {

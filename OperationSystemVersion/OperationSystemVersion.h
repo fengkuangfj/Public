@@ -3,7 +3,9 @@
 #include <Windows.h>
 #include <tchar.h>
 
+#ifndef MOD_OPERATION_SYSTEM_VERSION
 #define MOD_OPERATION_SYSTEM_VERSION _T("操作系统版本")
+#endif
 
 typedef enum _OS_VERSION_USER_DEFINED
 {
