@@ -1,19 +1,19 @@
 #include "SimpleLog.h"
 
-TCHAR				CSimpleLog::ms_LogPath[MAX_PATH]	= {0};
-CRITICAL_SECTION	CSimpleLog::ms_CriticalSection		= {0};
-BOOL				CSimpleLog::ms_Ready				= FALSE;
+TCHAR				CSimpleLog::ms_LogPath[MAX_PATH] = { 0 };
+CRITICAL_SECTION	CSimpleLog::ms_CriticalSection = { 0 };
+BOOL				CSimpleLog::ms_Ready = FALSE;
 
 BOOL
-	CSimpleLog::Init(
-	__in LPTSTR lpLogPath
-	)
+CSimpleLog::Init(
+__in LPTSTR lpLogPath
+)
 {
-	BOOL	bRet			= FALSE;
+	BOOL	bRet = FALSE;
 
-	HANDLE	hFile			= INVALID_HANDLE_VALUE;
-	LPTSTR	lpPosition		= NULL;
-	TCHAR	lpDir[MAX_PATH] = {0};
+	HANDLE	hFile = INVALID_HANDLE_VALUE;
+	LPTSTR	lpPosition = NULL;
+	TCHAR	lpDir[MAX_PATH] = { 0 };
 
 
 	__try
@@ -65,26 +65,26 @@ BOOL
 }
 
 BOOL
-	CSimpleLog::Write(
-	__in LPTSTR	lpMod,
-	__in LPSTR	lpFuncName,
-	__in LPTSTR	lpFmt,
-	...
-	)
+CSimpleLog::Write(
+__in LPTSTR	lpMod,
+__in LPSTR	lpFuncName,
+__in LPTSTR	lpFmt,
+...
+)
 {
-	BOOL			bRet							= FALSE;
+	BOOL			bRet = FALSE;
 
-	HANDLE			hFile							= INVALID_HANDLE_VALUE;
-	TCHAR			tchLog[MAX_PATH]				= {0};
-	TCHAR			Tmp[MAX_PATH]					= {0};
-	CHAR			chLog[MAX_PATH * sizeof(TCHAR)] = {0};
-	LARGE_INTEGER	FileSize						= {0};
-	DWORD			dwWrite							= 0;
-	time_t			rawTime							= 0;
-	tm				timeInfo						= {0};
-	LPTSTR			lpPositon						= NULL;
-	TCHAR			lpDir[MAX_PATH]					= {0};
-	TCHAR			tchFuncName[MAX_PATH]			= {0};
+	HANDLE			hFile = INVALID_HANDLE_VALUE;
+	TCHAR			tchLog[MAX_PATH] = { 0 };
+	TCHAR			Tmp[MAX_PATH] = { 0 };
+	CHAR			chLog[MAX_PATH * sizeof(TCHAR)] = { 0 };
+	LARGE_INTEGER	FileSize = { 0 };
+	DWORD			dwWrite = 0;
+	time_t			rawTime = 0;
+	tm				timeInfo = { 0 };
+	LPTSTR			lpPositon = NULL;
+	TCHAR			lpDir[MAX_PATH] = { 0 };
+	TCHAR			tchFuncName[MAX_PATH] = { 0 };
 
 	va_list			Args;
 
@@ -116,7 +116,7 @@ BOOL
 			NULL,
 			OPEN_EXISTING,
 			FILE_ATTRIBUTE_NORMAL,
-			NULL			
+			NULL
 			);
 		if (hFile == INVALID_HANDLE_VALUE)
 			__leave;
