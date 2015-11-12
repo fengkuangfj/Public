@@ -215,9 +215,9 @@ CSimpleDump::ExceptionHandler(
 _In_ struct _EXCEPTION_POINTERS* pExceptionInfo
 )
 {
-	PEXCEPTION_RECORD	pExceptionRecored = NULL;
+	PEXCEPTION_RECORD		pExceptionRecored = NULL;
 
-	COsVersion			OsVersion;
+	COperationSystemVersion	OsVersion;
 
 
 	__try
@@ -421,9 +421,9 @@ CSimpleDump::RegisterCrushHandler(
 __in PCRUSH_HANDLER_INFO pCrushHandlerInfo
 )
 {
-	HANDLE		hOutPut = INVALID_HANDLE_VALUE;
+	HANDLE					hOutPut = INVALID_HANDLE_VALUE;
 
-	COsVersion	OsVersion;
+	COperationSystemVersion	OsVersion;
 
 
 	__try

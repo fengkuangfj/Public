@@ -50,7 +50,7 @@ typedef BOOL(*IS_WINDOWS_XP_SP1_OR_GREATER)(void);
 typedef BOOL(*IS_WINDOWS_XP_OR_GREATER)(void);
 typedef BOOL(*GET_VERSION_EX)(LPOSVERSIONINFO);
 
-class COsVersion
+class COperationSystemVersion
 {
 public:
 	BOOL

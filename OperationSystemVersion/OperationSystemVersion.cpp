@@ -1,25 +1,25 @@
 #include "OperationSystemVersion.h"
 
-OS_VERSION_USER_DEFINED			COsVersion::ms_OsVersionUserDefined = OS_VERSION_UNKNOWN;
-OS_PROCESSOR_TYPE_USER_DEFINED	COsVersion::ms_ProcessorTypeUserDefined = OS_PROCESSOR_TYPE_UNKNOWN;
+OS_VERSION_USER_DEFINED			COperationSystemVersion::ms_OsVersionUserDefined = OS_VERSION_UNKNOWN;
+OS_PROCESSOR_TYPE_USER_DEFINED	COperationSystemVersion::ms_ProcessorTypeUserDefined = OS_PROCESSOR_TYPE_UNKNOWN;
 
-IS_WINDOWS_SERVER				COsVersion::IsWindowsServer = NULL;
-IS_WINDOWS_10_OR_GREATER		COsVersion::IsWindows1OrGreater = NULL;
-IS_WINDOWS_8_POINT_1_OR_GREATER	COsVersion::IsWindows8Point1OrGreater = NULL;
-IS_WINDOWS_8_OR_GREATER			COsVersion::IsWindows8OrGreater = NULL;
-IS_WINDOWS_7_SP_1_OR_GREATER	COsVersion::IsWindows7SP1OrGreater = NULL;
-IS_WINDOWS_7_OR_GREATER			COsVersion::IsWindows7OrGreater = NULL;
-IS_WINDOWS_VISTA_SP2_OR_GREATER	COsVersion::IsWindowsVistaSP2OrGreater = NULL;
-IS_WINDOWS_VISTA_SP1_OR_GREATER	COsVersion::IsWindowsVistaSP1OrGreater = NULL;
-IS_WINDOWS_VISTA_OR_GREATER		COsVersion::IsWindowsVistaOrGreater = NULL;
-IS_WINDOWS_XP_SP3_OR_GREATER	COsVersion::IsWindowsXPSP3OrGreater = NULL;
-IS_WINDOWS_XP_SP2_OR_GREATER	COsVersion::IsWindowsXPSP2OrGreater = NULL;
-IS_WINDOWS_XP_SP1_OR_GREATER	COsVersion::IsWindowsXPSP1OrGreater = NULL;
-IS_WINDOWS_XP_OR_GREATER		COsVersion::IsWindowsXPOrGreater = NULL;
-GET_VERSION_EX					COsVersion::GetVersionEx = NULL;
+IS_WINDOWS_SERVER				COperationSystemVersion::IsWindowsServer = NULL;
+IS_WINDOWS_10_OR_GREATER		COperationSystemVersion::IsWindows1OrGreater = NULL;
+IS_WINDOWS_8_POINT_1_OR_GREATER	COperationSystemVersion::IsWindows8Point1OrGreater = NULL;
+IS_WINDOWS_8_OR_GREATER			COperationSystemVersion::IsWindows8OrGreater = NULL;
+IS_WINDOWS_7_SP_1_OR_GREATER	COperationSystemVersion::IsWindows7SP1OrGreater = NULL;
+IS_WINDOWS_7_OR_GREATER			COperationSystemVersion::IsWindows7OrGreater = NULL;
+IS_WINDOWS_VISTA_SP2_OR_GREATER	COperationSystemVersion::IsWindowsVistaSP2OrGreater = NULL;
+IS_WINDOWS_VISTA_SP1_OR_GREATER	COperationSystemVersion::IsWindowsVistaSP1OrGreater = NULL;
+IS_WINDOWS_VISTA_OR_GREATER		COperationSystemVersion::IsWindowsVistaOrGreater = NULL;
+IS_WINDOWS_XP_SP3_OR_GREATER	COperationSystemVersion::IsWindowsXPSP3OrGreater = NULL;
+IS_WINDOWS_XP_SP2_OR_GREATER	COperationSystemVersion::IsWindowsXPSP2OrGreater = NULL;
+IS_WINDOWS_XP_SP1_OR_GREATER	COperationSystemVersion::IsWindowsXPSP1OrGreater = NULL;
+IS_WINDOWS_XP_OR_GREATER		COperationSystemVersion::IsWindowsXPOrGreater = NULL;
+GET_VERSION_EX					COperationSystemVersion::GetVersionEx = NULL;
 
 BOOL
-COsVersion::Init()
+COperationSystemVersion::Init()
 {
 	BOOL	bRet = FALSE;
 
@@ -73,13 +73,13 @@ COsVersion::Init()
 }
 
 OS_VERSION_USER_DEFINED
-COsVersion::GetOSVersion()
+COperationSystemVersion::GetOSVersion()
 {
 	return ms_OsVersionUserDefined;
 }
 
 OS_VERSION_USER_DEFINED
-COsVersion::GetOSVersionByIsOrGreater()
+COperationSystemVersion::GetOSVersionByIsOrGreater()
 
 {
 	OS_VERSION_USER_DEFINED	ret = OS_VERSION_UNKNOWN;
@@ -174,7 +174,7 @@ COsVersion::GetOSVersionByIsOrGreater()
 }
 
 OS_VERSION_USER_DEFINED
-COsVersion::GetOSVersionByGetVersionEx()
+COperationSystemVersion::GetOSVersionByGetVersionEx()
 {
 	OS_VERSION_USER_DEFINED	ret = OS_VERSION_UNKNOWN;
 
@@ -283,13 +283,13 @@ COsVersion::GetOSVersionByGetVersionEx()
 }
 
 OS_PROCESSOR_TYPE_USER_DEFINED
-COsVersion::GetOSProcessorType()
+COperationSystemVersion::GetOSProcessorType()
 {
 	return ms_ProcessorTypeUserDefined;
 }
 
 OS_PROCESSOR_TYPE_USER_DEFINED
-COsVersion::GetOSProcessorTypeInternal()
+COperationSystemVersion::GetOSProcessorTypeInternal()
 {
 	OS_PROCESSOR_TYPE_USER_DEFINED	ret = OS_PROCESSOR_TYPE_UNKNOWN;
 
