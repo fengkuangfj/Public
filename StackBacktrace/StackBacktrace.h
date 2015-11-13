@@ -4,12 +4,15 @@
 #include <stdio.h>
 #include <Dbghelp.h>
 #include <Shlwapi.h>
+#include <tchar.h>
 #include <strsafe.h>
 
 #pragma comment(lib, "Dbghelp.lib")
 #pragma comment(lib, "Shlwapi.lib")
 
-#define MOD_STACK_BACK_TRACE _T("Õ»»ØËÝ")
+#include "..\\SimpleLog\\SimpleLog.h"
+
+#define MOD_STACK_BACKTRACE _T("Õ»»ØËÝ")
 
 /*++
 *
@@ -142,18 +145,18 @@ public:
 		StackBacktrace();
 
 private:
-	static RTLWALKFRAMECHAIN	ms_RtlWalkFrameChain;
+	static RTLWALKFRAMECHAIN	RtlWalkFrameChain;
 	static HANDLE				ms_hProcess;
 	static BOOL					ms_bCanUseStackBacktraceSym;
-	static IMAGEHLPAPIVERSION	ms_ImagehlpApiVersion;
-	static SYMINITIALIZE		ms_SymInitialize;
-	static SYMCLEANUP			ms_SymCleanup;
-	static SYMSETOPTIONS		ms_SymSetOptions;
-	static SYMGETOPTIONS		ms_SymGetOptions;
-	static STACKWALK64			ms_StackWalk64;
-	static SYMFROMADDR			ms_SymFromAddr;
-	static UNDECORATESYMBOLNAME ms_UnDecorateSymbolName;
-	static SYMGETLINEFROMADDR64 ms_SymGetLineFromAddr64;
+	static IMAGEHLPAPIVERSION	ImagehlpApiVersion;
+	static SYMINITIALIZE		SymInitialize;
+	static SYMCLEANUP			SymCleanup;
+	static SYMSETOPTIONS		SymSetOptions;
+	static SYMGETOPTIONS		SymGetOptions;
+	static STACKWALK64			StackWalk64;
+	static SYMFROMADDR			SymFromAddr;
+	static UNDECORATESYMBOLNAME UnDecorateSymbolName;
+	static SYMGETLINEFROMADDR64 SymGetLineFromAddr64;
 
 	BOOL
 		WalkFrameChaim();
