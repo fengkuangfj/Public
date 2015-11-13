@@ -2,18 +2,20 @@
 
 TCHAR				CSimpleLog::ms_LogPath[MAX_PATH] = { 0 };
 CRITICAL_SECTION	CSimpleLog::ms_CriticalSection = { 0 };
-BOOL				CSimpleLog::ms_Ready = FALSE;
+BOOL				CSimpleLog::ms_WriteReady = FALSE;
 
 BOOL
 CSimpleLog::Init(
 __in LPTSTR lpLogPath
 )
 {
-	BOOL	bRet = FALSE;
+	BOOL			bRet = FALSE;
 
-	HANDLE	hFile = INVALID_HANDLE_VALUE;
-	LPTSTR	lpPosition = NULL;
-	TCHAR	lpDir[MAX_PATH] = { 0 };
+	HANDLE			hFile = INVALID_HANDLE_VALUE;
+	LPTSTR			lpPosition = NULL;
+	TCHAR			lpDir[MAX_PATH] = { 0 };
+
+	CStackBacktrace StackBacktrace;
 
 
 	__try
@@ -26,7 +28,7 @@ __in LPTSTR lpLogPath
 
 		_tcscat_s(ms_LogPath, _countof(ms_LogPath), lpLogPath);
 
-		lpPosition = wcsrchr(ms_LogPath, _T('\\'));
+		lpPosition = _tcsrchr(ms_LogPath, _T('\\'));
 		if (!lpPosition)
 			__leave;
 
@@ -43,63 +45,165 @@ __in LPTSTR lpLogPath
 			FILE_ATTRIBUTE_NORMAL,
 			NULL
 			);
-		if (hFile == INVALID_HANDLE_VALUE)
+		if (INVALID_HANDLE_VALUE == hFile)
 			__leave;
 
 		InitializeCriticalSection(&ms_CriticalSection);
 
-		ms_Ready = TRUE;
+		ms_WriteReady = TRUE;
+
+		setlocale(LC_ALL, "");
+
+		StackBacktrace.Init(lpDir);
 
 		bRet = TRUE;
 	}
 	__finally
 	{
-		if (hFile != INVALID_HANDLE_VALUE)
+		if (INVALID_HANDLE_VALUE != hFile)
+		{
 			CloseHandle(hFile);
+			hFile = INVALID_HANDLE_VALUE;
+		}
 
 		if (bRet)
-			CSimpleLogWrite(MOD_SIMPLE_LOG, _T("初始化成功"));
+			CSimpleLogSR(MOD_SIMPLE_LOG, LOG_LEVEL_INFORMATION, "初始化成功");
 	}
 
 	return bRet;
 }
 
 BOOL
-CSimpleLog::Write(
-__in LPTSTR	lpMod,
-__in LPSTR	lpFuncName,
-__in LPTSTR	lpFmt,
+CSimpleLog::Log(
+__in LPTSTR		lpMod,
+__in LOG_LEVEL	LogLevel,
+__in LPSTR		lpFile,
+__in LPSTR		lpFunction,
+__in ULONG		ulLine,
+__in LPSTR		lpFmt,
 ...
 )
 {
 	BOOL			bRet = FALSE;
 
-	HANDLE			hFile = INVALID_HANDLE_VALUE;
-	TCHAR			tchLog[MAX_PATH] = { 0 };
-	TCHAR			Tmp[MAX_PATH] = { 0 };
-	CHAR			chLog[MAX_PATH * sizeof(TCHAR)] = { 0 };
-	LARGE_INTEGER	FileSize = { 0 };
-	DWORD			dwWrite = 0;
-	time_t			rawTime = 0;
-	tm				timeInfo = { 0 };
-	LPTSTR			lpPositon = NULL;
-	TCHAR			lpDir[MAX_PATH] = { 0 };
-	TCHAR			tchFuncName[MAX_PATH] = { 0 };
-
 	va_list			Args;
 
+	time_t			rawTime = 0;
+	tm				timeInfo = { 0 };
+	CHAR			chFmtInfo[MAX_PATH] = {0};
+	CHAR			chLog[MAX_PATH * 2]	= {0};
+	HANDLE			hOutput = INVALID_HANDLE_VALUE;
 
-	if (!ms_Ready)
+	CSimpleLog		SimpleLog;
+	CStackBacktrace	StackBacktrace;
+
+
+	__try
+	{
+		if (LOG_LEVEL_INFORMATION_STACK_BACKTRACE == LogLevel ||
+			LOG_LEVEL_WARNING_STACK_BACKTRACE == LogLevel ||
+			LOG_LEVEL_ERROR_STACK_BACKTRACE == LogLevel)
+			LogLevel = (LOG_LEVEL)(LogLevel - 0x00000010);
+		else
+		{
+			if (LOG_LEVEL_ERROR == LogLevel)
+				StackBacktrace.StackBacktrace();
+		}
+
+		va_start(Args, lpFmt);
+
+		time(&rawTime);
+		localtime_s(&timeInfo, &rawTime);
+
+		StringCchVPrintfA(chFmtInfo, _countof(chFmtInfo), lpFmt, Args);
+
+		StringCchPrintfA(chLog, _countof(chLog), "[%hs][%04d/%02d/%02d][%02d:%02d:%02d][%05d][%lS][%hs][%d][%hs] %hs ",
+			(LOG_LEVEL_INFORMATION == LogLevel) ? "[INFO]" : ((LOG_LEVEL_WARNING == LogLevel) ? "[WARN]" : ((LOG_LEVEL_ERROR == LogLevel) ? "[ERRO]" : "[????]")),
+			timeInfo.tm_year + 1900,
+			timeInfo.tm_mon + 1,
+			timeInfo.tm_mday,
+			timeInfo.tm_hour,
+			timeInfo.tm_min,
+			timeInfo.tm_sec,
+			GetCurrentThreadId(),
+			lpMod ? lpMod : _T("未知模块"),
+			lpFile,
+			ulLine,
+			lpFunction,
+			chFmtInfo
+			);
+
+		SimpleLog.Write(chLog);
+
+		if (IsDebuggerPresent())
+		{
+			strcat_s(chLog, _countof(chLog), "\n");
+
+			hOutput = GetStdHandle(STD_OUTPUT_HANDLE);
+			if (INVALID_HANDLE_VALUE != hOutput)
+			{
+				if (hOutput)
+					printf("%hs", chLog);
+			}
+
+			OutputDebugStringA(chLog);
+		}
+
+		if (LOG_LEVEL_ERROR == LogLevel)
+		{
+			if (IsDebuggerPresent())
+			{
+				__asm
+				{
+					int 3
+				}
+			}
+			else
+			{
+#ifdef _ASSERT
+				VERIFY(FALSE);
+#else
+				assert(FALSE);
+#endif
+			}
+		}
+
+		bRet = TRUE;
+	}
+	__finally
+	{
+		va_end(Args);
+	}
+
+	return bRet;
+}
+
+BOOL
+	CSimpleLog::Write(
+	__in LPSTR lpLog
+	)
+{
+	BOOL			bRet = FALSE;
+
+	CHAR			chLog[MAX_PATH * 2] = { 0 };
+	LPTSTR			lpPositon = NULL;
+	TCHAR			lpDir[MAX_PATH] = { 0 };
+	HANDLE			hFile = INVALID_HANDLE_VALUE;
+	LARGE_INTEGER	FileSize = { 0 };
+	DWORD			dwWrite = 0;
+
+
+	if (!ms_WriteReady)
 		return TRUE;
 
 	__try
 	{
 		EnterCriticalSection(&CSimpleLog::ms_CriticalSection);
 
-		va_start(Args, lpFmt);
-
-		if (!_tcslen(CSimpleLog::ms_LogPath))
+		if (!lpLog)
 			__leave;
+
+		StringCchPrintfA(chLog, _countof(chLog), "%hs\r\n", lpLog);
 
 		lpPositon = wcsrchr(CSimpleLog::ms_LogPath, _T('\\'));
 		if (!lpPositon)
@@ -118,64 +222,13 @@ __in LPTSTR	lpFmt,
 			FILE_ATTRIBUTE_NORMAL,
 			NULL
 			);
-		if (hFile == INVALID_HANDLE_VALUE)
+		if (INVALID_HANDLE_VALUE == hFile)
 			__leave;
 
 		FileSize.LowPart = GetFileSize(hFile, NULL);
-		if (SetFilePointer(hFile, FileSize.LowPart, NULL, FILE_BEGIN) == INVALID_SET_FILE_POINTER)
+		if (INVALID_SET_FILE_POINTER == SetFilePointer(hFile, FileSize.LowPart, NULL, FILE_BEGIN))
 			__leave;
 
-		// 时间
-		time(&rawTime);
-		localtime_s(&timeInfo, &rawTime);
-
-		StringCbPrintf(Tmp, sizeof(Tmp), _T("[%04d-%02d-%02d][%02d:%02d:%02d]"),
-			timeInfo.tm_year + 1900,
-			timeInfo.tm_mon + 1,
-			timeInfo.tm_mday,
-			timeInfo.tm_hour,
-			timeInfo.tm_min,
-			timeInfo.tm_sec
-			);
-		_tcscat_s(tchLog, _countof(tchLog), Tmp);
-
-		// 线程
-		StringCbPrintf(Tmp, sizeof(Tmp), _T("[%05d]"), GetCurrentThreadId());
-		_tcscat_s(tchLog, _countof(tchLog), Tmp);
-
-		// 模块
-		if (lpMod)
-			StringCbPrintf(Tmp, sizeof(Tmp), _T("[%s]"), lpMod);
-		else
-			StringCbPrintf(Tmp, sizeof(Tmp), _T("未指定"));
-		_tcscat_s(tchLog, _countof(tchLog), Tmp);
-
-		// 函数名
-		if (lpFuncName)
-		{
-			MultiByteToWideChar(CP_ACP, 0, lpFuncName, -1, tchFuncName, _countof(tchFuncName));
-
-			StringCbPrintf(Tmp, sizeof(Tmp), _T("[%s]"), tchFuncName);
-		}
-		else
-			StringCbPrintf(Tmp, sizeof(Tmp), _T("未指定"));
-
-		_tcscat_s(tchLog, _countof(tchLog), Tmp);
-
-		// 日志
-		if (lpFmt)
-			StringCbVPrintf(Tmp, sizeof(Tmp), lpFmt, Args);
-		else
-			StringCbPrintf(Tmp, sizeof(Tmp), _T("参数非法"));
-		_tcscat_s(tchLog, _countof(tchLog), Tmp);
-
-		// 换行
-		_tcscat_s(tchLog, _countof(tchLog), _T("\r\n"));
-
-		// 转换
-		WideCharToMultiByte(CP_ACP, 0, tchLog, -1, chLog, sizeof(chLog), NULL, NULL);
-
-		// 写日志
 		if (!WriteFile(hFile, chLog, strlen(chLog), &dwWrite, NULL))
 			__leave;
 
@@ -183,17 +236,15 @@ __in LPTSTR	lpFmt,
 	}
 	__finally
 	{
-		if (hFile != INVALID_HANDLE_VALUE)
+		if (INVALID_HANDLE_VALUE != hFile)
 		{
 			FlushFileBuffers(hFile);
 			CloseHandle(hFile);
 			hFile = INVALID_HANDLE_VALUE;
 		}
 
-		va_end(Args);
-
 		LeaveCriticalSection(&CSimpleLog::ms_CriticalSection);
 	}
-
+	
 	return bRet;
 }

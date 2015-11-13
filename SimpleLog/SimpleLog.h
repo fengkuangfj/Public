@@ -3,15 +3,28 @@
 #include <Windows.h>
 #include <tchar.h>
 #include <Strsafe.h>
+#include <locale.h>
+#include <assert.h>
 #include <time.h>
-#include <string.h>
 #include <Shlobj.h>
+
+#include "..\\StackBacktrace\\StackBacktrace.h"
 
 #ifndef MOD_SIMPLE_LOG
 #define MOD_SIMPLE_LOG	_T("ºÚµ•»’÷æ")
 #endif
 
-#define CSimpleLogWrite(lpMod, FMT, ...) CSimpleLog::Write(lpMod, __FUNCTION__, FMT, __VA_ARGS__)
+typedef enum _LOG_LEVEL
+{
+	LOG_LEVEL_INFORMATION					= 0x00000001,
+	LOG_LEVEL_WARNING						= 0x00000002,
+	LOG_LEVEL_ERROR							= 0x00000004,
+	LOG_LEVEL_INFORMATION_STACK_BACKTRACE	= 0x00000011,
+	LOG_LEVEL_WARNING_STACK_BACKTRACE		= 0x00000012,
+	LOG_LEVEL_ERROR_STACK_BACKTRACE			= 0x00000014
+} LOG_LEVEL, *PLOG_LEVEL, *LPLOG_LEVEL;
+
+#define CSimpleLogSR(lpMod, PrintfLevel, FMT, ...) CSimpleLog::Log(lpMod, PrintfLevel, __FILE__, __FUNCTION__, __LINE__, FMT, __VA_ARGS__)
 
 class CSimpleLog
 {
@@ -23,15 +36,23 @@ public:
 
 	static
 		BOOL
-		Write(
-		__in LPTSTR	lpMod,
-		__in LPSTR	lpFuncName,
-		__in LPTSTR	lpFmt,
+		Log(
+		__in LPTSTR		lpMod,
+		__in LOG_LEVEL	PrintfLevel,
+		__in LPSTR		lpFile,
+		__in LPSTR		lpFunction,
+		__in ULONG		ulLine,
+		__in LPSTR		lpFmt,
 		...
 		);
 
 private:
 	static TCHAR			ms_LogPath[MAX_PATH];
 	static CRITICAL_SECTION	ms_CriticalSection;
-	static BOOL				ms_Ready;
+	static BOOL				ms_WriteReady;
+
+	BOOL
+		Write(
+		__in LPSTR lpLog
+		);
 };
