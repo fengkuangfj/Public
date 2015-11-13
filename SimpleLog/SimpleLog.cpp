@@ -105,7 +105,7 @@ __in LPSTR		lpFmt,
 			LOG_LEVEL_WARNING_STACK_BACKTRACE == LogLevel ||
 			LOG_LEVEL_ERROR_STACK_BACKTRACE == LogLevel)
 		{
-			LogLevel = (LOG_LEVEL)(LogLevel - 0x00000010);
+			LogLevel = (LOG_LEVEL)(LogLevel - LOG_LEVEL_STACK_BACKTRACE);
 			bNeedStackBacktrace = FALSE;
 		}
 
@@ -116,8 +116,8 @@ __in LPSTR		lpFmt,
 
 		StringCchVPrintfA(chFmtInfo, _countof(chFmtInfo), lpFmt, Args);
 
-		StringCchPrintfA(chLog, _countof(chLog), "[%hs][%04d/%02d/%02d][%02d:%02d:%02d][%05d][%lS][%hs][%d][%hs] %hs ",
-			(0 == _tcsicmp(lpMod, MOD_STACK_BACKTRACE)) ? ((LOG_LEVEL_INFORMATION == LogLevel) ? "\t][INFO" : ((LOG_LEVEL_WARNING == LogLevel) ? "\t][WARN" : ((LOG_LEVEL_ERROR == LogLevel) ? "\t][ERRO" : "\t][????"))) : ((LOG_LEVEL_INFORMATION == LogLevel) ? "INFO" : ((LOG_LEVEL_WARNING == LogLevel) ? "WARN" : ((LOG_LEVEL_ERROR == LogLevel) ? "ERRO" : "????"))),
+		StringCchPrintfA(chLog, _countof(chLog), "%hs[%04d/%02d/%02d][%02d:%02d:%02d][%05d][%lS][%hs][%d][%hs] %hs ",
+			(0 == _tcsicmp(lpMod, MOD_STACK_BACKTRACE)) ? ((LOG_LEVEL_INFORMATION == LogLevel) ? "\t[INFO]" : ((LOG_LEVEL_WARNING == LogLevel) ? "\t[WARN]" : ((LOG_LEVEL_ERROR == LogLevel) ? "\t[ERRO]" : "\t[????]"))) : ((LOG_LEVEL_INFORMATION == LogLevel) ? "[INFO]" : ((LOG_LEVEL_WARNING == LogLevel) ? "[WARN]" : ((LOG_LEVEL_ERROR == LogLevel) ? "[ERRO]" : "[????]"))),
 			timeInfo.tm_year + 1900,
 			timeInfo.tm_mon + 1,
 			timeInfo.tm_mday,
