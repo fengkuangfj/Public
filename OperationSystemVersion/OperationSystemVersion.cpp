@@ -49,7 +49,7 @@ COperationSystemVersion::Init()
 			ms_OsVersionUserDefined = GetOSVersionByIsOrGreater();
 		else
 		{
-			GetVersionEx = (GET_VERSION_EX)GetProcAddress(hModule, "GetVersionEx");
+			GetVersionEx = (GET_VERSION_EX)GetProcAddress(hModule, "GetVersionExW");
 			if (!GetVersionEx)
 				__leave;
 
