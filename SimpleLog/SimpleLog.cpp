@@ -93,6 +93,7 @@ __in LPSTR		lpFmt,
 	CHAR			chFmtInfo[MAX_PATH] = {0};
 	CHAR			chLog[MAX_PATH * 2]	= {0};
 	HANDLE			hOutput = INVALID_HANDLE_VALUE;
+	BOOL			bNeedStackBacktrace = TRUE;
 
 	CSimpleLog		SimpleLog;
 	CStackBacktrace	StackBacktrace;
@@ -103,11 +104,9 @@ __in LPSTR		lpFmt,
 		if (LOG_LEVEL_INFORMATION_STACK_BACKTRACE == LogLevel ||
 			LOG_LEVEL_WARNING_STACK_BACKTRACE == LogLevel ||
 			LOG_LEVEL_ERROR_STACK_BACKTRACE == LogLevel)
-			LogLevel = (LOG_LEVEL)(LogLevel - 0x00000010);
-		else
 		{
-			if (LOG_LEVEL_ERROR == LogLevel)
-				StackBacktrace.StackBacktrace();
+			LogLevel = (LOG_LEVEL)(LogLevel - 0x00000010);
+			bNeedStackBacktrace = FALSE;
 		}
 
 		va_start(Args, lpFmt);
@@ -118,7 +117,7 @@ __in LPSTR		lpFmt,
 		StringCchVPrintfA(chFmtInfo, _countof(chFmtInfo), lpFmt, Args);
 
 		StringCchPrintfA(chLog, _countof(chLog), "[%hs][%04d/%02d/%02d][%02d:%02d:%02d][%05d][%lS][%hs][%d][%hs] %hs ",
-			(LOG_LEVEL_INFORMATION == LogLevel) ? "[INFO]" : ((LOG_LEVEL_WARNING == LogLevel) ? "[WARN]" : ((LOG_LEVEL_ERROR == LogLevel) ? "[ERRO]" : "[????]")),
+			(0 == _tcsicmp(lpMod, MOD_STACK_BACKTRACE)) ? ((LOG_LEVEL_INFORMATION == LogLevel) ? "\t][INFO" : ((LOG_LEVEL_WARNING == LogLevel) ? "\t][WARN" : ((LOG_LEVEL_ERROR == LogLevel) ? "\t][ERRO" : "\t][????"))) : ((LOG_LEVEL_INFORMATION == LogLevel) ? "INFO" : ((LOG_LEVEL_WARNING == LogLevel) ? "WARN" : ((LOG_LEVEL_ERROR == LogLevel) ? "ERRO" : "????"))),
 			timeInfo.tm_year + 1900,
 			timeInfo.tm_mon + 1,
 			timeInfo.tm_mday,
@@ -149,8 +148,10 @@ __in LPSTR		lpFmt,
 			OutputDebugStringA(chLog);
 		}
 
-		if (LOG_LEVEL_ERROR == LogLevel)
+		if (bNeedStackBacktrace && (LOG_LEVEL_ERROR == LogLevel))
 		{
+			StackBacktrace.StackBacktrace();
+
 			if (IsDebuggerPresent())
 			{
 				__asm
