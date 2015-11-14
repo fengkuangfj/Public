@@ -4,7 +4,6 @@
 #include <time.h>
 #include <tchar.h>
 #include <strsafe.h>
-
 #include <DbgHelp.h>
 #include <Shlwapi.h>
 #include <Winver.h>
