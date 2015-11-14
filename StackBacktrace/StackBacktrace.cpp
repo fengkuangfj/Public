@@ -1,29 +1,29 @@
 #include "StackBacktrace.h"
 
-RTLWALKFRAMECHAIN		CStackBacktrace::RtlWalkFrameChain			= NULL;
-HANDLE					CStackBacktrace::ms_hProcess					= NULL;
-BOOL					CStackBacktrace::ms_bCanUseStackBacktraceSym	= FALSE;
-IMAGEHLPAPIVERSION		CStackBacktrace::ImagehlpApiVersion			= NULL;
-SYMINITIALIZE			CStackBacktrace::SymInitialize				= NULL;
-SYMCLEANUP				CStackBacktrace::SymCleanup					= NULL;
-SYMSETOPTIONS			CStackBacktrace::SymSetOptions				= NULL;
-SYMGETOPTIONS			CStackBacktrace::SymGetOptions				= NULL;
-STACKWALK64				CStackBacktrace::StackWalk64					= NULL;
-SYMFROMADDR				CStackBacktrace::SymFromAddr					= NULL;
-UNDECORATESYMBOLNAME	CStackBacktrace::UnDecorateSymbolName		= NULL;
-SYMGETLINEFROMADDR64	CStackBacktrace::SymGetLineFromAddr64		= NULL;
+RTLWALKFRAMECHAIN		CStackBacktrace::RtlWalkFrameChain = NULL;
+HANDLE					CStackBacktrace::ms_hProcess = NULL;
+BOOL					CStackBacktrace::ms_bCanUseStackBacktraceSym = FALSE;
+IMAGEHLPAPIVERSION		CStackBacktrace::ImagehlpApiVersion = NULL;
+SYMINITIALIZE			CStackBacktrace::SymInitialize = NULL;
+SYMCLEANUP				CStackBacktrace::SymCleanup = NULL;
+SYMSETOPTIONS			CStackBacktrace::SymSetOptions = NULL;
+SYMGETOPTIONS			CStackBacktrace::SymGetOptions = NULL;
+STACKWALK64				CStackBacktrace::StackWalk64 = NULL;
+SYMFROMADDR				CStackBacktrace::SymFromAddr = NULL;
+UNDECORATESYMBOLNAME	CStackBacktrace::UnDecorateSymbolName = NULL;
+SYMGETLINEFROMADDR64	CStackBacktrace::SymGetLineFromAddr64 = NULL;
 
 BOOL
-	CStackBacktrace::WalkFrameChaim()
+CStackBacktrace::WalkFrameChaim()
 {
-	BOOL	bRet					= FALSE;
+	BOOL	bRet = FALSE;
 
-	PVOID	ReturnAddress[MAX_PATH]	= {0};
-	ULONG	FrameCount				= 0;
-	ULONG	FrameNumber				= 0;
-	CHAR	chLog[MAX_PATH]			= {0};
+	PVOID	ReturnAddress[MAX_PATH] = { 0 };
+	ULONG	FrameCount = 0;
+	ULONG	FrameNumber = 0;
+	CHAR	chLog[MAX_PATH] = { 0 };
 
-	CSimpleLogSR(MOD_STACK_BACKTRACE, LOG_LEVEL_INFORMATION_STACK_BACKTRACE, "last"); 
+	CSimpleLogSR(MOD_STACK_BACKTRACE, LOG_LEVEL_INFORMATION_STACK_BACKTRACE, "last");
 
 	__try
 	{
@@ -44,22 +44,22 @@ BOOL
 		;
 	}
 
-	CSimpleLogSR(MOD_STACK_BACKTRACE, LOG_LEVEL_INFORMATION_STACK_BACKTRACE, "first"); 
+	CSimpleLogSR(MOD_STACK_BACKTRACE, LOG_LEVEL_INFORMATION_STACK_BACKTRACE, "first");
 
 	return bRet;
 }
 
 BOOL
-	CStackBacktrace::Init(
-	__in LPTSTR lpSymDir
-	)
+CStackBacktrace::Init(
+__in LPTSTR lpSymDir
+)
 {
-	BOOL			bRet			= FALSE;
+	BOOL			bRet = FALSE;
 
-	HMODULE			hModuleNtdll	= NULL;
-	DWORD			dwOptions		= 0;
-	HMODULE			hModuleDbghelp	= NULL;
-	LPAPI_VERSION	lpApiVersion	= NULL;
+	HMODULE			hModuleNtdll = NULL;
+	DWORD			dwOptions = 0;
+	HMODULE			hModuleDbghelp = NULL;
+	LPAPI_VERSION	lpApiVersion = NULL;
 
 
 	__try
@@ -201,7 +201,7 @@ BOOL
 }
 
 BOOL
-	CStackBacktrace::Unload()
+CStackBacktrace::Unload()
 {
 	BOOL bRet = FALSE;
 
@@ -239,28 +239,28 @@ BOOL
 }
 
 BOOL
-	CStackBacktrace::StackBacktrace()
+CStackBacktrace::StackBacktrace()
 {
 	return ms_bCanUseStackBacktraceSym ? StackBacktraceSym() : WalkFrameChaim();
 }
 
 BOOL
-	CStackBacktrace::StackBacktraceSym()
+CStackBacktrace::StackBacktraceSym()
 {
-	BOOL					bRet						= FALSE;
+	BOOL					bRet = FALSE;
 
-	STACKFRAME64			StackFrame64				= {0};
+	STACKFRAME64			StackFrame64 = { 0 };
 
-	DWORD64					dw64Displacement			= 0;
-	PSYMBOL_INFO			pSymbol						= NULL;
-	DWORD					dwDisplacement				= 0;
-	IMAGEHLP_LINE64			Line						= {0};
-	CHAR					chDecoratedName[MAX_PATH]	= {0};
-	LPEXCEPTION_POINTERS	lpExceptionPointers			= NULL;
-	HANDLE					hThread						= NULL;
-	CONTEXT					Context						= {0};
-	CHAR					chHomeDir[MAX_PATH]			= {0};
-	CHAR					chLog[MAX_PATH]				= {0};
+	DWORD64					dw64Displacement = 0;
+	PSYMBOL_INFO			pSymbol = NULL;
+	DWORD					dwDisplacement = 0;
+	IMAGEHLP_LINE64			Line = { 0 };
+	CHAR					chDecoratedName[MAX_PATH] = { 0 };
+	LPEXCEPTION_POINTERS	lpExceptionPointers = NULL;
+	HANDLE					hThread = NULL;
+	CONTEXT					Context = { 0 };
+	CHAR					chHomeDir[MAX_PATH] = { 0 };
+	CHAR					chLog[MAX_PATH] = { 0 };
 
 	CSimpleLogSR(MOD_STACK_BACKTRACE, LOG_LEVEL_INFORMATION_STACK_BACKTRACE, "last");
 
@@ -292,7 +292,7 @@ BOOL
 			__leave;
 		}
 
-		do 
+		do
 		{
 			ZeroMemory(pSymbol, sizeof(SYMBOL_INFO) - sizeof(CHAR) + MAX_PATH);
 
@@ -378,14 +378,14 @@ BOOL
 }
 
 BOOL
-	CALLBACK
-	ReadProcessMemoryProc64(
-	_In_  HANDLE  hProcess,
-	_In_  DWORD64 lpBaseAddress,
-	_Out_ PVOID   lpBuffer,
-	_In_  DWORD   nSize,
-	_Out_ LPDWORD lpNumberOfBytesRead
-	)
+CALLBACK
+ReadProcessMemoryProc64(
+_In_  HANDLE  hProcess,
+_In_  DWORD64 lpBaseAddress,
+_Out_ PVOID   lpBuffer,
+_In_  DWORD   nSize,
+_Out_ LPDWORD lpNumberOfBytesRead
+)
 {
 	BOOL bRet = FALSE;
 
