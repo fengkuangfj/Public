@@ -139,7 +139,7 @@ __in LPSTR		lpFmt,
 
 		StringCchVPrintfA(chFmtInfo, _countof(chFmtInfo), lpFmt, Args);
 
-		StringCchPrintfA(chLog, _countof(chLog), "%hs[%04d/%02d/%02d][%02d:%02d:%02d][%05d][%lS][%hs][%d][%hs] %hs ",
+		StringCchPrintfA(chLog, _countof(chLog), "%hs[%04d/%02d/%02d][%02d:%02d:%02d][%05d][%05d][%lS][%hs][%d][%hs] %hs ",
 			(0 == _tcsicmp(lpMod, MOD_STACK_BACKTRACE)) ? ((LOG_LEVEL_INFORMATION == LogLevel) ? "\t[INFO]" : ((LOG_LEVEL_WARNING == LogLevel) ? "\t[WARN]" : ((LOG_LEVEL_ERROR == LogLevel) ? "\t[ERRO]" : "\t[????]"))) : ((LOG_LEVEL_INFORMATION == LogLevel) ? "[INFO]" : ((LOG_LEVEL_WARNING == LogLevel) ? "[WARN]" : ((LOG_LEVEL_ERROR == LogLevel) ? "[ERRO]" : "[????]"))),
 			timeInfo.tm_year + 1900,
 			timeInfo.tm_mon + 1,
@@ -147,6 +147,7 @@ __in LPSTR		lpFmt,
 			timeInfo.tm_hour,
 			timeInfo.tm_min,
 			timeInfo.tm_sec,
+			GetCurrentProcessId(),
 			GetCurrentThreadId(),
 			lpMod ? lpMod : _T("Î´ÖªÄ£¿é"),
 			lpFile,
