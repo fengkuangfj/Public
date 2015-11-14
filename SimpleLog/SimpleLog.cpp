@@ -74,6 +74,29 @@ __in LPTSTR lpLogPath
 }
 
 BOOL
+CSimpleLog::Unload()
+{
+	BOOL			bRet = FALSE;
+
+	CStackBacktrace StackBacktrace;
+
+
+	__try
+	{
+		if (!StackBacktrace.Unload())
+			__leave;
+
+		bRet = TRUE;
+	}
+	__finally
+	{
+		;
+	}
+
+	return bRet;
+}
+
+BOOL
 CSimpleLog::Log(
 __in LPTSTR		lpMod,
 __in LOG_LEVEL	LogLevel,
@@ -90,8 +113,8 @@ __in LPSTR		lpFmt,
 
 	time_t			rawTime = 0;
 	tm				timeInfo = { 0 };
-	CHAR			chFmtInfo[MAX_PATH] = {0};
-	CHAR			chLog[MAX_PATH * 2]	= {0};
+	CHAR			chFmtInfo[MAX_PATH] = { 0 };
+	CHAR			chLog[MAX_PATH * 2] = { 0 };
 	HANDLE			hOutput = INVALID_HANDLE_VALUE;
 	BOOL			bNeedStackBacktrace = TRUE;
 
@@ -180,9 +203,9 @@ __in LPSTR		lpFmt,
 }
 
 BOOL
-	CSimpleLog::Write(
-	__in LPSTR lpLog
-	)
+CSimpleLog::Write(
+__in LPSTR lpLog
+)
 {
 	BOOL			bRet = FALSE;
 
@@ -246,6 +269,6 @@ BOOL
 
 		LeaveCriticalSection(&CSimpleLog::ms_CriticalSection);
 	}
-	
+
 	return bRet;
 }
