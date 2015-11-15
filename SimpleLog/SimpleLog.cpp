@@ -36,12 +36,18 @@ __in LPTSTR lpLogPath
 
 		SHCreateDirectoryEx(NULL, lpDir, NULL);
 
+		if (PathFileExists(ms_LogPath))
+		{
+			if (!PathYetAnotherMakeUniqueName(ms_LogPath, ms_LogPath, NULL, NULL))
+				__leave;
+		}
+
 		hFile = CreateFile(
 			ms_LogPath,
 			GENERIC_READ | GENERIC_WRITE,
 			FILE_SHARE_READ | FILE_SHARE_WRITE,
 			NULL,
-			OPEN_ALWAYS,
+			CREATE_NEW,
 			FILE_ATTRIBUTE_NORMAL,
 			NULL
 			);
@@ -158,19 +164,16 @@ __in LPSTR		lpFmt,
 
 		SimpleLog.Write(chLog);
 
-		if (IsDebuggerPresent())
+		strcat_s(chLog, _countof(chLog), "\n");
+
+		hOutput = GetStdHandle(STD_OUTPUT_HANDLE);
+		if (INVALID_HANDLE_VALUE != hOutput)
 		{
-			strcat_s(chLog, _countof(chLog), "\n");
-
-			hOutput = GetStdHandle(STD_OUTPUT_HANDLE);
-			if (INVALID_HANDLE_VALUE != hOutput)
-			{
-				if (hOutput)
-					printf("%hs", chLog);
-			}
-
-			OutputDebugStringA(chLog);
+			if (hOutput)
+				printf("%hs", chLog);
 		}
+
+		OutputDebugStringA(chLog);
 
 		if (bNeedStackBacktrace && (LOG_LEVEL_ERROR == LogLevel))
 		{
