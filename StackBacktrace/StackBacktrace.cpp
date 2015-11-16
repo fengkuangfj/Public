@@ -23,7 +23,7 @@ CStackBacktrace::WalkFrameChaim()
 	ULONG	FrameNumber = 0;
 	CHAR	chLog[MAX_PATH] = { 0 };
 
-	CSimpleLogSR(MOD_STACK_BACKTRACE, LOG_LEVEL_INFORMATION_STACK_BACKTRACE, "last");
+	printfEx(MOD_STACK_BACKTRACE, PRINTF_LEVEL_INFORMATION, "last");
 
 	__try
 	{
@@ -35,7 +35,7 @@ CStackBacktrace::WalkFrameChaim()
 
 		FrameCount = RtlWalkFrameChain(ReturnAddress, _countof(ReturnAddress), 0);
 		for (; FrameNumber < FrameCount; FrameNumber++)
-			CSimpleLogSR(MOD_STACK_BACKTRACE, LOG_LEVEL_INFORMATION_STACK_BACKTRACE, "[FrameNumber]%02d [ReturnAddress]0x%08p", FrameNumber, ReturnAddress[FrameNumber]);
+			printfEx(MOD_STACK_BACKTRACE, PRINTF_LEVEL_INFORMATION, "[FrameNumber]%02d [ReturnAddress]0x%08p", FrameNumber, ReturnAddress[FrameNumber]);
 
 		bRet = TRUE;
 	}
@@ -44,7 +44,7 @@ CStackBacktrace::WalkFrameChaim()
 		;
 	}
 
-	CSimpleLogSR(MOD_STACK_BACKTRACE, LOG_LEVEL_INFORMATION_STACK_BACKTRACE, "first");
+	printfEx(MOD_STACK_BACKTRACE, PRINTF_LEVEL_INFORMATION, "first");
 
 	return bRet;
 }
@@ -69,21 +69,21 @@ __in LPTSTR lpSymDir
 			hModuleNtdll = GetModuleHandle(L"ntdll.dll");
 			if (!hModuleNtdll)
 			{
-				CSimpleLogSR(MOD_STACK_BACKTRACE, LOG_LEVEL_ERROR_STACK_BACKTRACE, "GetModuleHandle failed. (%d)", GetLastError());
+				printfEx(MOD_STACK_BACKTRACE, PRINTF_LEVEL_ERROR, "GetModuleHandle failed. (%d)", GetLastError());
 				__leave;
 			}
 
 			RtlWalkFrameChain = (RTLWALKFRAMECHAIN)GetProcAddress(hModuleNtdll, "RtlWalkFrameChain");
 			if (!RtlWalkFrameChain)
 			{
-				CSimpleLogSR(MOD_STACK_BACKTRACE, LOG_LEVEL_ERROR_STACK_BACKTRACE, "GetProcAddress RtlWalkFrameChain failed. (%d)", GetLastError());
+				printfEx(MOD_STACK_BACKTRACE, PRINTF_LEVEL_ERROR, "GetProcAddress RtlWalkFrameChain failed. (%d)", GetLastError());
 				__leave;
 			}
 		}
 
 		if (!lpSymDir)
 		{
-			CSimpleLogSR(MOD_STACK_BACKTRACE, LOG_LEVEL_ERROR_STACK_BACKTRACE, "input argument error");
+			printfEx(MOD_STACK_BACKTRACE, PRINTF_LEVEL_ERROR, "input argument error");
 			__leave;
 		}
 
@@ -95,14 +95,14 @@ __in LPTSTR lpSymDir
 			ms_hProcess = GetCurrentProcess();
 			if (!ms_hProcess)
 			{
-				CSimpleLogSR(MOD_STACK_BACKTRACE, LOG_LEVEL_ERROR_STACK_BACKTRACE, "GetCurrentProcess failed. (%d)", GetLastError());
+				printfEx(MOD_STACK_BACKTRACE, PRINTF_LEVEL_ERROR, "GetCurrentProcess failed. (%d)", GetLastError());
 				__leave;
 			}
 
 			hModuleDbghelp = GetModuleHandle(L"Dbghelp.dll");
 			if (!hModuleDbghelp)
 			{
-				CSimpleLogSR(MOD_STACK_BACKTRACE, LOG_LEVEL_ERROR_STACK_BACKTRACE, "GetModuleHandle failed. (%d)", GetLastError());
+				printfEx(MOD_STACK_BACKTRACE, PRINTF_LEVEL_ERROR, "GetModuleHandle failed. (%d)", GetLastError());
 				__leave;
 			}
 
@@ -112,7 +112,7 @@ __in LPTSTR lpSymDir
 				lpApiVersion = ImagehlpApiVersion();
 				if (!lpApiVersion)
 				{
-					CSimpleLogSR(MOD_STACK_BACKTRACE, LOG_LEVEL_ERROR_STACK_BACKTRACE, "ImagehlpApiVersion failed. (%d)", GetLastError());
+					printfEx(MOD_STACK_BACKTRACE, PRINTF_LEVEL_ERROR, "ImagehlpApiVersion failed. (%d)", GetLastError());
 					__leave;
 				}
 
@@ -121,62 +121,62 @@ __in LPTSTR lpSymDir
 				SymInitialize = (SYMINITIALIZE)GetProcAddress(hModuleDbghelp, "SymInitialize");
 				if (!SymInitialize)
 				{
-					CSimpleLogSR(MOD_STACK_BACKTRACE, LOG_LEVEL_ERROR_STACK_BACKTRACE, "GetProcAddress SymInitialize failed. (%d)", GetLastError());
+					printfEx(MOD_STACK_BACKTRACE, PRINTF_LEVEL_ERROR, "GetProcAddress SymInitialize failed. (%d)", GetLastError());
 					__leave;
 				}
 
 				SymCleanup = (SYMCLEANUP)GetProcAddress(hModuleDbghelp, "SymCleanup");
 				if (!SymCleanup)
 				{
-					CSimpleLogSR(MOD_STACK_BACKTRACE, LOG_LEVEL_ERROR_STACK_BACKTRACE, "GetProcAddress SymCleanup failed. (%d)", GetLastError());
+					printfEx(MOD_STACK_BACKTRACE, PRINTF_LEVEL_ERROR, "GetProcAddress SymCleanup failed. (%d)", GetLastError());
 					__leave;
 				}
 
 				SymSetOptions = (SYMSETOPTIONS)GetProcAddress(hModuleDbghelp, "SymSetOptions");
 				if (!SymSetOptions)
 				{
-					CSimpleLogSR(MOD_STACK_BACKTRACE, LOG_LEVEL_ERROR_STACK_BACKTRACE, "GetProcAddress SymSetOptions failed. (%d)", GetLastError());
+					printfEx(MOD_STACK_BACKTRACE, PRINTF_LEVEL_ERROR, "GetProcAddress SymSetOptions failed. (%d)", GetLastError());
 					__leave;
 				}
 
 				SymGetOptions = (SYMGETOPTIONS)GetProcAddress(hModuleDbghelp, "SymGetOptions");
 				if (!SymGetOptions)
 				{
-					CSimpleLogSR(MOD_STACK_BACKTRACE, LOG_LEVEL_ERROR_STACK_BACKTRACE, "GetProcAddress SymGetOptions failed. (%d)", GetLastError());
+					printfEx(MOD_STACK_BACKTRACE, PRINTF_LEVEL_ERROR, "GetProcAddress SymGetOptions failed. (%d)", GetLastError());
 					__leave;
 				}
 
 				StackWalk64 = (STACKWALK64)GetProcAddress(hModuleDbghelp, "StackWalk64");
 				if (!StackWalk64)
 				{
-					CSimpleLogSR(MOD_STACK_BACKTRACE, LOG_LEVEL_ERROR_STACK_BACKTRACE, "GetProcAddress StackWalk64 failed. (%d)", GetLastError());
+					printfEx(MOD_STACK_BACKTRACE, PRINTF_LEVEL_ERROR, "GetProcAddress StackWalk64 failed. (%d)", GetLastError());
 					__leave;
 				}
 
 				SymFromAddr = (SYMFROMADDR)GetProcAddress(hModuleDbghelp, "SymFromAddr");
 				if (!SymFromAddr)
 				{
-					CSimpleLogSR(MOD_STACK_BACKTRACE, LOG_LEVEL_ERROR_STACK_BACKTRACE, "GetProcAddress SymFromAddr failed. (%d)", GetLastError());
+					printfEx(MOD_STACK_BACKTRACE, PRINTF_LEVEL_ERROR, "GetProcAddress SymFromAddr failed. (%d)", GetLastError());
 					__leave;
 				}
 
 				UnDecorateSymbolName = (UNDECORATESYMBOLNAME)GetProcAddress(hModuleDbghelp, "UnDecorateSymbolName");
 				if (!UnDecorateSymbolName)
 				{
-					CSimpleLogSR(MOD_STACK_BACKTRACE, LOG_LEVEL_ERROR_STACK_BACKTRACE, "GetProcAddress UnDecorateSymbolName failed. (%d)", GetLastError());
+					printfEx(MOD_STACK_BACKTRACE, PRINTF_LEVEL_ERROR, "GetProcAddress UnDecorateSymbolName failed. (%d)", GetLastError());
 					__leave;
 				}
 
 				SymGetLineFromAddr64 = (SYMGETLINEFROMADDR64)GetProcAddress(hModuleDbghelp, "SymGetLineFromAddr64");
 				if (!SymGetLineFromAddr64)
 				{
-					CSimpleLogSR(MOD_STACK_BACKTRACE, LOG_LEVEL_ERROR_STACK_BACKTRACE, "GetProcAddress SymGetLineFromAddr64 failed. (%d)", GetLastError());
+					printfEx(MOD_STACK_BACKTRACE, PRINTF_LEVEL_ERROR, "GetProcAddress SymGetLineFromAddr64 failed. (%d)", GetLastError());
 					__leave;
 				}
 
 				if (!SymInitialize(ms_hProcess, lpSymDir, TRUE))
 				{
-					CSimpleLogSR(MOD_STACK_BACKTRACE, LOG_LEVEL_ERROR_STACK_BACKTRACE, "SymInitialize failed. (%d)", GetLastError());
+					printfEx(MOD_STACK_BACKTRACE, PRINTF_LEVEL_ERROR, "SymInitialize failed. (%d)", GetLastError());
 					__leave;
 				}
 
@@ -193,7 +193,7 @@ __in LPTSTR lpSymDir
 		if (!bRet)
 		{
 			if (!Unload())
-				CSimpleLogSR(MOD_STACK_BACKTRACE, LOG_LEVEL_INFORMATION_STACK_BACKTRACE, "Unload failed");
+				printfEx(MOD_STACK_BACKTRACE, PRINTF_LEVEL_INFORMATION, "Unload failed");
 		}
 	}
 
@@ -262,7 +262,7 @@ CStackBacktrace::StackBacktraceSym()
 	CHAR					chHomeDir[MAX_PATH] = { 0 };
 	CHAR					chLog[MAX_PATH] = { 0 };
 
-	CSimpleLogSR(MOD_STACK_BACKTRACE, LOG_LEVEL_INFORMATION_STACK_BACKTRACE, "last");
+	printfEx(MOD_STACK_BACKTRACE, PRINTF_LEVEL_INFORMATION, "last");
 
 	__try
 	{
@@ -288,7 +288,7 @@ CStackBacktrace::StackBacktraceSym()
 		pSymbol = (PSYMBOL_INFO)calloc(1, sizeof(SYMBOL_INFO) - sizeof(CHAR) + MAX_PATH);
 		if (!pSymbol)
 		{
-			CSimpleLogSR(MOD_STACK_BACKTRACE, LOG_LEVEL_ERROR_STACK_BACKTRACE, "calloc failed. (%d)", GetLastError());
+			printfEx(MOD_STACK_BACKTRACE, PRINTF_LEVEL_ERROR, "calloc failed. (%d)", GetLastError());
 			__leave;
 		}
 
@@ -314,7 +314,7 @@ CStackBacktrace::StackBacktraceSym()
 				if (0 == GetLastError())
 					break;
 
-				CSimpleLogSR(MOD_STACK_BACKTRACE, LOG_LEVEL_ERROR_STACK_BACKTRACE, "StackWalk64 failed. (%d)", GetLastError());
+				printfEx(MOD_STACK_BACKTRACE, PRINTF_LEVEL_ERROR, "StackWalk64 failed. (%d)", GetLastError());
 				__leave;
 			}
 
@@ -325,7 +325,7 @@ CStackBacktrace::StackBacktraceSym()
 				pSymbol
 				))
 			{
-				CSimpleLogSR(MOD_STACK_BACKTRACE, LOG_LEVEL_ERROR_STACK_BACKTRACE, "SymFromAddr failed. (%d)", GetLastError());
+				printfEx(MOD_STACK_BACKTRACE, PRINTF_LEVEL_ERROR, "SymFromAddr failed. (%d)", GetLastError());
 				__leave;
 			}
 
@@ -336,7 +336,7 @@ CStackBacktrace::StackBacktraceSym()
 				0
 				))
 			{
-				CSimpleLogSR(MOD_STACK_BACKTRACE, LOG_LEVEL_ERROR_STACK_BACKTRACE, "UnDecorateSymbolName failed. (%d)", GetLastError());
+				printfEx(MOD_STACK_BACKTRACE, PRINTF_LEVEL_ERROR, "UnDecorateSymbolName failed. (%d)", GetLastError());
 				__leave;
 			}
 
@@ -353,12 +353,12 @@ CStackBacktrace::StackBacktraceSym()
 			{
 				if (487 != GetLastError())
 				{
-					CSimpleLogSR(MOD_STACK_BACKTRACE, LOG_LEVEL_ERROR_STACK_BACKTRACE, "SymGetLineFromAddr64 failed. (%d)", GetLastError());
+					printfEx(MOD_STACK_BACKTRACE, PRINTF_LEVEL_ERROR, "SymGetLineFromAddr64 failed. (%d)", GetLastError());
 					__leave;
 				}
 			}
 			else
-				CSimpleLogSR(MOD_STACK_BACKTRACE, LOG_LEVEL_INFORMATION_STACK_BACKTRACE, "[%s][%s][%d]", chDecoratedName, Line.FileName, Line.LineNumber);
+				printfEx(MOD_STACK_BACKTRACE, PRINTF_LEVEL_INFORMATION, "[%s][%s][%d]", chDecoratedName, Line.FileName, Line.LineNumber);
 		} while (TRUE);
 
 		bRet = TRUE;
@@ -372,7 +372,7 @@ CStackBacktrace::StackBacktraceSym()
 		}
 	}
 
-	CSimpleLogSR(MOD_STACK_BACKTRACE, LOG_LEVEL_INFORMATION_STACK_BACKTRACE, "first");
+	printfEx(MOD_STACK_BACKTRACE, PRINTF_LEVEL_INFORMATION, "first");
 
 	return bRet;
 }
@@ -401,7 +401,7 @@ _Out_ LPDWORD lpNumberOfBytesRead
 			);
 		if (!bRet)
 		{
-			CSimpleLogSR(MOD_STACK_BACKTRACE, LOG_LEVEL_ERROR_STACK_BACKTRACE, "ReadProcessMemory failed. (%d)", GetLastError());
+			printfEx(MOD_STACK_BACKTRACE, PRINTF_LEVEL_ERROR, "ReadProcessMemory failed. (%d)", GetLastError());
 			__leave;
 		}
 	}
