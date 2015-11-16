@@ -67,8 +67,8 @@ __in LPTSTR lpLogPath
 		if (!CProcessPath::Get(TRUE, 0, tchProcPath, _countof(tchProcPath)))
 			__leave;
 
-		if (_tcslen(tchProcPath) >= _tcslen(_T("DebugView.exe")) &&
-			(0 == _tcsnicmp(tchProcPath + (_tcslen(tchProcPath) - _tcslen(_T("DebugView.exe"))), _T("DebugView.exe"), _tcslen(_T("DebugView.exe")))))
+		if (_tcslen(tchProcPath) >= _tcslen(_T("DbgView.exe")) &&
+			(0 == _tcsnicmp(tchProcPath + (_tcslen(tchProcPath) - _tcslen(_T("DbgView.exe"))), _T("DbgView.exe"), _tcslen(_T("DbgView.exe")))))
 			ms_bOutputDebugString = FALSE;
 
 		bRet = TRUE;
