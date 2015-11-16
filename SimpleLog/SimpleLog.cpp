@@ -3,6 +3,7 @@
 TCHAR				CSimpleLog::ms_LogPath[MAX_PATH] = { 0 };
 CRITICAL_SECTION	CSimpleLog::ms_CriticalSection = { 0 };
 BOOL				CSimpleLog::ms_WriteReady = FALSE;
+BOOL				CSimpleLog::ms_bOutputDebugString = TRUE;
 
 BOOL
 CSimpleLog::Init(
@@ -65,6 +66,10 @@ __in LPTSTR lpLogPath
 
 		if (!CProcessPath::Get(TRUE, 0, tchProcPath, _countof(tchProcPath)))
 			__leave;
+
+		if (_tcslen(tchProcPath) >= _tcslen(_T("DebugView.exe")) &&
+			(0 == _tcsnicmp(tchProcPath + (_tcslen(tchProcPath) - _tcslen(_T("DebugView.exe"))), _T("DebugView.exe"), _tcslen(_T("DebugView.exe")))))
+			ms_bOutputDebugString = FALSE;
 
 		bRet = TRUE;
 	}
@@ -173,7 +178,8 @@ __in LPSTR		lpFmt,
 				printf("%hs", chLog);
 		}
 
-		OutputDebugStringA(chLog);
+		if (ms_bOutputDebugString)
+			OutputDebugStringA(chLog);
 
 		if ((LOG_LEVEL_ERROR == LogLevel))
 		{

@@ -51,6 +51,7 @@ private:
 	static TCHAR			ms_LogPath[MAX_PATH];
 	static CRITICAL_SECTION	ms_CriticalSection;
 	static BOOL				ms_WriteReady;
+	static BOOL				ms_bOutputDebugString;
 
 	BOOL
 		Write(
