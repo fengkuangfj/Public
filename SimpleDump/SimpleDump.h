@@ -142,6 +142,8 @@ private:
 	static BOOL								ms_bCanUseRegisterRestart;
 	static REGISTER_APPLICATION_RESTART		RegisterApplicationRestart;
 
+	static PTOP_LEVEL_EXCEPTION_FILTER		ms_pTopLevelExceptionFilter;
+
 	static
 		BOOL
 		GetFunc();

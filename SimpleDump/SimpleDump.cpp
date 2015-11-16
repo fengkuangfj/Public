@@ -12,6 +12,8 @@ HMODULE							CSimpleDump::ms_hModuleKernel32Dll = NULL;
 BOOL							CSimpleDump::ms_bCanUseRegisterRestart = FALSE;
 REGISTER_APPLICATION_RESTART	CSimpleDump::RegisterApplicationRestart = NULL;
 
+PTOP_LEVEL_EXCEPTION_FILTER		CSimpleDump::ms_pTopLevelExceptionFilter = NULL;
+
 
 BOOL
 CSimpleDump::GenRestartCmdLine(
@@ -286,7 +288,10 @@ _In_ struct _EXCEPTION_POINTERS* pExceptionInfo
 		}
 	}
 
-	return EXCEPTION_CONTINUE_SEARCH;
+	if (ms_pTopLevelExceptionFilter)
+		return ms_pTopLevelExceptionFilter(pExceptionInfo);
+	else
+		return EXCEPTION_CONTINUE_SEARCH;
 }
 
 BOOL
@@ -447,7 +452,7 @@ __in PCRUSH_HANDLER_INFO pCrushHandlerInfo
 			{
 				case EH_TYPE_S:
 				{
-					SetUnhandledExceptionFilter((PTOP_LEVEL_EXCEPTION_FILTER)ExceptionHandler);
+					ms_pTopLevelExceptionFilter = SetUnhandledExceptionFilter((PTOP_LEVEL_EXCEPTION_FILTER)ExceptionHandler);
 					break;
 				}
 				case EH_TYPE_V:
