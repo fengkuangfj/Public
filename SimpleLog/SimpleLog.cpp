@@ -14,6 +14,7 @@ __in LPTSTR lpLogPath
 	HANDLE			hFile = INVALID_HANDLE_VALUE;
 	LPTSTR			lpPosition = NULL;
 	TCHAR			lpDir[MAX_PATH] = { 0 };
+	TCHAR			tchProcPath[MAX_PATH] = { 0 };
 
 	CStackBacktrace StackBacktrace;
 
@@ -62,6 +63,9 @@ __in LPTSTR lpLogPath
 
 		StackBacktrace.Init(lpDir);
 
+		if (!CProcessPath::Get(TRUE, 0, tchProcPath, _countof(tchProcPath)))
+			__leave;
+
 		bRet = TRUE;
 	}
 	__finally
@@ -73,7 +77,10 @@ __in LPTSTR lpLogPath
 		}
 
 		if (bRet)
+		{
+			CSimpleLogSR(MOD_SIMPLE_LOG, LOG_LEVEL_INFORMATION, "%lS", tchProcPath);
 			CSimpleLogSR(MOD_SIMPLE_LOG, LOG_LEVEL_INFORMATION, "初始化成功");
+		}
 		else
 			Unload();
 	}
@@ -124,7 +131,6 @@ __in LPSTR		lpFmt,
 	CHAR			chFmtInfo[MAX_PATH] = { 0 };
 	CHAR			chLog[MAX_PATH * 2] = { 0 };
 	HANDLE			hOutput = INVALID_HANDLE_VALUE;
-	BOOL			bNeedStackBacktrace = TRUE;
 
 	CSimpleLog		SimpleLog;
 	CStackBacktrace	StackBacktrace;
@@ -132,14 +138,6 @@ __in LPSTR		lpFmt,
 
 	__try
 	{
-		if (LOG_LEVEL_INFORMATION_STACK_BACKTRACE == LogLevel ||
-			LOG_LEVEL_WARNING_STACK_BACKTRACE == LogLevel ||
-			LOG_LEVEL_ERROR_STACK_BACKTRACE == LogLevel)
-		{
-			LogLevel = (LOG_LEVEL)(LogLevel - LOG_LEVEL_STACK_BACKTRACE);
-			bNeedStackBacktrace = FALSE;
-		}
-
 		va_start(Args, lpFmt);
 
 		time(&rawTime);
@@ -177,7 +175,7 @@ __in LPSTR		lpFmt,
 
 		OutputDebugStringA(chLog);
 
-		if (bNeedStackBacktrace && (LOG_LEVEL_ERROR == LogLevel))
+		if ((LOG_LEVEL_ERROR == LogLevel))
 		{
 			StackBacktrace.StackBacktrace();
 
