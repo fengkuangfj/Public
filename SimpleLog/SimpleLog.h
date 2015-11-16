@@ -25,7 +25,7 @@ typedef enum _LOG_LEVEL
 	LOG_LEVEL_ERROR_STACK_BACKTRACE = LOG_LEVEL_STACK_BACKTRACE + LOG_LEVEL_ERROR
 } LOG_LEVEL, *PLOG_LEVEL, *LPLOG_LEVEL;
 
-#define CSimpleLogSR(lpMod, PrintfLevel, FMT, ...) CSimpleLog::Log(lpMod, PrintfLevel, __FILE__, __FUNCTION__, __LINE__, FMT, __VA_ARGS__)
+#define CSimpleLogSR(lpMod, PrintfLevel, FMT, ...) CSimpleLog::Log(lpMod, PrintfLevel, __FILE__, __FUNCSIG__, __LINE__, FMT, __VA_ARGS__)
 
 class CSimpleLog
 {

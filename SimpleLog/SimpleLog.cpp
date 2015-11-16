@@ -74,6 +74,8 @@ __in LPTSTR lpLogPath
 
 		if (bRet)
 			CSimpleLogSR(MOD_SIMPLE_LOG, LOG_LEVEL_INFORMATION, "初始化成功");
+		else
+			Unload();
 	}
 
 	return bRet;
