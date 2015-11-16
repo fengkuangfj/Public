@@ -6,10 +6,22 @@
 #include <locale.h>
 #include <time.h>
 #include <assert.h>
+#include <Psapi.h>
+
+#pragma comment(lib, "Psapi.lib")
 
 #include "..\\StackBacktrace\\StackBacktrace.h"
 
 #define MOD_PRINTF_EX _T("PrintfEx")
+
+typedef
+BOOL
+(*QUERY_FULL_PROCESS_IMAGE_NAME)(
+__in									HANDLE	hProcess,
+__in									DWORD	dwFlags,
+__out_ecount_part(*lpdwSize, *lpdwSize) LPWSTR	lpExeName,
+__inout									PDWORD	lpdwSize
+);
 
 typedef enum _PRINTF_LEVEL
 {
@@ -23,6 +35,9 @@ typedef enum _PRINTF_LEVEL
 class CPrintfEx
 {
 public:
+	BOOL
+		Init();
+
 	static
 		VOID
 		PrintfInternal(
@@ -41,5 +56,24 @@ public:
 		__in	DWORD	dwErrorCode,
 		__out	LPTSTR	lpOutBuf,
 		__in	ULONG	ulOutBufSizeCh
+		);
+
+private:
+	static BOOL								ms_bOutputDebugString;
+	static QUERY_FULL_PROCESS_IMAGE_NAME	ms_QueryFullProcessImageName;
+
+	BOOL
+		GetProcPath(
+		__in	BOOL	bCurrentProc,
+		__in	ULONG	ulPid,
+		__out	LPTSTR	lpOutBuf,
+		__in	ULONG	ulOutBufSizeCh
+		);
+
+	BOOL
+		GetModulePath(
+		__in_opt	HMODULE	hModule,
+		__out		LPTSTR	lpOutBuf,
+		__in		ULONG	ulOutBufSizeCh
 		);
 };

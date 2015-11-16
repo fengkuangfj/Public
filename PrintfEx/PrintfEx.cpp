@@ -1,5 +1,8 @@
 #include "PrintfEx.h"
 
+BOOL							CPrintfEx::ms_bOutputDebugString = TRUE;
+QUERY_FULL_PROCESS_IMAGE_NAME	CPrintfEx::ms_QueryFullProcessImageName = NULL;
+
 VOID
 CPrintfEx::PrintfInternal(
 __in LPTSTR			lpMod,
@@ -53,7 +56,8 @@ __in LPSTR			lpFmt,
 				printf("%hs", chLog);
 		}
 
-		OutputDebugStringA(chLog);
+		if (ms_bOutputDebugString)
+			OutputDebugStringA(chLog);
 	}
 	__finally
 	{
@@ -93,7 +97,217 @@ __in	ULONG	ulOutBufSizeCh
 		}
 
 		bRet = TRUE;
+	}
+	__finally
+	{
+		;
+	}
+
+	return bRet;
+}
+
+BOOL
+CPrintfEx::Init()
+{
+	BOOL	bRet = FALSE;
+
+	TCHAR	tchProcPath[MAX_PATH] = { 0 };
+
+
+	__try
+	{
+		if (!GetProcPath(TRUE, 0, tchProcPath, _countof(tchProcPath)))
+			__leave;
+
+		if (_tcslen(tchProcPath) >= _tcslen(_T("DebugView.exe")) &&
+			(0 == _tcsnicmp(tchProcPath + (_tcslen(tchProcPath) - _tcslen(_T("DebugView.exe"))), _T("DebugView.exe"), _tcslen(_T("DebugView.exe")))))
+			ms_bOutputDebugString = FALSE;
+
+		bRet = TRUE;
+	}
+	__finally
+	{
+		;
+	}
+
+	return bRet;
+}
+
+BOOL
+CPrintfEx::GetProcPath(
+__in	BOOL	bCurrentProc,
+__in	ULONG	ulPid,
+__out	LPTSTR	lpOutBuf,
+__in	ULONG	ulOutBufSizeCh
+)
+{
+	BOOL	bRet = FALSE;
+
+	HMODULE hModule = NULL;
+	HANDLE	hProc = NULL;
+	DWORD	dwProcPathLenCh = 0;
+	TCHAR	tchProcPathDev[MAX_PATH] = { 0 };
+	TCHAR	tchVolNameDev[MAX_PATH] = { 0 };
+	TCHAR	tchVolName[MAX_PATH] = { 0 };
+
+
+	__try
+	{
+		if (!lpOutBuf || !ulOutBufSizeCh || (!bCurrentProc && !ulPid))
+		{
+			printf("input arguments error. %d %d 0x%08p %d \n", bCurrentProc, ulPid, lpOutBuf, ulOutBufSizeCh);
+			__leave;
 		}
+
+		ZeroMemory(lpOutBuf, ulOutBufSizeCh * sizeof(TCHAR));
+
+		if (bCurrentProc)
+		{
+			if (!GetModulePath(NULL, lpOutBuf, ulOutBufSizeCh))
+			{
+				printf("Get failed \n");
+				__leave;
+			}
+
+			printf("%S \n", lpOutBuf);
+
+			bRet = TRUE;
+			__leave;
+		}
+
+		hProc = OpenProcess(PROCESS_QUERY_INFORMATION, FALSE, ulPid);
+		if (!hProc)
+		{
+			printf("OpenProcess failed. (%d) \n", GetLastError());
+			__leave;
+		}
+
+		hModule = LoadLibrary(_T("Kernel32.dll"));
+		if (!hModule)
+		{
+			printf("LoadLibrary failed. (%d) \n", GetLastError());
+			__leave;
+		}
+
+		if (!ms_QueryFullProcessImageName)
+		{
+			ms_QueryFullProcessImageName = (QUERY_FULL_PROCESS_IMAGE_NAME)GetProcAddress(hModule, "QueryFullProcessImageName");
+			if (ms_QueryFullProcessImageName)
+			{
+				dwProcPathLenCh = ulOutBufSizeCh;
+				if (!ms_QueryFullProcessImageName(hProc, 0, lpOutBuf, &dwProcPathLenCh))
+				{
+					printf("QueryFullProcessImageName failed. (%d) \n", GetLastError());
+					__leave;
+				}
+
+				printf("[QueryFullProcessImageName] [%d] %S \n", ulPid, lpOutBuf);
+
+				bRet = TRUE;
+				__leave;
+			}
+		}
+
+		if (!GetProcessImageFileName(hProc, tchProcPathDev, _countof(tchProcPathDev)))
+		{
+			printf("GetProcessImageFileName failed. (%d) \n", GetLastError());
+			__leave;
+		}
+
+		_tcscat_s(tchVolName, _countof(tchVolName), _T("A:"));
+		for (; _T('Z') >= *tchVolName; (*tchVolName)++)
+		{
+			ZeroMemory(tchVolNameDev, sizeof(tchVolNameDev));
+			if (!QueryDosDevice(tchVolName, tchVolNameDev, _countof(tchVolNameDev)))
+			{
+				if (2 == GetLastError())
+					continue;
+				else
+				{
+					printf("QueryDosDevice failed. (%d) \n", GetLastError());
+					__leave;
+				}
+			}
+
+			if (0 == _tcsnicmp(tchProcPathDev, tchVolNameDev, _tcslen(tchVolNameDev)))
+			{
+				bRet = TRUE;
+				break;
+			}
+		}
+
+		if (bRet)
+		{
+			_tcscat_s(lpOutBuf, ulOutBufSizeCh, tchVolName);
+			_tcscat_s(lpOutBuf, ulOutBufSizeCh, tchProcPathDev + _tcslen(tchVolNameDev));
+
+			printf("[QueryDosDevice] [%d] %S \n", ulPid, lpOutBuf);
+		}
+	}
+	__finally
+	{
+		if (hModule)
+		{
+			FreeLibrary(hModule);
+			hModule = NULL;
+		}
+
+		if (hProc)
+		{
+			CloseHandle(hProc);
+			hProc = NULL;
+		}
+	}
+
+	return bRet;
+}
+
+BOOL
+CPrintfEx::GetModulePath(
+__in_opt	HMODULE	hModule,
+__out		LPTSTR	lpOutBuf,
+__in		ULONG	ulOutBufSizeCh
+)
+{
+	BOOL	bRet = FALSE;
+
+	DWORD	dwResult = 0;
+
+
+	__try
+	{
+		if (!lpOutBuf || !ulOutBufSizeCh)
+		{
+			printf("input arguments error. 0x%08p %d \n", lpOutBuf, ulOutBufSizeCh);
+			__leave;
+		}
+
+		ZeroMemory(lpOutBuf, ulOutBufSizeCh * sizeof(TCHAR));
+
+		if (!hModule)
+		{
+			printf("the file used to create the calling process \n");
+			hModule = GetModuleHandle(NULL);
+			if (!hModule)
+			{
+				printf("GetModuleHandle failed. (%d) \n", GetLastError());
+				__leave;
+			}
+		}
+		else
+			printf("the fully qualified path of the module \n");
+
+		dwResult = GetModuleFileName(hModule, lpOutBuf, ulOutBufSizeCh);
+		if (!dwResult)
+		{
+			printf("GetModuleFileName failed. (%d) \n", GetLastError());
+			__leave;
+		}
+		else
+			printf("%S \n", lpOutBuf);
+
+		bRet = TRUE;
+	}
 	__finally
 	{
 		;
