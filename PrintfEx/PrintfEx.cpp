@@ -169,8 +169,6 @@ __in	ULONG	ulOutBufSizeCh
 				__leave;
 			}
 
-			printf("%S \n", lpOutBuf);
-
 			bRet = TRUE;
 			__leave;
 		}
@@ -200,8 +198,6 @@ __in	ULONG	ulOutBufSizeCh
 					printf("QueryFullProcessImageName failed. (%d) \n", GetLastError());
 					__leave;
 				}
-
-				printf("[QueryFullProcessImageName] [%d] %S \n", ulPid, lpOutBuf);
 
 				bRet = TRUE;
 				__leave;
@@ -240,8 +236,6 @@ __in	ULONG	ulOutBufSizeCh
 		{
 			_tcscat_s(lpOutBuf, ulOutBufSizeCh, tchVolName);
 			_tcscat_s(lpOutBuf, ulOutBufSizeCh, tchProcPathDev + _tcslen(tchVolNameDev));
-
-			printf("[QueryDosDevice] [%d] %S \n", ulPid, lpOutBuf);
 		}
 	}
 	__finally
@@ -286,7 +280,6 @@ __in		ULONG	ulOutBufSizeCh
 
 		if (!hModule)
 		{
-			printf("the file used to create the calling process \n");
 			hModule = GetModuleHandle(NULL);
 			if (!hModule)
 			{
@@ -294,8 +287,6 @@ __in		ULONG	ulOutBufSizeCh
 				__leave;
 			}
 		}
-		else
-			printf("the fully qualified path of the module \n");
 
 		dwResult = GetModuleFileName(hModule, lpOutBuf, ulOutBufSizeCh);
 		if (!dwResult)
@@ -303,8 +294,6 @@ __in		ULONG	ulOutBufSizeCh
 			printf("GetModuleFileName failed. (%d) \n", GetLastError());
 			__leave;
 		}
-		else
-			printf("%S \n", lpOutBuf);
 
 		bRet = TRUE;
 	}
