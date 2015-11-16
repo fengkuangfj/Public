@@ -2,9 +2,7 @@
 
 MINIDUMP_TYPE					CSimpleDump::ms_MinidumpType = MiniDumpNormal;
 BOOL							CSimpleDump::ms_bRestart = FALSE;
-HMODULE							CSimpleDump::ms_hModule = NULL;
 APPLICATION_TYPE				CSimpleDump::ms_ApplicationType = APPLICATION_TYPE_UNKNOWN;
-PROGRAM_TYPE					CSimpleDump::ms_ProgramType = PROGRAM_TYPE_TYPE_UNKNOWN;
 LPTSTR							CSimpleDump::ms_lpCmdLine = NULL;
 TCHAR							CSimpleDump::ms_tchRestartTag[MAX_PATH] = { 0 };
 
@@ -445,10 +443,6 @@ __in PCRUSH_HANDLER_INFO pCrushHandlerInfo
 
 		if (pCrushHandlerInfo)
 		{
-			ms_ProgramType = pCrushHandlerInfo->ProgramType;
-			if (PROGRAM_TYPE_TYPE_DLL == ms_ProgramType)
-				ms_hModule = pCrushHandlerInfo->hDllModule;
-
 			switch (pCrushHandlerInfo->EhType)
 			{
 				case EH_TYPE_S:
@@ -513,55 +507,52 @@ __in PCRUSH_HANDLER_INFO pCrushHandlerInfo
 
 BOOL
 CSimpleDump::CreateDumpFile(
+__in	PVOID	pExceptionAddress,
 __inout LPTSTR	lpDumpFilePath,
 __in	ULONG	ulBufferLen
 )
 {
-	BOOL		bRet = FALSE;
+	BOOL						bRet = FALSE;
 
-	TCHAR		tchModulePath[MAX_PATH] = { 0 };
-	TCHAR		tchProcPath[MAX_PATH] = { 0 };
-	TCHAR		tchDumpFilePath[MAX_PATH] = { 0 };
-	TCHAR		tchTmp[MAX_PATH] = { 0 };
-	TCHAR		tchDumpFilePathWithoutCount[MAX_PATH] = { 0 };
-	TCHAR*		pModuleName = NULL;
-	TCHAR*		pProcName = NULL;
-	SYSTEMTIME	SystemTime = { 0 };
-	HANDLE		hFile = INVALID_HANDLE_VALUE;
-	ULONG		ulCount = 0;
+	TCHAR						tchModulePath[MAX_PATH] = { 0 };
+	TCHAR						tchProcPath[MAX_PATH] = { 0 };
+	TCHAR						tchDumpFilePath[MAX_PATH] = { 0 };
+	TCHAR						tchTmp[MAX_PATH] = { 0 };
+	TCHAR						tchDumpFilePathWithoutCount[MAX_PATH] = { 0 };
+	TCHAR*						pModuleName = NULL;
+	TCHAR*						pProcName = NULL;
+	SYSTEMTIME					SystemTime = { 0 };
+	HANDLE						hFile = INVALID_HANDLE_VALUE;
+	ULONG						ulCount = 0;
+	MEMORY_BASIC_INFORMATION	MemoryBasicInfo = { 0 };
 
 
 	__try
 	{
-		if (!lpDumpFilePath || !ulBufferLen)
+		if (!pExceptionAddress || !lpDumpFilePath || !ulBufferLen)
 			__leave;
 
-		if (ms_hModule)
-		{
-			if (!GetModuleFileName(ms_hModule, tchModulePath, _countof(tchModulePath)))
-				__leave;
+		if (!VirtualQuery(pExceptionAddress, &MemoryBasicInfo, sizeof(MemoryBasicInfo)))
+			__leave;
 
-			pModuleName = StrRChr(tchModulePath, tchModulePath + _tcsclen(tchModulePath), _T('\\'));
-			if (!pModuleName)
-				__leave;
+		if (!GetModuleFileName((HMODULE)MemoryBasicInfo.AllocationBase, tchModulePath, _countof(tchModulePath)))
+			__leave;
 
-			if (!GetModuleFileName(NULL, tchProcPath, _countof(tchProcPath)))
-				__leave;
+		pModuleName = StrRChr(tchModulePath, tchModulePath + _tcsclen(tchModulePath), _T('\\'));
+		if (!pModuleName)
+			__leave;
 
-			pProcName = StrRChr(tchProcPath, tchProcPath + _tcsclen(tchProcPath), _T('\\'));
-			if (!pProcName)
-				__leave;
+		if (!GetModuleFileName(NULL, tchProcPath, _countof(tchProcPath)))
+			__leave;
 
-			MoveMemory(tchDumpFilePathWithoutCount, tchModulePath, (pModuleName - tchModulePath) * sizeof(TCHAR));
-			_tcscat_s(tchDumpFilePathWithoutCount, _countof(tchDumpFilePathWithoutCount), pProcName);
-			_tcscat_s(tchDumpFilePathWithoutCount, _countof(tchDumpFilePathWithoutCount), _T("__"));
-			_tcscat_s(tchDumpFilePathWithoutCount, _countof(tchDumpFilePathWithoutCount), pModuleName + 1);
-		}
-		else
-		{
-			if (!GetModuleFileName(NULL, tchDumpFilePathWithoutCount, _countof(tchDumpFilePathWithoutCount)))
-				__leave;
-		}
+		pProcName = StrRChr(tchProcPath, tchProcPath + _tcsclen(tchProcPath), _T('\\'));
+		if (!pProcName)
+			__leave;
+
+		MoveMemory(tchDumpFilePathWithoutCount, tchModulePath, (pModuleName - tchModulePath) * sizeof(TCHAR));
+		_tcscat_s(tchDumpFilePathWithoutCount, _countof(tchDumpFilePathWithoutCount), pProcName);
+		_tcscat_s(tchDumpFilePathWithoutCount, _countof(tchDumpFilePathWithoutCount), _T("__"));
+		_tcscat_s(tchDumpFilePathWithoutCount, _countof(tchDumpFilePathWithoutCount), pModuleName + 1);
 
 		GetLocalTime(&SystemTime);
 
@@ -600,8 +591,8 @@ __in	ULONG	ulBufferLen
 
 			hFile = CreateFileW(
 				tchDumpFilePath,
-				GENERIC_ALL,
-				FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
+				0,
+				0,
 				NULL,
 				CREATE_NEW,
 				FILE_ATTRIBUTE_NORMAL,
@@ -656,7 +647,7 @@ __in _EXCEPTION_POINTERS* pExceptionInfo
 		if (!pExceptionInfo)
 			__leave;
 
-		if (!CreateDumpFile(tchDumpFilePath, sizeof(tchDumpFilePath)))
+		if (!CreateDumpFile(pExceptionInfo->ExceptionRecord->ExceptionAddress, tchDumpFilePath, sizeof(tchDumpFilePath)))
 			__leave;
 
 		hFile = CreateFileW(

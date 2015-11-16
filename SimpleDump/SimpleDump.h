@@ -31,14 +31,6 @@ typedef enum _APPLICATION_TYPE
 	APPLICATION_TYPE_NOT_CONSOLE
 } APPLICATION_TYPE, *PAPPLICATION_TYPE;
 
-typedef enum _PROGRAM_TYPE
-{
-	PROGRAM_TYPE_TYPE_UNKNOWN,
-	PROGRAM_TYPE_TYPE_CONSOLE,
-	PROGRAM_TYPE_TYPE_DLL,
-	PROGRAM_TYPE_TYPE_NOT_CONSOLE_OR_DLL
-} PROGRAM_TYPE, *PPROGRAM_TYPE;
-
 typedef enum _EH_TYPE
 {
 	EH_TYPE_UNKNOWN,
@@ -61,11 +53,9 @@ typedef struct _CRUSH_HANDLER_INFO
 	BOOL					bFirstHandler;
 
 	MINIDUMP_TYPE			MiniDumpType;
-	HMODULE					hDllModule;
 
 	BOOL					bRestart;
 	RESTART					Restart;
-	PROGRAM_TYPE			ProgramType;
 	PARAMETER_TYPE			ParameterType;
 	TCHAR					tchRestartTag[MAX_PATH];
 	union
@@ -142,9 +132,7 @@ public:
 private:
 	static MINIDUMP_TYPE					ms_MinidumpType;
 	static BOOL								ms_bRestart;
-	static HMODULE							ms_hModule;
 	static APPLICATION_TYPE					ms_ApplicationType;
-	static PROGRAM_TYPE						ms_ProgramType;
 	static LPTSTR							ms_lpCmdLine;
 	static TCHAR							ms_tchRestartTag[MAX_PATH];
 
@@ -176,6 +164,7 @@ private:
 	static
 		BOOL
 		CreateDumpFile(
+		__in	PVOID	pExceptionAddress,
 		__inout LPTSTR	lpDumpFilePath,
 		__in	ULONG	ulBufferLen
 		);
