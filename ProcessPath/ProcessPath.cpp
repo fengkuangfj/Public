@@ -38,8 +38,6 @@ BOOL
 				__leave;
 			}
 
-			printfEx(MOD_PROCESS_PATH, PRINTF_LEVEL_INFORMATION, "%S", lpOutBuf);
-
 			bRet = TRUE;
 			__leave;
 		}
@@ -69,8 +67,6 @@ BOOL
 					printfEx(MOD_PROCESS_PATH, PRINTF_LEVEL_ERROR, "QueryFullProcessImageName failed. (%d)", GetLastError());
 					__leave;
 				}
-
-				printfEx(MOD_PROCESS_PATH, PRINTF_LEVEL_INFORMATION, "[QueryFullProcessImageName] [%d] %S", ulPid, lpOutBuf);
 
 				bRet = TRUE;
 				__leave;
@@ -109,8 +105,6 @@ BOOL
 		{
 			_tcscat_s(lpOutBuf, ulOutBufSizeCh, tchVolName);
 			_tcscat_s(lpOutBuf, ulOutBufSizeCh, tchProcPathDev + _tcslen(tchVolNameDev));
-
-			printfEx(MOD_PROCESS_PATH, PRINTF_LEVEL_INFORMATION, "[QueryDosDevice] [%d] %S", ulPid, lpOutBuf);
 		}
 	}
 	__finally
