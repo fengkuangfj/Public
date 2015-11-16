@@ -44,8 +44,8 @@ __in LPTSTR lpLogPath
 
 		hFile = CreateFile(
 			ms_LogPath,
-			GENERIC_READ | GENERIC_WRITE,
-			FILE_SHARE_READ | FILE_SHARE_WRITE,
+			0,
+			0,
 			NULL,
 			CREATE_NEW,
 			FILE_ATTRIBUTE_NORMAL,
