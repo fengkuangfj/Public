@@ -24,7 +24,6 @@ BOOL
 
 		if (!hModule)
 		{
-			printfEx(MOD_MODULE_PATH, PRINTF_LEVEL_INFORMATION, "the file used to create the calling process");
 			hModule = GetModuleHandle(NULL);
 			if (!hModule)
 			{
@@ -32,8 +31,6 @@ BOOL
 				__leave;
 			}
 		}
-		else
-			printfEx(MOD_MODULE_PATH, PRINTF_LEVEL_INFORMATION, "the fully qualified path of the module");
 
 		dwResult = GetModuleFileName(hModule, lpOutBuf, ulOutBufSizeCh);
 		if (!dwResult)
@@ -41,8 +38,6 @@ BOOL
 			printfEx(MOD_MODULE_PATH, PRINTF_LEVEL_ERROR, "GetModuleFileName failed. (%d)", GetLastError());
 			__leave;
 		}
-		else
-			printfEx(MOD_MODULE_PATH, PRINTF_LEVEL_INFORMATION, "%S", lpOutBuf);
 
 		bRet = TRUE;
 	}
