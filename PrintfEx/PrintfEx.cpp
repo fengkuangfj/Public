@@ -116,6 +116,8 @@ CPrintfEx::Init()
 
 	__try
 	{
+		setlocale(LC_ALL, "");
+
 		if (!GetProcPath(TRUE, 0, tchProcPath, _countof(tchProcPath)))
 			__leave;
 
