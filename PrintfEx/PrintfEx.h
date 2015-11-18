@@ -10,8 +10,6 @@
 
 #pragma comment(lib, "Psapi.lib")
 
-#include "..\\StackBacktrace\\StackBacktrace.h"
-
 #define MOD_PRINTF_EX _T("PrintfEx")
 
 typedef
