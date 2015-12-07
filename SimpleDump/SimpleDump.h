@@ -129,6 +129,9 @@ public:
 		__inout		ULONG*				pulBufLen
 		);
 
+	BOOL
+		IsRestarted();
+
 private:
 	static MINIDUMP_TYPE					ms_MinidumpType;
 	static BOOL								ms_bRestart;
@@ -137,6 +140,7 @@ private:
 	static TCHAR							ms_tchRestartTag[MAX_PATH];
 
 	static RESTART							ms_Restart;
+	static BOOL								ms_bRestarted;
 
 	static HMODULE							ms_hModuleKernel32Dll;
 	static BOOL								ms_bCanUseRegisterRestart;

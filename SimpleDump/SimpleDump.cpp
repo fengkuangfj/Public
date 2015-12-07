@@ -7,6 +7,7 @@ LPTSTR							CSimpleDump::ms_lpCmdLine = NULL;
 TCHAR							CSimpleDump::ms_tchRestartTag[MAX_PATH] = { 0 };
 
 RESTART							CSimpleDump::ms_Restart = NULL;
+BOOL							CSimpleDump::ms_bRestarted = FALSE;
 
 HMODULE							CSimpleDump::ms_hModuleKernel32Dll = NULL;
 BOOL							CSimpleDump::ms_bCanUseRegisterRestart = FALSE;
@@ -389,7 +390,10 @@ __in_opt LPTSTR	lpCmdLine
 				*lpPosition = _T('\0');
 
 				if (lpPosition > ms_lpCmdLine && _T(' ') == *(lpPosition - 1))
+				{
 					*(lpPosition - 1) = _T('\0');
+					ms_bRestarted = TRUE;
+				}
 			}
 		}
 
@@ -1247,4 +1251,10 @@ __inout		ULONG*				pulBufLen
 	}
 
 	return bRet;
+}
+
+BOOL
+	CSimpleDump::IsRestarted()
+{
+	return ms_bRestarted;
 }
