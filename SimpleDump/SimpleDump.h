@@ -89,6 +89,12 @@ typedef struct _ARG_CMDLINE_INFO
 	};
 } ARG_CMDLINE_INFO, *PARG_CMDLINE_INFO;
 
+typedef struct _PRE_PROC_INFO
+{
+	DWORD		dwPid;
+	FILETIME	FileTime;
+} PRE_PROC_INFO, *PPRE_PROC_INFO, *LPPRE_PROC_INFO;
+
 typedef
 HRESULT
 (WINAPI * REGISTER_APPLICATION_RESTART)(
@@ -129,8 +135,8 @@ public:
 		__inout		ULONG*				pulBufLen
 		);
 
-	BOOL
-		IsRestarted();
+	void
+		WaitForPreProcExit();
 
 private:
 	static MINIDUMP_TYPE					ms_MinidumpType;
@@ -138,6 +144,7 @@ private:
 	static APPLICATION_TYPE					ms_ApplicationType;
 	static LPTSTR							ms_lpCmdLine;
 	static TCHAR							ms_tchRestartTag[MAX_PATH];
+	static PRE_PROC_INFO					ms_PreProcInfo;
 
 	static RESTART							ms_Restart;
 	static BOOL								ms_bRestarted;
@@ -234,5 +241,11 @@ private:
 		__in_opt int	nArgc,
 		__in_opt TCHAR*	pArgv[],
 		__in_opt LPTSTR	lpCmdLine
+		);
+
+	static
+		BOOL
+		GetPreProcInfo(
+		__in LPTSTR lpStr
 		);
 };

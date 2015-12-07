@@ -5,6 +5,7 @@ BOOL							CSimpleDump::ms_bRestart = FALSE;
 APPLICATION_TYPE				CSimpleDump::ms_ApplicationType = APPLICATION_TYPE_UNKNOWN;
 LPTSTR							CSimpleDump::ms_lpCmdLine = NULL;
 TCHAR							CSimpleDump::ms_tchRestartTag[MAX_PATH] = { 0 };
+PRE_PROC_INFO					CSimpleDump::ms_PreProcInfo = {0};
 
 RESTART							CSimpleDump::ms_Restart = NULL;
 BOOL							CSimpleDump::ms_bRestarted = FALSE;
@@ -22,10 +23,15 @@ __inout LPTSTR	pCmdLine,
 __in	ULONG	ulCharacters
 )
 {
-	BOOL	bRet = FALSE;
+	BOOL		bRet = FALSE;
 
-	int		i = 0;
-	TCHAR	tchArgv[MAX_PATH] = { 0 };
+	int			i = 0;
+	TCHAR		tchArgv[MAX_PATH]	= { 0 };
+	FILETIME	FileTime			= {0};
+	FILETIME	ExitTime			= {0};
+	FILETIME	KernelTime			= {0};
+	FILETIME	UserTime			= {0};
+	TCHAR		tchTemp[MAX_PATH]	= {0};
 
 
 	__try
@@ -43,6 +49,23 @@ __in	ULONG	ulCharacters
 		}
 
 		_tcscat_s(pCmdLine, ulCharacters, ms_tchRestartTag);
+
+		_tcscat_s(pCmdLine, ulCharacters, _T("_"));
+		_itow_s(GetCurrentProcessId(), tchTemp, _countof(tchTemp), 10);
+		_tcscat_s(pCmdLine, ulCharacters, tchTemp);
+
+		if (!GetProcessTimes(GetCurrentProcess(), &FileTime, &ExitTime, &KernelTime, &UserTime))
+			__leave;
+
+		_tcscat_s(pCmdLine, ulCharacters, _T("_"));
+		ZeroMemory(tchTemp, sizeof(tchTemp));
+		_itow_s(FileTime.dwLowDateTime, tchTemp, _countof(tchTemp), 10);
+		_tcscat_s(pCmdLine, ulCharacters, tchTemp);
+
+		_tcscat_s(pCmdLine, ulCharacters, _T("_"));
+		ZeroMemory(tchTemp, sizeof(tchTemp));
+		_itow_s(FileTime.dwHighDateTime, tchTemp, _countof(tchTemp), 10);
+		_tcscat_s(pCmdLine, ulCharacters, tchTemp);
 
 		bRet = TRUE;
 	}
@@ -390,10 +413,12 @@ __in_opt LPTSTR	lpCmdLine
 				*lpPosition = _T('\0');
 
 				if (lpPosition > ms_lpCmdLine && _T(' ') == *(lpPosition - 1))
-				{
 					*(lpPosition - 1) = _T('\0');
-					ms_bRestarted = TRUE;
-				}
+
+				ms_bRestarted = TRUE;
+
+				if (!GetPreProcInfo(ms_tchRestartTag))
+					__leave;
 			}
 		}
 
@@ -1253,8 +1278,104 @@ __inout		ULONG*				pulBufLen
 	return bRet;
 }
 
-BOOL
-	CSimpleDump::IsRestarted()
+void
+	CSimpleDump::WaitForPreProcExit()
 {
-	return ms_bRestarted;
+	HANDLE		hProc		= NULL;
+	FILETIME	FileTime	= {0};
+	FILETIME	ExitTime	= {0};
+	FILETIME	KernelTime	= {0};
+	FILETIME	UserTime	= {0};
+
+
+	__try
+	{
+		if (!ms_bRestarted)
+			__leave;
+
+		if (!ms_PreProcInfo.dwPid)
+			__leave;
+
+		do 
+		{
+			hProc = OpenProcess(PROCESS_ALL_ACCESS, FALSE, ms_PreProcInfo.dwPid);
+			if (!hProc)
+				__leave;
+
+			if (!GetProcessTimes(hProc, &FileTime, &ExitTime, &KernelTime, &UserTime))
+				__leave;
+
+			CloseHandle(hProc);
+			hProc = NULL;
+
+			if (FileTime.dwLowDateTime != ms_PreProcInfo.FileTime.dwLowDateTime ||
+				FileTime.dwHighDateTime != ms_PreProcInfo.FileTime.dwHighDateTime)
+				__leave;
+			
+			Sleep(1000);
+			continue;
+		} while (TRUE);
+	}
+	__finally
+	{
+		if (hProc)
+		{
+			CloseHandle(hProc);
+			hProc = NULL;
+		}
+	}
+
+	return ;
+}
+
+BOOL
+	CSimpleDump::GetPreProcInfo(
+	__in LPTSTR lpStr
+	)
+{
+	BOOL	bRet		= FALSE;
+
+	LPTSTR	lpPosition	= NULL;
+
+
+	__try
+	{
+		if (!lpStr)
+			__leave;
+
+		if (_tcslen(lpStr))
+		{
+			lpPosition = StrRChr(lpStr, NULL, _T('_'));
+			if (!lpPosition)
+				__leave;
+
+			ms_PreProcInfo.FileTime.dwHighDateTime = _wtoi(lpPosition + 1);
+
+			*lpPosition = _T('\0');
+
+			lpPosition = NULL;
+			lpPosition = StrRChr(lpStr, NULL, _T('_'));
+			if (!lpPosition)
+				__leave;
+
+			ms_PreProcInfo.FileTime.dwLowDateTime = _wtoi(lpPosition + 1);
+
+			*lpPosition = _T('\0');
+
+			lpPosition = NULL;
+			lpPosition = StrRChr(lpStr, NULL, _T('_'));
+			if (!lpPosition)
+				__leave;
+
+			ms_PreProcInfo.dwPid = _wtoi(lpPosition + 1);
+		}
+
+		bRet = TRUE;
+	}
+	__finally
+	{
+		;
+	}
+
+	return bRet;
 }
