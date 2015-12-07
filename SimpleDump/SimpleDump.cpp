@@ -1315,6 +1315,8 @@ void
 
 		dwPidPre = _wtoi(lpPosition + 1);
 
+		*lpPosition = _T('\0');
+
 		do 
 		{
 			hProc = OpenProcess(PROCESS_ALL_ACCESS, FALSE, dwPidPre);
