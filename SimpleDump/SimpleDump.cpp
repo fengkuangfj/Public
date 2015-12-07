@@ -5,10 +5,8 @@ BOOL							CSimpleDump::ms_bRestart = FALSE;
 APPLICATION_TYPE				CSimpleDump::ms_ApplicationType = APPLICATION_TYPE_UNKNOWN;
 LPTSTR							CSimpleDump::ms_lpCmdLine = NULL;
 TCHAR							CSimpleDump::ms_tchRestartTag[MAX_PATH] = { 0 };
-PRE_PROC_INFO					CSimpleDump::ms_PreProcInfo = {0};
 
 RESTART							CSimpleDump::ms_Restart = NULL;
-BOOL							CSimpleDump::ms_bRestarted = FALSE;
 
 HMODULE							CSimpleDump::ms_hModuleKernel32Dll = NULL;
 BOOL							CSimpleDump::ms_bCanUseRegisterRestart = FALSE;
@@ -415,10 +413,7 @@ __in_opt LPTSTR	lpCmdLine
 				if (lpPosition > ms_lpCmdLine && _T(' ') == *(lpPosition - 1))
 					*(lpPosition - 1) = _T('\0');
 
-				ms_bRestarted = TRUE;
-
-				if (!GetPreProcInfo(ms_tchRestartTag))
-					__leave;
+				WaitForOldProcExit();
 			}
 		}
 
@@ -1279,8 +1274,11 @@ __inout		ULONG*				pulBufLen
 }
 
 void
-	CSimpleDump::WaitForPreProcExit()
+	CSimpleDump::WaitForOldProcExit()
 {
+	LPTSTR		lpPosition	= NULL;
+	DWORD		dwPidPre	= 0;
+	FILETIME	FileTimePre	= {0};
 	HANDLE		hProc		= NULL;
 	FILETIME	FileTime	= {0};
 	FILETIME	ExitTime	= {0};
@@ -1290,15 +1288,36 @@ void
 
 	__try
 	{
-		if (!ms_bRestarted)
+		if (!_tcslen(ms_tchRestartTag))
 			__leave;
 
-		if (!ms_PreProcInfo.dwPid)
+		lpPosition = StrRChr(ms_tchRestartTag, NULL, _T('_'));
+		if (!lpPosition)
 			__leave;
+
+		FileTimePre.dwHighDateTime = _wtoi(lpPosition + 1);
+
+		*lpPosition = _T('\0');
+
+		lpPosition = NULL;
+		lpPosition = StrRChr(ms_tchRestartTag, NULL, _T('_'));
+		if (!lpPosition)
+			__leave;
+
+		FileTimePre.dwLowDateTime = _wtoi(lpPosition + 1);
+
+		*lpPosition = _T('\0');
+
+		lpPosition = NULL;
+		lpPosition = StrRChr(ms_tchRestartTag, NULL, _T('_'));
+		if (!lpPosition)
+			__leave;
+
+		dwPidPre = _wtoi(lpPosition + 1);
 
 		do 
 		{
-			hProc = OpenProcess(PROCESS_ALL_ACCESS, FALSE, ms_PreProcInfo.dwPid);
+			hProc = OpenProcess(PROCESS_ALL_ACCESS, FALSE, dwPidPre);
 			if (!hProc)
 				__leave;
 
@@ -1308,10 +1327,10 @@ void
 			CloseHandle(hProc);
 			hProc = NULL;
 
-			if (FileTime.dwLowDateTime != ms_PreProcInfo.FileTime.dwLowDateTime ||
-				FileTime.dwHighDateTime != ms_PreProcInfo.FileTime.dwHighDateTime)
+			if (FileTime.dwLowDateTime != FileTimePre.dwLowDateTime ||
+				FileTime.dwHighDateTime != FileTimePre.dwHighDateTime)
 				__leave;
-			
+
 			Sleep(1000);
 			continue;
 		} while (TRUE);
@@ -1326,56 +1345,4 @@ void
 	}
 
 	return ;
-}
-
-BOOL
-	CSimpleDump::GetPreProcInfo(
-	__in LPTSTR lpStr
-	)
-{
-	BOOL	bRet		= FALSE;
-
-	LPTSTR	lpPosition	= NULL;
-
-
-	__try
-	{
-		if (!lpStr)
-			__leave;
-
-		if (_tcslen(lpStr))
-		{
-			lpPosition = StrRChr(lpStr, NULL, _T('_'));
-			if (!lpPosition)
-				__leave;
-
-			ms_PreProcInfo.FileTime.dwHighDateTime = _wtoi(lpPosition + 1);
-
-			*lpPosition = _T('\0');
-
-			lpPosition = NULL;
-			lpPosition = StrRChr(lpStr, NULL, _T('_'));
-			if (!lpPosition)
-				__leave;
-
-			ms_PreProcInfo.FileTime.dwLowDateTime = _wtoi(lpPosition + 1);
-
-			*lpPosition = _T('\0');
-
-			lpPosition = NULL;
-			lpPosition = StrRChr(lpStr, NULL, _T('_'));
-			if (!lpPosition)
-				__leave;
-
-			ms_PreProcInfo.dwPid = _wtoi(lpPosition + 1);
-		}
-
-		bRet = TRUE;
-	}
-	__finally
-	{
-		;
-	}
-
-	return bRet;
 }
