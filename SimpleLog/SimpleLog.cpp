@@ -199,6 +199,7 @@ __in LPSTR		lpFmt,
 #else
 				assert(FALSE);
 #endif
+				// MessageBox MB_SERVICE_NOTIFICATION
 			}
 		}
 
