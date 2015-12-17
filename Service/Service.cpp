@@ -25,23 +25,23 @@ BOOL
 	__in_opt	LPWSTR	lpDependencies
 	)
 {
-	BOOL					bRet							= FALSE;
+	BOOL							bRet							= FALSE;
 
-	SC_HANDLE				hScManager						= NULL;
-	SC_HANDLE				hService						= NULL;
-	WCHAR					wchTemp[MAX_PATH]				= {0};
-	HKEY					hkResult						= NULL;
-	DWORD					dwData							= 0;
-	LONG					lResult							= 0;
-	WCHAR					wchPath[MAX_PATH]				= {0};
-	LPWSTR					lpPosition						= NULL;
-	PVOID					pOldValue						= NULL;
-	BOOL					bWow64DisableWow64FsRedirection = FALSE;
-	HMODULE					hModule							= NULL;
-	OS_PROC_TYPE			OsProcType						= OS_PROC_TYPE_UNKNOWN;
-	WCHAR					wchSubKey[MAX_PATH]				= {0};
+	SC_HANDLE						hScManager						= NULL;
+	SC_HANDLE						hService						= NULL;
+	WCHAR							wchTemp[MAX_PATH]				= {0};
+	HKEY							hkResult						= NULL;
+	DWORD							dwData							= 0;
+	LONG							lResult							= 0;
+	WCHAR							wchPath[MAX_PATH]				= {0};
+	LPWSTR							lpPosition						= NULL;
+	PVOID							pOldValue						= NULL;
+	BOOL							bWow64DisableWow64FsRedirection = FALSE;
+	HMODULE							hModule							= NULL;
+	OS_PROCESSOR_TYPE_USER_DEFINED	OsProcType						= OS_PROCESSOR_TYPE_UNKNOWN;
+	WCHAR							wchSubKey[MAX_PATH]				= {0};
 
-	COperationSystemVersion	OperationSystemVersion;
+	COperationSystemVersion			OperationSystemVersion;
 
 
 	__try
@@ -60,12 +60,12 @@ BOOL
 			__leave;
 		}
 
-		OsProcType = OperationSystemVersion.GetOSProcType();
+		OsProcType = OperationSystemVersion.GetOSProcessorType();
 		switch (OsProcType)
 		{
-		case OS_PROC_TYPE_X86:
+		case OS_PROCESSOR_TYPE_X86:
 			break;
-		case OS_PROC_TYPE_X64:
+		case OS_PROCESSOR_TYPE_X64:
 			{
 				if (!g_Wow64DisableWow64FsRedirection)
 				{
@@ -975,7 +975,7 @@ VOID
 	DWORD dwWaitHint
 	)
 {
-	OS_VER_AND_PROC_TYPE	OsVerAndProcType		= OS_VER_AND_PROC_TYPE_UNKNOWN;
+	OS_VERSION_USER_DEFINED	OsVerAndProcType		= OS_VERSION_UNKNOWN;
 
 	COperationSystemVersion OperationSystemVersion;
 
@@ -991,11 +991,20 @@ VOID
 			ms_SvcStatus.dwControlsAccepted = 0;
 		else
 		{
-			OsVerAndProcType = OperationSystemVersion.GetOsVerAndProcType();
+			OsVerAndProcType = OperationSystemVersion.GetOSVersion();
 			switch (OsVerAndProcType)
 			{
-			case OS_VER_AND_PROC_TYPE_WINDOWS_XP_X86:
+			case OS_VERSION_WINDOWS_XP:
+			case OS_VERSION_WINDOWS_XP_SP1:
+			case OS_VERSION_WINDOWS_XP_SP2:
+			case OS_VERSION_WINDOWS_XP_SP3:
 				{
+					if (OS_PROCESSOR_TYPE_X86 != OperationSystemVersion.GetOSProcessorType())
+					{
+						printfEx(MOD_SERVICE, PRINTF_LEVEL_ERROR, "GetOSProcessorType error. %d", OsVerAndProcType);
+						__leave;
+					}
+
 					ms_SvcStatus.dwControlsAccepted =
 						SERVICE_ACCEPT_STOP                  |  // 0x00000001
 						SERVICE_ACCEPT_PAUSE_CONTINUE        |  // 0x00000002
@@ -1008,8 +1017,11 @@ VOID
 
 					break;
 				}
-			case OS_VER_AND_PROC_TYPE_WINDOWS_7_X86:
-			case OS_VER_AND_PROC_TYPE_WINDOWS_7_X64:
+			case OS_VERSION_WINDOWS_7:
+			case OS_VERSION_WINDOWS_7_SP1:
+			case OS_VERSION_WINDOWS_8:
+			case OS_VERSION_WINDOWS_8_POINT1:
+			case OS_VERSION_WINDOWS_10:
 				{
 					ms_SvcStatus.dwControlsAccepted =
 						SERVICE_ACCEPT_STOP                  |  // 0x00000001

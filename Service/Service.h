@@ -2,6 +2,8 @@
 
 #include <Windows.h>
 
+#pragma comment(lib, "Advapi32.lib")
+
 #include "..\\PrintfEx\\PrintfEx.h"
 #include "..\\VolumeDetector\\\VolumeDetector.h"
 #include "..\\OperationSystemVersion\\OperationSystemVersion.h"
