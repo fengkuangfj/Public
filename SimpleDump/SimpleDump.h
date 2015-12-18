@@ -10,6 +10,7 @@
 #include <Psapi.h>
 
 #include "..\\OperationSystemVersion\\OperationSystemVersion.h"
+#include "..\\ProcessType\\ProcessType.h"
 
 #pragma comment(lib, "DbgHelp.lib")
 #pragma comment(lib, "Shlwapi.lib")
@@ -23,13 +24,6 @@
 #ifndef CMD_LINE_MAX_CHARS
 #define	CMD_LINE_MAX_CHARS 						32768
 #endif
-
-typedef enum _APPLICATION_TYPE
-{
-	APPLICATION_TYPE_UNKNOWN,
-	APPLICATION_TYPE_CONSOLE,
-	APPLICATION_TYPE_NOT_CONSOLE
-} APPLICATION_TYPE, *PAPPLICATION_TYPE;
 
 typedef enum _EH_TYPE
 {
@@ -72,7 +66,7 @@ typedef struct _CRUSH_HANDLER_INFO
 
 typedef struct _ARG_CMDLINE_INFO
 {
-	APPLICATION_TYPE	ApplicationType;
+	PROC_TYPE			ProcType;
 
 	union
 	{
@@ -107,13 +101,9 @@ public:
 		);
 
 	static
-		APPLICATION_TYPE
-		GetApplicationType();
-
-	static
 		BOOL
 		InitArgCmdlineInfo(
-		__in		APPLICATION_TYPE	ApplicationType,
+		__in		PROC_TYPE			ProcType,
 		__in_opt	int					nArgc,
 		__in_opt	LPTSTR				lpArgv[],
 		__in_opt	LPTSTR				lpCmdLine,
@@ -132,7 +122,7 @@ public:
 private:
 	static MINIDUMP_TYPE					ms_MinidumpType;
 	static BOOL								ms_bRestart;
-	static APPLICATION_TYPE					ms_ApplicationType;
+	static PROC_TYPE						ms_ProcType;
 	static LPTSTR							ms_lpCmdLine;
 	static TCHAR							ms_tchRestartTag[MAX_PATH];
 

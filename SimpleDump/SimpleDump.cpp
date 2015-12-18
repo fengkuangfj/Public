@@ -2,7 +2,7 @@
 
 MINIDUMP_TYPE					CSimpleDump::ms_MinidumpType = MiniDumpNormal;
 BOOL							CSimpleDump::ms_bRestart = FALSE;
-APPLICATION_TYPE				CSimpleDump::ms_ApplicationType = APPLICATION_TYPE_UNKNOWN;
+PROC_TYPE						CSimpleDump::ms_ProcType = PROC_TYPE_UNKNOWN;
 LPTSTR							CSimpleDump::ms_lpCmdLine = NULL;
 TCHAR							CSimpleDump::ms_tchRestartTag[MAX_PATH] = { 0 };
 
@@ -37,7 +37,7 @@ __in	ULONG	ulCharacters
 		if (!pCmdLine || !ulCharacters)
 			__leave;
 
-		if (APPLICATION_TYPE_NOT_CONSOLE == ms_ApplicationType)
+		if (PROC_TYPE_NORMAL == ms_ProcType)
 			_tcscat_s(pCmdLine, ulCharacters, _T(" "));
 
 		if (ms_lpCmdLine && _tcslen(ms_lpCmdLine))
@@ -119,7 +119,7 @@ CSimpleDump::DefaultRestartFunc()
 			if (!GenRestartCmdLine(lpCmdLine, CMD_LINE_MAX_CHARS))
 				__leave;
 
-			if (APPLICATION_TYPE_CONSOLE == ms_ApplicationType)
+			if (PROC_TYPE_CONSOLE == ms_ProcType || PROC_TYPE_SERVICE == ms_ProcType)
 			{
 				if (!CreateProcess(NULL, lpCmdLine, NULL, NULL, FALSE, CREATE_NEW_CONSOLE, NULL, NULL, &si, &pi))
 					__leave;
@@ -359,7 +359,7 @@ __in_opt LPTSTR	lpCmdLine
 
 	__try
 	{
-		if (APPLICATION_TYPE_CONSOLE == ms_ApplicationType)
+		if (PROC_TYPE_CONSOLE == ms_ProcType || PROC_TYPE_SERVICE == ms_ProcType)
 		{
 			if (nArgc && pArgv)
 			{
@@ -385,7 +385,7 @@ __in_opt LPTSTR	lpCmdLine
 			if (!ms_lpCmdLine)
 				__leave;
 
-			if (APPLICATION_TYPE_CONSOLE == ms_ApplicationType)
+			if (PROC_TYPE_CONSOLE == ms_ProcType || PROC_TYPE_SERVICE == ms_ProcType)
 			{
 				if (nArgc && pArgv)
 				{
@@ -461,14 +461,7 @@ __in PCRUSH_HANDLER_INFO pCrushHandlerInfo
 		if (!GetFunc())
 			__leave;
 
-		hOutPut = GetStdHandle(STD_OUTPUT_HANDLE);
-		if (INVALID_HANDLE_VALUE == hOutPut)
-			__leave;
-
-		if (hOutPut)
-			ms_ApplicationType = APPLICATION_TYPE_CONSOLE;
-		else
-			ms_ApplicationType = APPLICATION_TYPE_NOT_CONSOLE;
+		ms_ProcType = CProcessType::GetProcType(TRUE, 0);
 
 		if (pCrushHandlerInfo)
 		{
@@ -501,7 +494,7 @@ __in PCRUSH_HANDLER_INFO pCrushHandlerInfo
 				ms_Restart = pCrushHandlerInfo->Restart;
 				_tcscat_s(ms_tchRestartTag, _countof(ms_tchRestartTag), pCrushHandlerInfo->tchRestartTag);
 
-				if (APPLICATION_TYPE_CONSOLE == ms_ApplicationType)
+				if (PROC_TYPE_CONSOLE == ms_ProcType || PROC_TYPE_SERVICE == ms_ProcType)
 				{
 					if (!InitCmdLine(pCrushHandlerInfo->Arg.nArgc, pCrushHandlerInfo->Arg.plpArgv, NULL))
 						__leave;
@@ -981,36 +974,9 @@ CSimpleDump::GetKernel32DllFunc()
 	return bRet;
 }
 
-APPLICATION_TYPE
-CSimpleDump::GetApplicationType()
-{
-	APPLICATION_TYPE	ApplicationType = APPLICATION_TYPE_UNKNOWN;
-
-	HANDLE				hOutput = INVALID_HANDLE_VALUE;
-
-
-	__try
-	{
-		hOutput = GetStdHandle(STD_OUTPUT_HANDLE);
-		if (INVALID_HANDLE_VALUE == hOutput)
-			__leave;
-
-		if (hOutput)
-			ApplicationType = APPLICATION_TYPE_CONSOLE;
-		else
-			ApplicationType = APPLICATION_TYPE_NOT_CONSOLE;
-	}
-	__finally
-	{
-		;
-	}
-
-	return ApplicationType;
-}
-
 BOOL
 CSimpleDump::InitArgCmdlineInfo(
-__in		APPLICATION_TYPE	ApplicationType,
+__in		PROC_TYPE			ProcType,
 __in_opt	int					nArgc,
 __in_opt	LPTSTR				lpArgv[],
 __in_opt	LPTSTR				lpCmdLine,
@@ -1027,9 +993,10 @@ __inout		ULONG*				pulBufLen
 	__try
 	{
 		// 计算大小
-		switch (ApplicationType)
+		switch (ProcType)
 		{
-			case APPLICATION_TYPE_CONSOLE:
+			case PROC_TYPE_CONSOLE:
+			case PROC_TYPE_SERVICE:
 			{
 				if (nArgc && lpArgv)
 				{
@@ -1046,7 +1013,7 @@ __inout		ULONG*				pulBufLen
 
 				break;
 			}
-			case APPLICATION_TYPE_NOT_CONSOLE:
+			case PROC_TYPE_NORMAL:
 			{
 				if (lpCmdLine)
 				{
@@ -1080,10 +1047,11 @@ __inout		ULONG*				pulBufLen
 			__leave;
 		}
 
-		pArgCmdLineInfo->ApplicationType = ApplicationType;
-		switch (pArgCmdLineInfo->ApplicationType)
+		pArgCmdLineInfo->ProcType = ProcType;
+		switch (pArgCmdLineInfo->ProcType)
 		{
-			case APPLICATION_TYPE_CONSOLE:
+			case PROC_TYPE_CONSOLE:
+			case PROC_TYPE_SERVICE:
 			{
 				if (nArgc && lpArgv)
 				{
@@ -1106,7 +1074,7 @@ __inout		ULONG*				pulBufLen
 
 				break;
 			}
-			case APPLICATION_TYPE_NOT_CONSOLE:
+			case PROC_TYPE_NORMAL:
 			{
 				if (lpCmdLine)
 				{
@@ -1153,9 +1121,10 @@ __inout		ULONG*				pulBufLen
 			__leave;
 
 		// 计算大小
-		switch (pArgCmdlineInfo->ApplicationType)
+		switch (pArgCmdlineInfo->ProcType)
 		{
-			case APPLICATION_TYPE_CONSOLE:
+			case PROC_TYPE_CONSOLE:
+			case PROC_TYPE_SERVICE:
 			{
 				if (pArgCmdlineInfo->Console.nArgc)
 				{
@@ -1168,7 +1137,7 @@ __inout		ULONG*				pulBufLen
 
 				break;
 			}
-			case APPLICATION_TYPE_NOT_CONSOLE:
+			case PROC_TYPE_NORMAL:
 			{
 				ulBufLen = _tcslen(pArgCmdlineInfo->NotConsole.tchCmdLine) * sizeof(TCHAR);
 				ulBufLen += sizeof(TCHAR);
@@ -1195,9 +1164,10 @@ __inout		ULONG*				pulBufLen
 			__leave;
 		}
 
-		switch (pArgCmdlineInfo->ApplicationType)
+		switch (pArgCmdlineInfo->ProcType)
 		{
-			case APPLICATION_TYPE_CONSOLE:
+			case PROC_TYPE_CONSOLE:
+			case PROC_TYPE_SERVICE:
 			{
 				i = 0;
 				while (i < pArgCmdlineInfo->Console.nArgc)
@@ -1210,7 +1180,7 @@ __inout		ULONG*				pulBufLen
 
 				break;
 			}
-			case APPLICATION_TYPE_NOT_CONSOLE:
+			case PROC_TYPE_NORMAL:
 			{
 				lpPrePosition = pArgCmdlineInfo->NotConsole.tchCmdLine;
 				lpCurrentPosition = pArgCmdlineInfo->NotConsole.tchCmdLine;
