@@ -805,6 +805,8 @@ BOOL
 		{NULL, NULL}
 	};
 
+	COperationSystemVersion	OsVersion;
+
 	printfEx(MOD_SERVICE, PRINTF_LEVEL_INFORMATION, "begin");
 
 	__try
@@ -812,6 +814,12 @@ BOOL
 		if (!lpServiceName || !InitMod || !UnloadMod)
 		{
 			printfEx(MOD_SERVICE, PRINTF_LEVEL_ERROR, "input arguments error. 0x%08p 0x%08p 0x%08p",lpServiceName, InitMod, UnloadMod);
+			__leave;
+		}
+
+		if (!OsVersion.Init())
+		{
+			printfEx(MOD_SERVICE, PRINTF_LEVEL_ERROR, "OsVersion.Init failed");
 			__leave;
 		}
 
