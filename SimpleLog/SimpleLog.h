@@ -10,6 +10,7 @@
 
 #include "..\\ProcessPath\\ProcessPath.h"
 #include "..\\StackBacktrace\\StackBacktrace.h"
+#include "..\\ProcessType\\ProcessType.h"
 
 #ifndef MOD_SIMPLE_LOG
 #define MOD_SIMPLE_LOG	_T("ºÚµ•»’÷æ")
@@ -52,6 +53,7 @@ private:
 	static CRITICAL_SECTION	ms_CriticalSection;
 	static BOOL				ms_WriteReady;
 	static BOOL				ms_bOutputDebugString;
+	static PROC_TYPE		ms_ProcType;
 
 	BOOL
 		Write(

@@ -1,9 +1,10 @@
-#include "SimpleLog.h"
+ #include "SimpleLog.h"
 
 TCHAR				CSimpleLog::ms_LogPath[MAX_PATH] = { 0 };
 CRITICAL_SECTION	CSimpleLog::ms_CriticalSection = { 0 };
 BOOL				CSimpleLog::ms_WriteReady = FALSE;
 BOOL				CSimpleLog::ms_bOutputDebugString = TRUE;
+PROC_TYPE			CSimpleLog::ms_ProcType = PROC_TYPE_UNKNOWN;
 
 BOOL
 CSimpleLog::Init(
@@ -70,6 +71,8 @@ __in LPTSTR lpLogPath
 		if (_tcslen(tchProcPath) >= _tcslen(_T("DbgView.exe")) &&
 			(0 == _tcsnicmp(tchProcPath + (_tcslen(tchProcPath) - _tcslen(_T("DbgView.exe"))), _T("DbgView.exe"), _tcslen(_T("DbgView.exe")))))
 			ms_bOutputDebugString = FALSE;
+
+		ms_ProcType = CProcessType::GetProcType(TRUE, 0);
 
 		bRet = TRUE;
 	}
@@ -181,7 +184,7 @@ __in LPSTR		lpFmt,
 		if (ms_bOutputDebugString)
 			OutputDebugStringA(chLog);
 
-		if ((LOG_LEVEL_ERROR == LogLevel))
+		if (LOG_LEVEL_ERROR == LogLevel)
 		{
 			StackBacktrace.StackBacktrace();
 
@@ -194,12 +197,18 @@ __in LPSTR		lpFmt,
 			}
 			else
 			{
+				if (PROC_TYPE_SERVICE == ms_ProcType)
+				{
+					;
+				}
+				else
+				{
 #ifdef _ASSERT
-				VERIFY(FALSE);
+					VERIFY(FALSE);
 #else
-				assert(FALSE);
+					assert(FALSE);
 #endif
-				// MessageBox MB_SERVICE_NOTIFICATION
+				}
 			}
 		}
 
