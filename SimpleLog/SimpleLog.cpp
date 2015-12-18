@@ -174,11 +174,21 @@ __in LPSTR		lpFmt,
 
 		strcat_s(chLog, _countof(chLog), "\n");
 
-		hOutput = GetStdHandle(STD_OUTPUT_HANDLE);
-		if (INVALID_HANDLE_VALUE != hOutput)
+		switch (ms_ProcType)
 		{
-			if (hOutput)
+		case PROC_TYPE_NORMAL:
+		case PROC_TYPE_CONSOLE:
+			{
 				printf("%hs", chLog);
+				break;
+			}
+		case PROC_TYPE_SERVICE:
+			break;
+		default:
+			{
+				printf("ms_ProcType error. (%d) \n", ms_ProcType);
+				break;
+			}
 		}
 
 		if (ms_bOutputDebugString)
@@ -198,9 +208,7 @@ __in LPSTR		lpFmt,
 			else
 			{
 				if (PROC_TYPE_SERVICE == ms_ProcType)
-				{
-					;
-				}
+					MessageBox(NULL, _T("发生严重错误"), _T("错误"), MB_OK | MB_SERVICE_NOTIFICATION | MB_ICONERROR);
 				else
 				{
 #ifdef _ASSERT
