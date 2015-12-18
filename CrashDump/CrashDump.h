@@ -9,6 +9,7 @@
 #include <Shlwapi.h>
 
 #pragma comment(lib, "Shlwapi.lib")
+#pragma comment(lib, "Shell32.lib")
 
 typedef enum _CRASH_DUMP_TYPE
 {
