@@ -10,6 +10,8 @@
 #include "..\\PrintfEx\\PrintfEx.h"
 #include "..\\StorageDevice\\StorageDevice.h"
 
+#pragma comment(lib, "Gdi32.lib")
+
 #define WND_CLASS_NAME _T("DeviceDetectorWindowClass")
 
 LRESULT
