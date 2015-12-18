@@ -6,6 +6,7 @@
 
 #include <Windows.h>
 #include <stdio.h>
+#include <tchar.h>
 
 typedef enum _PROC_TYPE
 {
@@ -23,5 +24,14 @@ public:
 		GetProcType(
 		__in BOOL	bCurrentProc,
 		__in ULONG	ulPid
+		);
+
+private:
+	static
+		BOOL
+		GetSessionId(
+		__in	BOOL		bCurrentProc,
+		__in	ULONG		ulPid,
+		__out	int		*	pnSid
 		);
 };
