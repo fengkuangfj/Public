@@ -8,6 +8,8 @@
 #include <assert.h>
 #include <Psapi.h>
 
+#include "..\\ProcessType\\ProcessType.h"
+
 #pragma comment(lib, "Psapi.lib")
 
 #define MOD_PRINTF_EX _T("PrintfEx")
@@ -59,6 +61,7 @@ public:
 private:
 	static BOOL								ms_bOutputDebugString;
 	static QUERY_FULL_PROCESS_IMAGE_NAME	ms_QueryFullProcessImageName;
+	static PROC_TYPE						ms_ProcType;
 
 	BOOL
 		GetProcPath(

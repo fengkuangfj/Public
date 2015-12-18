@@ -2,6 +2,7 @@
 
 BOOL							CPrintfEx::ms_bOutputDebugString = TRUE;
 QUERY_FULL_PROCESS_IMAGE_NAME	CPrintfEx::ms_QueryFullProcessImageName = NULL;
+PROC_TYPE						CPrintfEx::ms_ProcType = PROC_TYPE_UNKNOWN;
 
 VOID
 CPrintfEx::PrintfInternal(
@@ -20,7 +21,6 @@ __in LPSTR			lpFmt,
 	tm		timeInfo = { 0 };
 	CHAR	chFmtInfo[MAX_PATH] = { 0 };
 	CHAR	chLog[MAX_PATH * 2] = { 0 };
-	HANDLE	hOutput = INVALID_HANDLE_VALUE;
 
 
 	__try
@@ -49,11 +49,21 @@ __in LPSTR			lpFmt,
 			chFmtInfo
 			);
 
-		hOutput = GetStdHandle(STD_OUTPUT_HANDLE);
-		if (INVALID_HANDLE_VALUE != hOutput)
+		switch (ms_ProcType)
 		{
-			if (hOutput)
+		case PROC_TYPE_NORMAL:
+		case PROC_TYPE_CONSOLE:
+			{
 				printf("%hs", chLog);
+				break;
+			}
+		case PROC_TYPE_SERVICE:
+			break;
+		default:
+			{
+				printf("ms_ProcType error. (%d) \n", ms_ProcType);
+				break;
+			}
 		}
 
 		if (ms_bOutputDebugString)
@@ -124,6 +134,8 @@ CPrintfEx::Init()
 		if (_tcslen(tchProcPath) >= _tcslen(_T("DbgView.exe")) &&
 			(0 == _tcsnicmp(tchProcPath + (_tcslen(tchProcPath) - _tcslen(_T("DbgView.exe"))), _T("DbgView.exe"), _tcslen(_T("DbgView.exe")))))
 			ms_bOutputDebugString = FALSE;
+
+		ms_ProcType = CProcessType::GetProcType(TRUE, 0);
 
 		bRet = TRUE;
 	}
