@@ -208,7 +208,10 @@ __in LPSTR		lpFmt,
 			else
 			{
 				if (PROC_TYPE_SERVICE == ms_ProcType)
-					MessageBox(NULL, _T("发生严重错误"), _T("错误"), MB_OK | MB_SERVICE_NOTIFICATION | MB_ICONERROR);
+				{
+					if (!SimpleLog.MessageBoxForService(_T("错误"), _T("发生严重错误"), MB_OK | MB_SERVICE_NOTIFICATION | MB_ICONERROR))
+						printf("MessageBoxForService failed. \n");
+				}
 				else
 				{
 #ifdef _ASSERT
@@ -296,6 +299,53 @@ __in LPSTR lpLog
 		}
 
 		LeaveCriticalSection(&CSimpleLog::ms_CriticalSection);
+	}
+
+	return bRet;
+}
+
+BOOL
+	CSimpleLog::MessageBoxForService(
+	__in LPTSTR lpTitle,
+	__in LPTSTR lpMessage,
+	__in DWORD	dwStyle
+	)
+{
+	BOOL	bRet		= FALSE;
+
+	DWORD	dwResponse	= 0;
+
+
+	__try
+	{
+		if (!lpTitle || !lpMessage)
+		{
+			printf("input arguments error. \n");
+			__leave;
+		}
+
+		if (!WTSSendMessage(
+			WTS_CURRENT_SERVER_HANDLE,
+			WTSGetActiveConsoleSessionId(),
+			lpTitle,
+			_tcslen(lpTitle) * sizeof(TCHAR),
+			lpMessage,
+			_tcslen(lpMessage) * sizeof(TCHAR),
+			dwStyle,
+			0,
+			&dwResponse,
+			TRUE
+			))
+		{
+			printf("WTSSendMessage failed. (%d) \n", GetLastError());
+			__leave;
+		}
+
+		bRet = TRUE;
+	}
+	__finally
+	{
+		;
 	}
 
 	return bRet;

@@ -7,10 +7,13 @@
 #include <assert.h>
 #include <time.h>
 #include <Shlobj.h>
+#include <Wtsapi32.h>
 
 #include "..\\ProcessPath\\ProcessPath.h"
 #include "..\\StackBacktrace\\StackBacktrace.h"
 #include "..\\ProcessType\\ProcessType.h"
+
+#pragma comment(lib, "Wtsapi32.lib")
 
 #ifndef MOD_SIMPLE_LOG
 #define MOD_SIMPLE_LOG	_T("ºÚµ•»’÷æ")
@@ -58,5 +61,12 @@ private:
 	BOOL
 		Write(
 		__in LPSTR lpLog
+		);
+
+	BOOL
+		MessageBoxForService(
+		__in LPTSTR lpTitle,
+		__in LPTSTR lpMessage,
+		__in DWORD	dwStyle
 		);
 };
