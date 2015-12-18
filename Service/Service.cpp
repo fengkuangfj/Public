@@ -22,7 +22,8 @@ BOOL
 	__in_opt	DWORD	dwErrorControl,
 	__in		LPWSTR	lpPath,
 	__in_opt	LPWSTR	lpLoadOrderGroup,
-	__in_opt	LPWSTR	lpDependencies
+	__in_opt	LPWSTR	lpDependencies,
+	__in_opt	BOOL	bInteractWithTheDesktop
 	)
 {
 	BOOL							bRet							= FALSE;
@@ -174,6 +175,13 @@ BOOL
 				printfEx(MOD_SERVICE, PRINTF_LEVEL_ERROR, "dwErrorControl error. 0x%08x", dwErrorControl);
 				__leave;
 			}
+		}
+
+		if (SERVICE_WIN32_OWN_PROCESS == dwServiceType ||
+			SERVICE_WIN32_SHARE_PROCESS == dwServiceType)
+		{
+			if (bInteractWithTheDesktop)
+				dwServiceType |= SERVICE_INTERACTIVE_PROCESS;
 		}
 
 		hService = CreateService(

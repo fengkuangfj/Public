@@ -53,7 +53,8 @@ public:
 		__in_opt	DWORD	dwErrorControl,
 		__in		LPWSTR	lpPath,
 		__in_opt	LPWSTR	lpLoadOrderGroup,
-		__in_opt	LPWSTR	lpDependencies
+		__in_opt	LPWSTR	lpDependencies,
+		__in_opt	BOOL	bInteractWithTheDesktop
 		);
 
 	BOOL
