@@ -21,7 +21,6 @@ BOOL
 	TCHAR				tchStdOutputRead[4096]			= {0};
 	DWORD				dwStdOutputNumberOfBytesRead	= 0;
 	ULONG				ulLoopReadStdOutput				= 0;
-	DWORD				dwExitCode						= 0;
 
 
 	__try
