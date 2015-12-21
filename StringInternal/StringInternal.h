@@ -13,8 +13,8 @@ public:
 	static
 		BOOL
 		ASCIIToUNICODE(
-		__in	LPSTR	lpInBuf,
 		__out	LPTSTR	lpOutBuf,
-		__in	ULONG	ulOutBufSizeCh
+		__in	ULONG	ulOutBufSizeCh,
+		__in	LPSTR	lpInBuf
 		);
 };

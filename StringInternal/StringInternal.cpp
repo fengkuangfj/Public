@@ -2,9 +2,9 @@
 
 BOOL
 	CStringInternal::ASCIIToUNICODE(
-	__in	LPSTR	lpInBuf,
 	__out	LPTSTR	lpOutBuf,
-	__in	ULONG	ulOutBufSizeCh
+	__in	ULONG	ulOutBufSizeCh,
+	__in	LPSTR	lpInBuf
 	)
 {
 	BOOL	bRet		= FALSE;
