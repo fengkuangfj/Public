@@ -43,24 +43,29 @@ BOOL
 
 		GetStartupInfo(&StartupInfo);
 
-		StartupInfo.dwFlags = STARTF_USESHOWWINDOW | STARTF_USESTDHANDLES;
+		StartupInfo.dwFlags = STARTF_USESHOWWINDOW;
 		StartupInfo.wShowWindow = SW_HIDE;
 
-		SecurityAttributes.nLength = sizeof(SecurityAttributes);
-		SecurityAttributes.lpSecurityDescriptor = NULL;
-		SecurityAttributes.bInheritHandle = TRUE;
+		if (lpCmdResultInfo)
+		{
+			StartupInfo.dwFlags |= STARTF_USESTDHANDLES;
 
-		if (!CreatePipe(&hReadStdOutput, &StartupInfo.hStdOutput, &SecurityAttributes, 0))
-			__leave;
+			SecurityAttributes.nLength = sizeof(SecurityAttributes);
+			SecurityAttributes.lpSecurityDescriptor = NULL;
+			SecurityAttributes.bInheritHandle = TRUE;
 
-		if (!SetHandleInformation(hReadStdOutput, HANDLE_FLAG_INHERIT, HANDLE_FLAG_INHERIT))
-			__leave;
+			if (!CreatePipe(&hReadStdOutput, &StartupInfo.hStdOutput, &SecurityAttributes, 0))
+				__leave;
 
-		if (!CreatePipe(&hReadStdError, &StartupInfo.hStdError, &SecurityAttributes, 0))
-			__leave;
+			if (!SetHandleInformation(hReadStdOutput, HANDLE_FLAG_INHERIT, HANDLE_FLAG_INHERIT))
+				__leave;
 
-		if (!SetHandleInformation(hReadStdError, HANDLE_FLAG_INHERIT, HANDLE_FLAG_INHERIT))
-			__leave;
+			if (!CreatePipe(&hReadStdError, &StartupInfo.hStdError, &SecurityAttributes, 0))
+				__leave;
+
+			if (!SetHandleInformation(hReadStdError, HANDLE_FLAG_INHERIT, HANDLE_FLAG_INHERIT))
+				__leave;
+		}
 
 		if (!CreateProcess(
 			NULL,
@@ -76,16 +81,19 @@ BOOL
 			))
 			__leave;
 
-		if (StartupInfo.hStdOutput)
+		if (lpCmdResultInfo)
 		{
-			CloseHandle(StartupInfo.hStdOutput);
-			StartupInfo.hStdOutput = NULL;
-		}
+			if (StartupInfo.hStdOutput)
+			{
+				CloseHandle(StartupInfo.hStdOutput);
+				StartupInfo.hStdOutput = NULL;
+			}
 
-		if (StartupInfo.hStdError)
-		{
-			CloseHandle(StartupInfo.hStdError);
-			StartupInfo.hStdError = NULL;
+			if (StartupInfo.hStdError)
+			{
+				CloseHandle(StartupInfo.hStdError);
+				StartupInfo.hStdError = NULL;
+			}
 		}
 
 		if (bWaitUntilCmdExit)
@@ -97,75 +105,43 @@ BOOL
 			}
 		}
 
-		__try
+		if (lpCmdResultInfo)
 		{
-			while (TRUE)
-			{
-				if (!ReadFile(hReadStdOutput, chStdOutputRead, 4096, &dwStdOutputNumberOfBytesRead, NULL))
-				{
-					if (lpCmdResultInfo && ulLoopReadStdOutput)
-						lpCmdResultInfo->bResult = TRUE;
-
-					break;
-				}
-
-				if (!CStringInternal::ASCIIToUNICODE(tchStdOutputRead, _countof(tchStdOutputRead), chStdOutputRead))
-					__leave;
-
-				if (lpCmdResultInfo && lpCmdResultInfo->lpResult && lpCmdResultInfo->ulResultBufferSizeCh)
-				{
-					if (ulLoopReadStdOutput)
-					{
-						lpCmdResultInfo->ulReturnSizeCh += _tcslen(_T("\n"));
-						if (lpCmdResultInfo->ulReturnSizeCh > lpCmdResultInfo->ulResultBufferSizeCh)
-						{
-							lpCmdResultInfo->bResult = TRUE;
-							__leave;
-						}
-
-						CopyMemory(lpCmdResultInfo->lpResult + lpCmdResultInfo->ulReturnSizeCh - _tcslen(_T("\n")), _T("\n"), _tcslen(_T("\n")) * sizeof(TCHAR));
-					}
-
-					lpCmdResultInfo->ulReturnSizeCh += _tcslen(tchStdOutputRead);
-					if (lpCmdResultInfo->ulReturnSizeCh > lpCmdResultInfo->ulResultBufferSizeCh)
-					{
-						lpCmdResultInfo->bResult = TRUE;
-						__leave;
-					}
-
-					CopyMemory(lpCmdResultInfo->lpResult + lpCmdResultInfo->ulReturnSizeCh - _tcslen(tchStdOutputRead), tchStdOutputRead, _tcslen(tchStdOutputRead) * sizeof(TCHAR));
-				}
-
-				ulLoopReadStdOutput++;
-
-				ZeroMemory(chStdOutputRead, sizeof(chStdOutputRead));
-				ZeroMemory(tchStdOutputRead, sizeof(tchStdOutputRead));
-			}
-
-			if (!ulLoopReadStdOutput)
+			__try
 			{
 				while (TRUE)
 				{
-					if (!ReadFile(hReadStdError, chStdOutputRead, 4096, &dwStdOutputNumberOfBytesRead, NULL))
+					if (!ReadFile(hReadStdOutput, chStdOutputRead, 4096, &dwStdOutputNumberOfBytesRead, NULL))
+					{
+						if (ulLoopReadStdOutput)
+							lpCmdResultInfo->bResult = TRUE;
+
 						break;
+					}
 
 					if (!CStringInternal::ASCIIToUNICODE(tchStdOutputRead, _countof(tchStdOutputRead), chStdOutputRead))
 						__leave;
 
-					if (lpCmdResultInfo && lpCmdResultInfo->lpResult && lpCmdResultInfo->ulResultBufferSizeCh)
+					if (lpCmdResultInfo->lpResult && lpCmdResultInfo->ulResultBufferSizeCh)
 					{
 						if (ulLoopReadStdOutput)
 						{
 							lpCmdResultInfo->ulReturnSizeCh += _tcslen(_T("\n"));
 							if (lpCmdResultInfo->ulReturnSizeCh > lpCmdResultInfo->ulResultBufferSizeCh)
+							{
+								lpCmdResultInfo->bResult = TRUE;
 								__leave;
+							}
 
 							CopyMemory(lpCmdResultInfo->lpResult + lpCmdResultInfo->ulReturnSizeCh - _tcslen(_T("\n")), _T("\n"), _tcslen(_T("\n")) * sizeof(TCHAR));
 						}
 
 						lpCmdResultInfo->ulReturnSizeCh += _tcslen(tchStdOutputRead);
 						if (lpCmdResultInfo->ulReturnSizeCh > lpCmdResultInfo->ulResultBufferSizeCh)
+						{
+							lpCmdResultInfo->bResult = TRUE;
 							__leave;
+						}
 
 						CopyMemory(lpCmdResultInfo->lpResult + lpCmdResultInfo->ulReturnSizeCh - _tcslen(tchStdOutputRead), tchStdOutputRead, _tcslen(tchStdOutputRead) * sizeof(TCHAR));
 					}
@@ -175,14 +151,51 @@ BOOL
 					ZeroMemory(chStdOutputRead, sizeof(chStdOutputRead));
 					ZeroMemory(tchStdOutputRead, sizeof(tchStdOutputRead));
 				}
-			}
 
+				if (!ulLoopReadStdOutput)
+				{
+					while (TRUE)
+					{
+						if (!ReadFile(hReadStdError, chStdOutputRead, 4096, &dwStdOutputNumberOfBytesRead, NULL))
+							break;
+
+						if (!CStringInternal::ASCIIToUNICODE(tchStdOutputRead, _countof(tchStdOutputRead), chStdOutputRead))
+							__leave;
+
+						if (lpCmdResultInfo->lpResult && lpCmdResultInfo->ulResultBufferSizeCh)
+						{
+							if (ulLoopReadStdOutput)
+							{
+								lpCmdResultInfo->ulReturnSizeCh += _tcslen(_T("\n"));
+								if (lpCmdResultInfo->ulReturnSizeCh > lpCmdResultInfo->ulResultBufferSizeCh)
+									__leave;
+
+								CopyMemory(lpCmdResultInfo->lpResult + lpCmdResultInfo->ulReturnSizeCh - _tcslen(_T("\n")), _T("\n"), _tcslen(_T("\n")) * sizeof(TCHAR));
+							}
+
+							lpCmdResultInfo->ulReturnSizeCh += _tcslen(tchStdOutputRead);
+							if (lpCmdResultInfo->ulReturnSizeCh > lpCmdResultInfo->ulResultBufferSizeCh)
+								__leave;
+
+							CopyMemory(lpCmdResultInfo->lpResult + lpCmdResultInfo->ulReturnSizeCh - _tcslen(tchStdOutputRead), tchStdOutputRead, _tcslen(tchStdOutputRead) * sizeof(TCHAR));
+						}
+
+						ulLoopReadStdOutput++;
+
+						ZeroMemory(chStdOutputRead, sizeof(chStdOutputRead));
+						ZeroMemory(tchStdOutputRead, sizeof(tchStdOutputRead));
+					}
+				}
+
+				bRet = TRUE;
+			}
+			__finally
+			{
+				;
+			}
+		}
+		else
 			bRet = TRUE;
-		}
-		__finally
-		{
-			;
-		}
 	}
 	__finally
 	{
