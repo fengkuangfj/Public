@@ -8,6 +8,8 @@
 #include <stdio.h>
 #include <tchar.h>
 
+#pragma comment(lib, "Advapi32.lib")
+
 typedef enum _PROC_TYPE
 {
 	PROC_TYPE_UNKNOWN,
