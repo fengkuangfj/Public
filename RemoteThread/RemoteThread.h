@@ -21,3 +21,4 @@ public:
 		__in DWORD					dwParameterSizeB
 		);
 };
+
