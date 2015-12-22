@@ -24,7 +24,7 @@ BOOL
 	{
 		if (!lpOutBuf || !ulOutBufSizeCh || (!bCurrentProc && !ulPid))
 		{
-			printfEx(MOD_PROCESS_PATH, PRINTF_LEVEL_ERROR, "input arguments error. %d %d 0x%08p %d", bCurrentProc, ulPid, lpOutBuf, ulOutBufSizeCh);
+			printf("input arguments error. %d %d 0x%08p %d \n", bCurrentProc, ulPid, lpOutBuf, ulOutBufSizeCh);
 			__leave;
 		}
 
@@ -34,7 +34,7 @@ BOOL
 		{
 			if (!CModulePath::Get(NULL, lpOutBuf, ulOutBufSizeCh))
 			{
-				printfEx(MOD_PROCESS_PATH, PRINTF_LEVEL_ERROR, "Get failed");
+				printf("Get failed. \n");
 				__leave;
 			}
 
@@ -45,14 +45,14 @@ BOOL
 		hProc = OpenProcess(PROCESS_QUERY_INFORMATION, FALSE, ulPid);
 		if (!hProc)
 		{
-			printfEx(MOD_PROCESS_PATH, PRINTF_LEVEL_ERROR, "OpenProcess failed. (%d)", GetLastError());
+			printf("OpenProcess failed. (%d) \n", GetLastError());
 			__leave;
 		}
 
 		hModule = LoadLibrary(_T("Kernel32.dll"));
 		if (!hModule)
 		{
-			printfEx(MOD_PROCESS_PATH, PRINTF_LEVEL_ERROR, "LoadLibrary failed. (%d)", GetLastError());
+			printf("LoadLibrary failed. (%d) \n", GetLastError());
 			__leave;
 		}
 
@@ -64,7 +64,7 @@ BOOL
 				dwProcPathLenCh = ulOutBufSizeCh;
 				if (!g_QueryFullProcessImageName(hProc, 0, lpOutBuf, &dwProcPathLenCh))
 				{
-					printfEx(MOD_PROCESS_PATH, PRINTF_LEVEL_ERROR, "QueryFullProcessImageName failed. (%d)", GetLastError());
+					printf("QueryFullProcessImageName failed. (%d) \n", GetLastError());
 					__leave;
 				}
 
@@ -75,7 +75,7 @@ BOOL
 
 		if (!GetProcessImageFileName(hProc, tchProcPathDev, _countof(tchProcPathDev)))
 		{
-			printfEx(MOD_PROCESS_PATH, PRINTF_LEVEL_ERROR, "GetProcessImageFileName failed. (%d)", GetLastError());
+			printf("GetProcessImageFileName failed. (%d) \n", GetLastError());
 			__leave;
 		}
 
@@ -89,7 +89,7 @@ BOOL
 					continue;
 				else
 				{
-					printfEx(MOD_PROCESS_PATH, PRINTF_LEVEL_ERROR, "QueryDosDevice failed. (%d)", GetLastError());
+					printf("QueryDosDevice failed. (%d) \n", GetLastError());
 					__leave;
 				}
 			}

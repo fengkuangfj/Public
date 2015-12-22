@@ -4,11 +4,9 @@
 #include <tchar.h>
 #include <Psapi.h>
 
-#pragma comment(lib, "Psapi.lib")
-#pragma comment(lib, "Kernel32.lib")
-
-#include "..\\PrintfEx\\PrintfEx.h"
 #include "..\\ModulePath\\ModulePath.h"
+
+#pragma comment(lib, "Psapi.lib")
 
 #define MOD_PROCESS_PATH _T("½ø³ÌÂ·¾¶")
 
