@@ -15,9 +15,11 @@ BOOL
 	HANDLE		hThread						= NULL;
 	LPVOID		lpFunctionAddress			= NULL;
 	LPVOID		lpFunctionParameterAddress	= NULL;
-	DWORD		dwFunctionSizeB				= 0;
+	ULONG_PTR	ulFunctionSizeB				= 0;
 	BYTE	*	pbyStartAddress				= NULL;
 	BYTE	*	pbyStartAddressFollow		= NULL;
+	DWORD       dwThreadId					= 0;
+	DWORD		dwResult					= 0;
 
 
 	__try
@@ -37,35 +39,34 @@ BOOL
 			__leave;
 		}
 
-		//在目标进程内分配存放线程函数起始地址的内存
 #ifdef _DEBUG
-		pbyStartAddress = (BYTE *)lpStartAddress;		//DEBUG模式下编译器会有一个函数跳转表
-		if (0xe9 == *pbyStartAddress)	//jmp的机器码为0xE9
+		pbyStartAddress = (BYTE *)lpStartAddress;		// DEBUG模式下编译器会有一个函数跳转表
+		if (0xe9 == *pbyStartAddress)					// jmp的机器码为0xE9
 		{
 			pbyStartAddress++;	
-			pbyStartAddress += *(int *)pbyStartAddress;				//当前地址+偏移地址
-			pbyStartAddress += 4;				//此处内容为CC CC CC CC再加真实函数机器码,所以要跳过这4个0xCC,
+			pbyStartAddress += *(int *)pbyStartAddress;	// 当前地址+偏移地址
+			pbyStartAddress += 4;						// 此处内容为CC CC CC CC再加真实函数机器码,所以要跳过这4个0xCC,
 		}
 		lpStartAddress = (LPTHREAD_START_ROUTINE)pbyStartAddress;
 
-		pbyStartAddressFollow = (BYTE *)lpStartAddressFollow;		//DEBUG模式下编译器会有一个函数跳转表
-		if (0xe9 == *pbyStartAddressFollow)	//jmp的机器码为0xE9
+		pbyStartAddressFollow = (BYTE *)lpStartAddressFollow;
+		if (0xe9 == *pbyStartAddressFollow)
 		{
 			pbyStartAddressFollow++;	
-			pbyStartAddressFollow += *(int *)pbyStartAddressFollow;				//当前地址+偏移地址
-			pbyStartAddressFollow += 4;				//此处内容为CC CC CC CC再加真实函数机器码,所以要跳过这4个0xCC,
+			pbyStartAddressFollow += *(int *)pbyStartAddressFollow;
+			pbyStartAddressFollow += 4;
 		}
 		lpStartAddressFollow = (LPTHREAD_START_ROUTINE)pbyStartAddressFollow;
 #endif
 
-		dwFunctionSizeB = ((BYTE *)(DWORD)lpStartAddressFollow - (BYTE *)(DWORD)lpStartAddress); 
+		ulFunctionSizeB = (ULONG_PTR)lpStartAddressFollow - (ULONG_PTR)lpStartAddress; 
 
 		lpFunctionAddress = VirtualAllocEx(
 			hProcess,
 			NULL,
-			dwFunctionSizeB,
-			MEM_COMMIT,
-			PAGE_READWRITE
+			ulFunctionSizeB,
+			MEM_COMMIT | MEM_RESERVE,
+			PAGE_EXECUTE_READWRITE
 			);
 		if (!lpFunctionAddress)
 		{
@@ -73,11 +74,12 @@ BOOL
 			__leave;
 		}
 
+		// 写入的是机器指令
 		if (!WriteProcessMemory(
 			hProcess,
 			lpFunctionAddress,
 			(LPCVOID)lpStartAddress,
-			dwFunctionSizeB,
+			ulFunctionSizeB,
 			NULL
 			))
 		{
@@ -117,11 +119,18 @@ BOOL
 			(LPTHREAD_START_ROUTINE)lpFunctionAddress,
 			lpFunctionParameterAddress,
 			0,
-			NULL
+			&dwThreadId
 			);
 		if (!hThread)
 		{
 			printfEx(MOD_REMOTE_THREAD, PRINTF_LEVEL_ERROR, "CreateRemoteThread failed. (%d)", GetLastError());
+			__leave;
+		}
+
+		dwResult = WaitForSingleObject(hThread, INFINITE);
+		if (WAIT_OBJECT_0 != dwResult)
+		{
+			printfEx(MOD_REMOTE_THREAD, PRINTF_LEVEL_ERROR, "WaitForSingleObject failed. (%d)", dwResult);
 			__leave;
 		}
 
@@ -131,13 +140,17 @@ BOOL
 	{
 		if (lpFunctionAddress)
 		{
-			VirtualFreeEx(hProcess, lpFunctionAddress, sizeof(DWORD), MEM_RELEASE);
+			if (!VirtualFreeEx(hProcess, lpFunctionAddress, 0, MEM_RELEASE))
+				printfEx(MOD_REMOTE_THREAD, PRINTF_LEVEL_ERROR, "VirtualFreeEx failed. (%d)", GetLastError());
+
 			lpFunctionAddress = NULL;
 		}
 
 		if (lpFunctionParameterAddress)
 		{
-			VirtualFreeEx(hProcess, lpFunctionParameterAddress, sizeof(DWORD), MEM_RELEASE);
+			if (!VirtualFreeEx(hProcess, lpFunctionParameterAddress, 0, MEM_RELEASE))
+				printfEx(MOD_REMOTE_THREAD, PRINTF_LEVEL_ERROR, "VirtualFreeEx failed. (%d)", GetLastError());
+
 			lpFunctionParameterAddress = NULL;
 		}
 
