@@ -5,14 +5,13 @@
 #include <strsafe.h>
 #include <locale.h>
 #include <time.h>
-#include <assert.h>
-#include <Psapi.h>
 
+#include "..\\ProcessPath\\ProcessPath.h"
 #include "..\\ProcessType\\ProcessType.h"
 
-#pragma comment(lib, "Psapi.lib")
-
+#ifndef MOD_PRINTF_EX
 #define MOD_PRINTF_EX _T("PrintfEx")
+#endif
 
 typedef
 BOOL
@@ -59,22 +58,6 @@ public:
 		);
 
 private:
-	static BOOL								ms_bOutputDebugString;
-	static QUERY_FULL_PROCESS_IMAGE_NAME	ms_QueryFullProcessImageName;
-	static PROC_TYPE						ms_ProcType;
-
-	BOOL
-		GetProcPath(
-		__in	BOOL	bCurrentProc,
-		__in	ULONG	ulPid,
-		__out	LPTSTR	lpOutBuf,
-		__in	ULONG	ulOutBufSizeCh
-		);
-
-	BOOL
-		GetModulePath(
-		__in_opt	HMODULE	hModule,
-		__out		LPTSTR	lpOutBuf,
-		__in		ULONG	ulOutBufSizeCh
-		);
+	static BOOL			ms_bOutputDebugString;
+	static PROC_TYPE	ms_ProcType;
 };
