@@ -1,5 +1,9 @@
 #pragma once
 
+#ifndef MOD_PRINTF_EX
+#define MOD_PRINTF_EX _T("PrintfEx")
+#endif
+
 #include <Windows.h>
 #include <tchar.h>
 #include <strsafe.h>
@@ -8,10 +12,6 @@
 
 #include "..\\ProcessPath\\ProcessPath.h"
 #include "..\\ProcessType\\ProcessType.h"
-
-#ifndef MOD_PRINTF_EX
-#define MOD_PRINTF_EX _T("PrintfEx")
-#endif
 
 typedef
 BOOL

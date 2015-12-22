@@ -1,13 +1,13 @@
 #pragma once
 
+#ifndef MOD_PROCESS_TYPE
+#define MOD_PROCESS_TYPE _T("进程类型")
+#endif
+
 #include <Windows.h>
 #include <stdio.h>
 
 #pragma comment(lib, "Advapi32.lib")
-
-#ifndef MOD_PROCESS_TYPE
-#define MOD_PROCESS_TYPE _T("进程类型")
-#endif
 
 typedef enum _PROC_TYPE
 {

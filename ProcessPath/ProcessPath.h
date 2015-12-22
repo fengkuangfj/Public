@@ -1,5 +1,9 @@
 #pragma once
 
+#ifndef MOD_PROCESS_PATH
+#define MOD_PROCESS_PATH _T("进程路径")
+#endif
+
 #include <Windows.h>
 #include <tchar.h>
 #include <Psapi.h>
@@ -7,8 +11,6 @@
 #include "..\\ModulePath\\ModulePath.h"
 
 #pragma comment(lib, "Psapi.lib")
-
-#define MOD_PROCESS_PATH _T("进程路径")
 
 typedef
 	BOOL
