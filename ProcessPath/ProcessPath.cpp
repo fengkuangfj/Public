@@ -1,6 +1,6 @@
 #include "ProcessPath.h"
 
-QUERY_FULL_PROCESS_IMAGE_NAME g_QueryFullProcessImageName = NULL;
+QUERY_FULL_PROCESS_IMAGE_NAME CProcessPath::ms_QueryFullProcessImageName = NULL;
 
 BOOL
 	CProcessPath::Get(
@@ -56,21 +56,20 @@ BOOL
 			__leave;
 		}
 
-		if (!g_QueryFullProcessImageName)
-		{
-			g_QueryFullProcessImageName = (QUERY_FULL_PROCESS_IMAGE_NAME)GetProcAddress(hModule, "QueryFullProcessImageName");
-			if (g_QueryFullProcessImageName)
-			{
-				dwProcPathLenCh = ulOutBufSizeCh;
-				if (!g_QueryFullProcessImageName(hProc, 0, lpOutBuf, &dwProcPathLenCh))
-				{
-					printf("QueryFullProcessImageName failed. (%d) \n", GetLastError());
-					__leave;
-				}
+		if (!ms_QueryFullProcessImageName)
+			ms_QueryFullProcessImageName = (QUERY_FULL_PROCESS_IMAGE_NAME)GetProcAddress(hModule, "QueryFullProcessImageName");
 
-				bRet = TRUE;
+		if (ms_QueryFullProcessImageName)
+		{
+			dwProcPathLenCh = ulOutBufSizeCh;
+			if (!ms_QueryFullProcessImageName(hProc, 0, lpOutBuf, &dwProcPathLenCh))
+			{
+				printf("QueryFullProcessImageName failed. (%d) \n", GetLastError());
 				__leave;
 			}
+
+			bRet = TRUE;
+			__leave;
 		}
 
 		if (!GetProcessImageFileName(hProc, tchProcPathDev, _countof(tchProcPathDev)))

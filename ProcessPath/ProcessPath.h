@@ -30,4 +30,7 @@ public:
 		__out	LPTSTR	lpOutBuf,
 		__in	ULONG	ulOutBufSizeCh
 		);
+
+private:
+	static QUERY_FULL_PROCESS_IMAGE_NAME ms_QueryFullProcessImageName;
 };
