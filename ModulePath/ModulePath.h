@@ -1,10 +1,11 @@
 #pragma once
 
 #include <Windows.h>
+#include <stdio.h>
 
-#include "..\\..\\Public\\PrintfEx\\PrintfEx.h"
-
+#ifndef MOD_MODULE_PATH
 #define MOD_MODULE_PATH _T("Ä£¿éÂ·¾¶")
+#endif
 
 class CModulePath
 {
