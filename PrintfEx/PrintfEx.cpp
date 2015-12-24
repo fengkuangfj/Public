@@ -50,12 +50,12 @@ __in LPSTR			lpFmt,
 
 		switch (ms_ProcType)
 		{
-		case PROC_TYPE_NORMAL:
 		case PROC_TYPE_CONSOLE:
 			{
 				printf("%hs", chLog);
 				break;
 			}
+		case PROC_TYPE_NORMAL:
 		case PROC_TYPE_SERVICE:
 			break;
 		default:
