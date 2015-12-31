@@ -286,7 +286,7 @@ COperationSystemVersion::GetOSVersionByGetVersionEx()
 		}
 
 		if (OS_VERSION_UNKNOWN < ret)
-			ret += OsVersionInfoEx.wServicePackMajor;
+			ret = (OS_VERSION_USER_DEFINED)(ret + OsVersionInfoEx.wServicePackMajor);
 	}
 	__finally
 	{
