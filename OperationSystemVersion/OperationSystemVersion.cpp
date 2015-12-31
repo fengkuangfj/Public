@@ -255,7 +255,18 @@ COperationSystemVersion::GetOSVersionByGetVersionEx()
 							}
 							case 2:
 							{
-								ret = OS_VERSION_WINDOWS_8;
+								if (VER_NT_WORKSTATION == OsVersionInfoEx.wProductType)
+									ret = OS_VERSION_WINDOWS_8;
+								else
+									ret = OS_VERSION_WINDOWS_SERVER_2012;
+
+								break;
+							}
+							case 3:
+							{
+								if (VER_NT_WORKSTATION == OsVersionInfoEx.wProductType)
+									ret = OS_VERSION_WINDOWS_8_POINT1;
+
 								break;
 							}
 							default:
@@ -273,6 +284,9 @@ COperationSystemVersion::GetOSVersionByGetVersionEx()
 			default:
 				break;
 		}
+
+		if (OS_VERSION_UNKNOWN < ret)
+			ret += OsVersionInfoEx.wServicePackMajor;
 	}
 	__finally
 	{
