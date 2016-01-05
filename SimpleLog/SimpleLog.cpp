@@ -1,10 +1,6 @@
  #include "SimpleLog.h"
 
-TCHAR				CSimpleLog::ms_LogPath[MAX_PATH] = { 0 };
-CRITICAL_SECTION	CSimpleLog::ms_CriticalSection = { 0 };
-BOOL				CSimpleLog::ms_WriteReady = FALSE;
-BOOL				CSimpleLog::ms_bOutputDebugString = TRUE;
-PROC_TYPE			CSimpleLog::ms_ProcType = PROC_TYPE_UNKNOWN;
+CSimpleLog * CSimpleLog::ms_pInstance = NULL;
 
 BOOL
 CSimpleLog::Init(
@@ -140,7 +136,6 @@ __in LPSTR		lpFmt,
 	CHAR			chLog[MAX_PATH * 2] = { 0 };
 	HANDLE			hOutput = INVALID_HANDLE_VALUE;
 
-	CSimpleLog		SimpleLog;
 	CStackBacktrace	StackBacktrace;
 
 
@@ -170,7 +165,7 @@ __in LPSTR		lpFmt,
 			chFmtInfo
 			);
 
-		SimpleLog.Write(chLog);
+		Write(chLog);
 
 		strcat_s(chLog, _countof(chLog), "\n");
 
@@ -209,7 +204,7 @@ __in LPSTR		lpFmt,
 			{
 				if (PROC_TYPE_SERVICE == ms_ProcType)
 				{
-					if (!SimpleLog.MessageBoxForService(_T("错误"), _T("发生严重错误"), MB_OK | MB_SERVICE_NOTIFICATION | MB_ICONERROR))
+					if (!MessageBoxForService(_T("错误"), _T("发生严重错误"), MB_OK | MB_SERVICE_NOTIFICATION | MB_ICONERROR))
 						printf("MessageBoxForService failed. \n");
 				}
 				else
@@ -253,23 +248,23 @@ __in LPSTR lpLog
 
 	__try
 	{
-		EnterCriticalSection(&CSimpleLog::ms_CriticalSection);
+		EnterCriticalSection(&ms_CriticalSection);
 
 		if (!lpLog)
 			__leave;
 
 		StringCchPrintfA(chLog, _countof(chLog), "%hs\r\n", lpLog);
 
-		lpPositon = wcsrchr(CSimpleLog::ms_LogPath, _T('\\'));
+		lpPositon = wcsrchr(ms_LogPath, _T('\\'));
 		if (!lpPositon)
 			__leave;
 
-		CopyMemory(lpDir, ms_LogPath, (lpPositon - CSimpleLog::ms_LogPath) * sizeof(TCHAR));
+		CopyMemory(lpDir, ms_LogPath, (lpPositon - ms_LogPath) * sizeof(TCHAR));
 
 		SHCreateDirectoryEx(NULL, lpDir, NULL);
 
 		hFile = CreateFile(
-			CSimpleLog::ms_LogPath,
+			ms_LogPath,
 			GENERIC_READ | GENERIC_WRITE,
 			FILE_SHARE_READ | FILE_SHARE_WRITE,
 			NULL,
@@ -298,7 +293,7 @@ __in LPSTR lpLog
 			hFile = INVALID_HANDLE_VALUE;
 		}
 
-		LeaveCriticalSection(&CSimpleLog::ms_CriticalSection);
+		LeaveCriticalSection(&ms_CriticalSection);
 	}
 
 	return bRet;
@@ -349,4 +344,50 @@ BOOL
 	}
 
 	return bRet;
+}
+
+CSimpleLog *
+	CSimpleLog::GetInstance()
+{
+	if (!ms_pInstance)
+	{
+		do 
+		{
+			ms_pInstance = (CSimpleLog *)calloc(1, sizeof(CSimpleLog));
+			if (!ms_pInstance)
+				Sleep(1000);
+			else
+				break;
+		} while (TRUE);
+	}
+
+	return ms_pInstance;
+}
+
+VOID
+	CSimpleLog::ReleaseInstance()
+{
+	if (ms_pInstance)
+	{
+		free(ms_pInstance);
+		ms_pInstance = NULL;
+	}
+}
+
+CSimpleLog::CSimpleLog()
+{
+	ZeroMemory(ms_LogPath, sizeof(ms_LogPath));
+	ZeroMemory(&ms_CriticalSection, sizeof(ms_CriticalSection));
+	ms_WriteReady = FALSE;
+	ms_bOutputDebugString = TRUE;
+	ms_ProcType = PROC_TYPE_UNKNOWN;
+}
+
+CSimpleLog::~CSimpleLog()
+{
+	ZeroMemory(ms_LogPath, sizeof(ms_LogPath));
+	ZeroMemory(&ms_CriticalSection, sizeof(ms_CriticalSection));
+	ms_WriteReady = FALSE;
+	ms_bOutputDebugString = TRUE;
+	ms_ProcType = PROC_TYPE_UNKNOWN;
 }

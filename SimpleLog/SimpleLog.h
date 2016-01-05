@@ -1,5 +1,9 @@
 #pragma once
 
+#ifndef MOD_SIMPLE_LOG
+#define MOD_SIMPLE_LOG	_T("简单日志")
+#endif
+
 #include <Windows.h>
 #include <tchar.h>
 #include <Strsafe.h>
@@ -15,10 +19,6 @@
 
 #pragma comment(lib, "Wtsapi32.lib")
 
-#ifndef MOD_SIMPLE_LOG
-#define MOD_SIMPLE_LOG	_T("简单日志")
-#endif
-
 typedef enum _LOG_LEVEL
 {
 	LOG_LEVEL_INFORMATION,
@@ -26,11 +26,19 @@ typedef enum _LOG_LEVEL
 	LOG_LEVEL_ERROR
 } LOG_LEVEL, *PLOG_LEVEL, *LPLOG_LEVEL;
 
-#define CSimpleLogSR(lpMod, PrintfLevel, FMT, ...) CSimpleLog::Log(lpMod, PrintfLevel, __FILE__, __FUNCSIG__, __LINE__, FMT, __VA_ARGS__)
+#define CSimpleLogSR(lpMod, PrintfLevel, FMT, ...) CSimpleLog::GetInstance()->Log(lpMod, PrintfLevel, __FILE__, __FUNCSIG__, __LINE__, FMT, __VA_ARGS__)
 
 class CSimpleLog
 {
 public:
+	static
+		CSimpleLog *
+		GetInstance();
+
+	static
+		VOID
+		ReleaseInstance();
+
 	BOOL
 		Init(
 		__in LPTSTR lpLogPath
@@ -39,8 +47,7 @@ public:
 	BOOL
 		Unload();
 
-	static
-		BOOL
+	BOOL
 		Log(
 		__in LPTSTR		lpMod,
 		__in LOG_LEVEL	PrintfLevel,
@@ -52,11 +59,17 @@ public:
 		);
 
 private:
-	static TCHAR			ms_LogPath[MAX_PATH];
-	static CRITICAL_SECTION	ms_CriticalSection;
-	static BOOL				ms_WriteReady;
-	static BOOL				ms_bOutputDebugString;
-	static PROC_TYPE		ms_ProcType;
+	static CSimpleLog	*	ms_pInstance;
+
+	TCHAR					ms_LogPath[MAX_PATH];
+	CRITICAL_SECTION		ms_CriticalSection;
+	BOOL					ms_WriteReady;
+	BOOL					ms_bOutputDebugString;
+	PROC_TYPE				ms_ProcType;
+
+	CSimpleLog();
+
+	~CSimpleLog();
 
 	BOOL
 		Write(
