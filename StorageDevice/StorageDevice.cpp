@@ -168,8 +168,6 @@ BOOL
 
 	ULONG	ulDiskNumber	= 0;
 
-	CWmi	Wmi;
-
 
 	__try
 	{
@@ -185,7 +183,7 @@ BOOL
 			__leave;
 		}
 
-		if (!Wmi.QueryCaption(ulDiskNumber, lpOutBuf, ulOutBufSizeCh))
+		if (!CWmi::GetInstance()->QueryCaption(ulDiskNumber, lpOutBuf, ulOutBufSizeCh))
 		{
 			printfEx(MOD_STORAGE_DEVICE, PRINTF_LEVEL_ERROR, "CWmi::QueryCaption failed");
 			__leave;

@@ -1,12 +1,14 @@
 #pragma once
 
+#ifndef MOD_STORAGE_DEVICE
+#define MOD_STORAGE_DEVICE _T("存储设备")
+#endif
+
 #include <Windows.h>
 #include <tchar.h>
 
 #include "..\\PrintfEx\\PrintfEx.h"
 #include "..\\Wmi\\Wmi.h"
-
-#define MOD_STORAGE_DEVICE _T("存储设备")
 
 typedef struct _MEDIA_SERIAL_NUMBER_DATA
 {
