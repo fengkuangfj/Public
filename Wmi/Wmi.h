@@ -1,6 +1,8 @@
 #pragma once
 
+#ifndef MOD_WMI
 #define MOD_WMI _T("WMI")
+#endif
 
 #include <Windows.h>
 #include <comdef.h>
@@ -13,6 +15,14 @@
 class CWmi
 {
 public:
+	static
+		CWmi *
+		GetInstance();
+
+	static
+		VOID
+		ReleaseInstance();
+
 	BOOL
 		Init();
 
@@ -34,7 +44,13 @@ public:
 		);
 
 private:
-	static IWbemLocator		*	ms_pIWbemLocator;
-	static IWbemServices	*	ms_pIWbemServices;
-	static BOOL					ms_bNeedCoUnInit;
+	static CWmi		*	ms_pInstance;
+
+	IWbemLocator	*	m_pIWbemLocator;
+	IWbemServices	*	m_pIWbemServices;
+	BOOL				m_bNeedCoUnInit;
+
+	CWmi();
+
+	~CWmi();
 };

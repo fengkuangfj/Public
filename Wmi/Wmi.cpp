@@ -1,8 +1,6 @@
 #include "Wmi.h"
 
-IWbemLocator	*	CWmi::ms_pIWbemLocator	= NULL;
-IWbemServices	*	CWmi::ms_pIWbemServices	= NULL;
-BOOL				CWmi::ms_bNeedCoUnInit	= FALSE;
+CWmi * CWmi::ms_pInstance = NULL;
 
 BOOL
 	CWmi::Query(
@@ -237,7 +235,7 @@ BOOL
 
 		// Step 6: --------------------------------------------------
 		// Use the IWbemServices pointer to make requests of WMI ----
-		hResult = ms_pIWbemServices->ExecQuery(
+		hResult = m_pIWbemServices->ExecQuery(
 			bstr_t("WQL"),
 			bstr_t("SELECT * FROM Win32_DiskDrive"),
 			WBEM_FLAG_FORWARD_ONLY | WBEM_FLAG_RETURN_IMMEDIATELY,
@@ -360,7 +358,7 @@ BOOL
 			break;
 		}
 
-		ms_bNeedCoUnInit = TRUE;
+		m_bNeedCoUnInit = TRUE;
 
 		// Step 2: --------------------------------------------------
 		// Set general COM security levels --------------------------
@@ -388,7 +386,7 @@ BOOL
 			NULL,
 			CLSCTX_INPROC_SERVER,
 			IID_IWbemLocator,
-			(LPVOID *)&ms_pIWbemLocator
+			(LPVOID *)&m_pIWbemLocator
 			);
 		if (FAILED(hResult))
 		{
@@ -398,7 +396,7 @@ BOOL
 
 		// Step 4: -----------------------------------------------------
 		// Connect to WMI through the IWbemLocator::ConnectServer method
-		hResult = ms_pIWbemLocator->ConnectServer(
+		hResult = m_pIWbemLocator->ConnectServer(
 			_bstr_t(L"ROOT\\CIMV2"),
 			NULL,
 			NULL,
@@ -406,7 +404,7 @@ BOOL
 			0,
 			NULL,
 			NULL,
-			&ms_pIWbemServices
+			&m_pIWbemServices
 			);
 		if (FAILED(hResult))
 		{
@@ -417,7 +415,7 @@ BOOL
 		// Step 5: --------------------------------------------------
 		// Set security levels on the proxy -------------------------
 		hResult = CoSetProxyBlanket(
-			ms_pIWbemServices,
+			m_pIWbemServices,
 			RPC_C_AUTHN_WINNT,
 			RPC_C_AUTHZ_NONE,
 			NULL,
@@ -455,19 +453,19 @@ BOOL
 
 	__try
 	{
-		if (ms_pIWbemServices)
+		if (m_pIWbemServices)
 		{
-			ms_pIWbemServices->Release();
-			ms_pIWbemServices = NULL;
+			m_pIWbemServices->Release();
+			m_pIWbemServices = NULL;
 		}
 
-		if (ms_pIWbemLocator)
+		if (m_pIWbemLocator)
 		{
-			ms_pIWbemLocator->Release();
-			ms_pIWbemLocator = NULL;
+			m_pIWbemLocator->Release();
+			m_pIWbemLocator = NULL;
 		}
 
-		if (ms_bNeedCoUnInit)
+		if (m_bNeedCoUnInit)
 			CoUninitialize();
 
 		bRet = TRUE;
@@ -480,4 +478,46 @@ BOOL
 	printfEx(MOD_WMI, PRINTF_LEVEL_INFORMATION, "end");
 
 	return bRet;
+}
+
+CWmi *
+	CWmi::GetInstance()
+{
+	if (!ms_pInstance)
+	{
+		do 
+		{
+			ms_pInstance = (CWmi *)calloc(1, sizeof(CWmi));
+			if (!ms_pInstance)
+				Sleep(1000);
+			else
+				break;
+		} while (TRUE);
+	}
+
+	return ms_pInstance;
+}
+
+VOID
+	CWmi::ReleaseInstance()
+{
+	if (ms_pInstance)
+	{
+		free(ms_pInstance);
+		ms_pInstance = NULL;
+	}
+}
+
+CWmi::CWmi()
+{
+	m_pIWbemLocator	= NULL;
+	m_pIWbemServices	= NULL;
+	m_bNeedCoUnInit	= FALSE;
+}
+
+CWmi::~CWmi()
+{
+	m_pIWbemLocator	= NULL;
+	m_pIWbemServices	= NULL;
+	m_bNeedCoUnInit	= FALSE;
 }
