@@ -29,16 +29,23 @@ typedef enum _PRINTF_LEVEL
 	PRINTF_LEVEL_ERROR
 } PRINTF_LEVEL, *PPRINTF_LEVEL, *LPPRINTF_LEVEL;
 
-#define printfEx(lpMod, PrintfLevel, FMT, ...) CPrintfEx::PrintfInternal(lpMod, PrintfLevel, __FILE__, __FUNCSIG__, __LINE__, FMT, __VA_ARGS__)
+#define printfEx(lpMod, PrintfLevel, FMT, ...) CPrintfEx::GetInstance()->PrintfInternal(lpMod, PrintfLevel, __FILE__, __FUNCSIG__, __LINE__, FMT, __VA_ARGS__)
 
 class CPrintfEx
 {
 public:
-	BOOL
-		Init();
+	static
+		CPrintfEx *
+		GetInstance();
 
 	static
 		VOID
+		ReleaseInstance();
+
+	BOOL
+		Init();
+
+	VOID
 		PrintfInternal(
 		__in LPTSTR			lpMod,
 		__in PRINTF_LEVEL	PrintfLevel,
@@ -58,6 +65,12 @@ public:
 		);
 
 private:
-	static BOOL			ms_bOutputDebugString;
-	static PROC_TYPE	ms_ProcType;
+	static CPrintfEx *	ms_pInstance;
+
+	BOOL				m_bOutputDebugString;
+	PROC_TYPE			m_ProcType;
+
+	CPrintfEx();
+
+	~CPrintfEx();
 };

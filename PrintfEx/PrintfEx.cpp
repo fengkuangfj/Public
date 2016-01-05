@@ -1,7 +1,6 @@
 #include "PrintfEx.h"
 
-BOOL		CPrintfEx::ms_bOutputDebugString = TRUE;
-PROC_TYPE	CPrintfEx::ms_ProcType = PROC_TYPE_UNKNOWN;
+CPrintfEx * CPrintfEx::ms_pInstance = NULL;
 
 VOID
 CPrintfEx::PrintfInternal(
@@ -48,7 +47,7 @@ __in LPSTR			lpFmt,
 			chFmtInfo
 			);
 
-		switch (ms_ProcType)
+		switch (m_ProcType)
 		{
 		case PROC_TYPE_CONSOLE:
 			{
@@ -60,12 +59,12 @@ __in LPSTR			lpFmt,
 			break;
 		default:
 			{
-				printf("ms_ProcType error. (%d) \n", ms_ProcType);
+				printf("ms_ProcType error. (%d) \n", m_ProcType);
 				break;
 			}
 		}
 
-		if (ms_bOutputDebugString)
+		if (m_bOutputDebugString)
 			OutputDebugStringA(chLog);
 	}
 	__finally
@@ -132,9 +131,9 @@ CPrintfEx::Init()
 
 		if (_tcslen(tchProcPath) >= _tcslen(_T("DbgView.exe")) &&
 			(0 == _tcsnicmp(tchProcPath + (_tcslen(tchProcPath) - _tcslen(_T("DbgView.exe"))), _T("DbgView.exe"), _tcslen(_T("DbgView.exe")))))
-			ms_bOutputDebugString = FALSE;
+			m_bOutputDebugString = FALSE;
 
-		ms_ProcType = CProcessType::GetProcType(TRUE, 0);
+		m_ProcType = CProcessType::GetProcType(TRUE, 0);
 
 		bRet = TRUE;
 	}
@@ -144,4 +143,44 @@ CPrintfEx::Init()
 	}
 
 	return bRet;
+}
+
+CPrintfEx *
+	CPrintfEx::GetInstance()
+{
+	if (!ms_pInstance)
+	{
+		do 
+		{
+			ms_pInstance = (CPrintfEx *)calloc(1, sizeof(CPrintfEx));
+			if (!ms_pInstance)
+				Sleep(1000);
+			else
+				break;
+		} while (TRUE);
+	}
+
+	return ms_pInstance;
+}
+
+VOID
+	CPrintfEx::ReleaseInstance()
+{
+	if (ms_pInstance)
+	{
+		free(ms_pInstance);
+		ms_pInstance = NULL;
+	}
+}
+
+CPrintfEx::CPrintfEx()
+{
+	m_bOutputDebugString = TRUE;
+	m_ProcType = PROC_TYPE_UNKNOWN;
+}
+
+CPrintfEx::~CPrintfEx()
+{
+	m_bOutputDebugString = TRUE;
+	m_ProcType = PROC_TYPE_UNKNOWN;
 }
