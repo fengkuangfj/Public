@@ -487,7 +487,7 @@ CWmi *
 	{
 		do 
 		{
-			ms_pInstance = (CWmi *)calloc(1, sizeof(CWmi));
+			ms_pInstance = new CWmi;
 			if (!ms_pInstance)
 				Sleep(1000);
 			else
@@ -503,7 +503,7 @@ VOID
 {
 	if (ms_pInstance)
 	{
-		free(ms_pInstance);
+		delete ms_pInstance;
 		ms_pInstance = NULL;
 	}
 }

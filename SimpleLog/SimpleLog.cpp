@@ -353,7 +353,7 @@ CSimpleLog *
 	{
 		do 
 		{
-			ms_pInstance = (CSimpleLog *)calloc(1, sizeof(CSimpleLog));
+			ms_pInstance = new CSimpleLog;
 			if (!ms_pInstance)
 				Sleep(1000);
 			else
@@ -369,7 +369,7 @@ VOID
 {
 	if (ms_pInstance)
 	{
-		free(ms_pInstance);
+		delete ms_pInstance;
 		ms_pInstance = NULL;
 	}
 }

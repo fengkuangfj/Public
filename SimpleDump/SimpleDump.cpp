@@ -1316,7 +1316,7 @@ CSimpleDump *
 	{
 		do 
 		{
-			ms_pInstance = (CSimpleDump *)calloc(1, sizeof(CSimpleDump));
+			ms_pInstance = new CSimpleDump;
 			if (!ms_pInstance)
 				Sleep(1000);
 			else
@@ -1332,7 +1332,7 @@ VOID
 {
 	if (ms_pInstance)
 	{
-		free(ms_pInstance);
+		delete ms_pInstance;
 		ms_pInstance = NULL;
 	}
 }

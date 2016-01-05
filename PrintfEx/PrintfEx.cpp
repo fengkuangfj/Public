@@ -152,7 +152,7 @@ CPrintfEx *
 	{
 		do 
 		{
-			ms_pInstance = (CPrintfEx *)calloc(1, sizeof(CPrintfEx));
+			ms_pInstance = new CPrintfEx;
 			if (!ms_pInstance)
 				Sleep(1000);
 			else
@@ -168,7 +168,7 @@ VOID
 {
 	if (ms_pInstance)
 	{
-		free(ms_pInstance);
+		delete ms_pInstance;
 		ms_pInstance = NULL;
 	}
 }

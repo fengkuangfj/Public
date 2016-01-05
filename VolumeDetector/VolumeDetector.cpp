@@ -492,7 +492,7 @@ CVolumeDetector *
 	{
 		do 
 		{
-			ms_pInstance = (CVolumeDetector *)calloc(1, sizeof(CVolumeDetector));
+			ms_pInstance = new CVolumeDetector;
 			if (!ms_pInstance)
 				Sleep(1000);
 			else
@@ -508,7 +508,7 @@ VOID
 {
 	if (ms_pInstance)
 	{
-		free(ms_pInstance);
+		delete ms_pInstance;
 		ms_pInstance = NULL;
 	}
 }
