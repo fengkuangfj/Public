@@ -1,5 +1,9 @@
 ﻿#pragma once
 
+#ifndef MOD_SIMPLE_DUMP
+#define MOD_SIMPLE_DUMP							_T("简单转储")
+#endif
+
 #include <Windows.h>
 #include <time.h>
 #include <tchar.h>
@@ -16,10 +20,6 @@
 #pragma comment(lib, "Shlwapi.lib")
 #pragma comment(lib, "Version.lib")
 #pragma comment(lib, "Psapi.lib")
-
-#ifndef MOD_SIMPLE_DUMP
-#define MOD_SIMPLE_DUMP							_T("简单转储")
-#endif
 
 #ifndef CMD_LINE_MAX_CHARS
 #define	CMD_LINE_MAX_CHARS 						32768
@@ -95,6 +95,14 @@ typedef HRESULT(WINAPI * UNREGISTER_APPLICATION_RESTART)(void);
 class CSimpleDump
 {
 public:
+	static
+		CSimpleDump *
+		GetInstance();
+
+	static
+		VOID
+		ReleaseInstance();
+
 	VOID
 		RegisterCrushHandler(
 		__in PCRUSH_HANDLER_INFO pCrushHandlerInfo = NULL
@@ -120,71 +128,69 @@ public:
 		);
 
 private:
-	static MINIDUMP_TYPE					ms_MinidumpType;
-	static BOOL								ms_bRestart;
-	static PROC_TYPE						ms_ProcType;
-	static LPTSTR							ms_lpCmdLine;
-	static TCHAR							ms_tchRestartTag[MAX_PATH];
+	static CSimpleDump				*	ms_pInstance;
 
-	static RESTART							ms_Restart;
+	MINIDUMP_TYPE						m_MinidumpType;
+	BOOL								m_bRestart;
+	PROC_TYPE							m_ProcType;
+	LPTSTR								m_lpCmdLine;
+	TCHAR								m_tchRestartTag[MAX_PATH];
 
-	static HMODULE							ms_hModuleKernel32Dll;
-	static BOOL								ms_bCanUseRegisterRestart;
-	static REGISTER_APPLICATION_RESTART		RegisterApplicationRestart;
+	RESTART								m_pfRestart;
 
-	static PTOP_LEVEL_EXCEPTION_FILTER		ms_pTopLevelExceptionFilter;
+	HMODULE								m_hModuleKernel32Dll;
+	BOOL								m_bCanUseRegisterRestart;
+	REGISTER_APPLICATION_RESTART		m_pfRegisterApplicationRestart;
 
-	static
-		BOOL
+	PTOP_LEVEL_EXCEPTION_FILTER			m_pfTopLevelExceptionFilter;
+
+	CSimpleDump();
+
+	~CSimpleDump();
+
+	BOOL
 		GetFunc();
 
-	static
-		BOOL
+	BOOL
 		GetKernel32DllFunc();
 
-	static
-		VOID
+	VOID
 		DefaultRestartFunc();
 
 	static
-		LONG
+	LONG
 		WINAPI
 		ExceptionHandler(
 		_In_ struct _EXCEPTION_POINTERS* pExceptionInfo
 		);
 
-	static
-		BOOL
+	BOOL
 		CreateDumpFile(
 		__in	PVOID	pExceptionAddress,
 		__inout LPTSTR	lpDumpFilePath,
 		__in	ULONG	ulBufferLen
 		);
 
-	static
-		BOOL
+	BOOL
 		GenDump(
 		__in _EXCEPTION_POINTERS* pExceptionInfo
 		);
 
-	static
-		BOOL
+	BOOL
 		GetApplicationVersion(
 		__in	LPTSTR	lpApplicationPath,
 		__inout LPTSTR	lpApplicationVersion,
 		__in	ULONG	ulApplicationVersionLen
 		);
 
-	static
-		BOOL
+	BOOL
 		GetModuleName(
 		__in	PVOID	pAddress,
 		__inout LPTSTR	lpMoudleName,
 		__in	ULONG	ulMoudleNameLen
 		);
 
-	static
-		BOOL
+	BOOL
 		GetModuleNameIndex(
 		__in	PVOID		pAddress,
 		__in	HMODULE*	phMoudle,
@@ -192,37 +198,31 @@ private:
 		__inout ULONG*		pIndex
 		);
 
-	static
-		BOOL
+	BOOL
 		SortModule(
 		__inout	HMODULE*	phMoudle,
 		__in	ULONG		ulCount
 		);
 
-	static
-		BOOL
+	BOOL
 		RegisterRestart();
 
-	static
-		BOOL
+	BOOL
 		BeenRunningMinimum60Seconds();
 
-	static
-		BOOL
+	BOOL
 		GenRestartCmdLine(
 		__inout LPTSTR	pCmdLine,
 		__in	ULONG	ulCharacters
 		);
 
-	static
-		BOOL
+	BOOL
 		InitCmdLine(
 		__in_opt int	nArgc,
 		__in_opt TCHAR*	pArgv[],
 		__in_opt LPTSTR	lpCmdLine
 		);
 
-	static
-		void
+	void
 		WaitForOldProcExit();
 };

@@ -1,19 +1,6 @@
 #include "SimpleDump.h"
 
-MINIDUMP_TYPE					CSimpleDump::ms_MinidumpType = MiniDumpNormal;
-BOOL							CSimpleDump::ms_bRestart = FALSE;
-PROC_TYPE						CSimpleDump::ms_ProcType = PROC_TYPE_UNKNOWN;
-LPTSTR							CSimpleDump::ms_lpCmdLine = NULL;
-TCHAR							CSimpleDump::ms_tchRestartTag[MAX_PATH] = { 0 };
-
-RESTART							CSimpleDump::ms_Restart = NULL;
-
-HMODULE							CSimpleDump::ms_hModuleKernel32Dll = NULL;
-BOOL							CSimpleDump::ms_bCanUseRegisterRestart = FALSE;
-REGISTER_APPLICATION_RESTART	CSimpleDump::RegisterApplicationRestart = NULL;
-
-PTOP_LEVEL_EXCEPTION_FILTER		CSimpleDump::ms_pTopLevelExceptionFilter = NULL;
-
+CSimpleDump * CSimpleDump::ms_pInstance = NULL;
 
 BOOL
 CSimpleDump::GenRestartCmdLine(
@@ -37,16 +24,16 @@ __in	ULONG	ulCharacters
 		if (!pCmdLine || !ulCharacters)
 			__leave;
 
-		if (PROC_TYPE_NORMAL == ms_ProcType)
+		if (PROC_TYPE_NORMAL == m_ProcType)
 			_tcscat_s(pCmdLine, ulCharacters, _T(" "));
 
-		if (ms_lpCmdLine && _tcslen(ms_lpCmdLine))
+		if (m_lpCmdLine && _tcslen(m_lpCmdLine))
 		{
-			_tcscat_s(pCmdLine, ulCharacters, ms_lpCmdLine);
+			_tcscat_s(pCmdLine, ulCharacters, m_lpCmdLine);
 			_tcscat_s(pCmdLine, ulCharacters, _T(" "));
 		}
 
-		_tcscat_s(pCmdLine, ulCharacters, ms_tchRestartTag);
+		_tcscat_s(pCmdLine, ulCharacters, m_tchRestartTag);
 
 		_tcscat_s(pCmdLine, ulCharacters, _T("_"));
 		_itow_s(GetCurrentProcessId(), tchTemp, _countof(tchTemp), 10);
@@ -106,7 +93,7 @@ CSimpleDump::DefaultRestartFunc()
 		{
 			if (BeenRunningMinimum60Seconds())
 			{
-				if (ms_bCanUseRegisterRestart)
+				if (m_bCanUseRegisterRestart)
 					__leave;
 			}
 
@@ -119,7 +106,7 @@ CSimpleDump::DefaultRestartFunc()
 			if (!GenRestartCmdLine(lpCmdLine, CMD_LINE_MAX_CHARS))
 				__leave;
 
-			if (PROC_TYPE_CONSOLE == ms_ProcType || PROC_TYPE_SERVICE == ms_ProcType)
+			if (PROC_TYPE_CONSOLE == m_ProcType || PROC_TYPE_SERVICE == m_ProcType)
 			{
 				if (!CreateProcess(NULL, lpCmdLine, NULL, NULL, FALSE, CREATE_NEW_CONSOLE, NULL, NULL, &si, &pi))
 					__leave;
@@ -261,7 +248,7 @@ _In_ struct _EXCEPTION_POINTERS* pExceptionInfo
 					DBG_PRINTEXCEPTION_C == pExceptionRecored->ExceptionCode)
 					__leave;
 
-				GenDump(pExceptionInfo);
+				CSimpleDump::GetInstance()->GenDump(pExceptionInfo);
 			}
 			__finally
 			{
@@ -273,45 +260,45 @@ _In_ struct _EXCEPTION_POINTERS* pExceptionInfo
 
 		if (OS_VERSION_WINDOWS_VISTA > OsVersion.GetOSVersion())
 		{
-			if (ms_bRestart)
+			if (CSimpleDump::GetInstance()->m_bRestart)
 			{
-				if (ms_Restart)
-					ms_Restart();
+				if (CSimpleDump::GetInstance()->m_pfRestart)
+					CSimpleDump::GetInstance()->m_pfRestart();
 				else
-					DefaultRestartFunc();
+					CSimpleDump::GetInstance()->DefaultRestartFunc();
 			}
 		}
 		else
 		{
-			if (ms_bRestart)
+			if (CSimpleDump::GetInstance()->m_bRestart)
 			{
-				if (!BeenRunningMinimum60Seconds())
+				if (!CSimpleDump::GetInstance()->BeenRunningMinimum60Seconds())
 				{
-					if (ms_Restart)
-						ms_Restart();
+					if (CSimpleDump::GetInstance()->m_pfRestart)
+						CSimpleDump::GetInstance()->m_pfRestart();
 					else
-						DefaultRestartFunc();
+						CSimpleDump::GetInstance()->DefaultRestartFunc();
 				}
 			}
 		}
 	}
 	__finally
 	{
-		if (ms_hModuleKernel32Dll)
+		if (CSimpleDump::GetInstance()->m_hModuleKernel32Dll)
 		{
-			FreeLibrary(ms_hModuleKernel32Dll);
-			ms_hModuleKernel32Dll = NULL;
+			FreeLibrary(CSimpleDump::GetInstance()->m_hModuleKernel32Dll);
+			CSimpleDump::GetInstance()->m_hModuleKernel32Dll = NULL;
 		}
 
-		if (ms_lpCmdLine)
+		if (CSimpleDump::GetInstance()->m_lpCmdLine)
 		{
-			free(ms_lpCmdLine);
-			ms_lpCmdLine = NULL;
+			free(CSimpleDump::GetInstance()->m_lpCmdLine);
+			CSimpleDump::GetInstance()->m_lpCmdLine = NULL;
 		}
 	}
 
-	if (ms_pTopLevelExceptionFilter)
-		return ms_pTopLevelExceptionFilter(pExceptionInfo);
+	if (CSimpleDump::GetInstance()->m_pfTopLevelExceptionFilter)
+		return CSimpleDump::GetInstance()->m_pfTopLevelExceptionFilter(pExceptionInfo);
 	else
 		return EXCEPTION_CONTINUE_SEARCH;
 }
@@ -329,7 +316,7 @@ CSimpleDump::RegisterRestart()
 	{
 		StringCchPrintf(tchCmdLine, _countof(tchCmdLine), L"/restart -r");
 
-		hResult = RegisterApplicationRestart(tchCmdLine, RESTART_NO_PATCH | RESTART_NO_REBOOT);
+		hResult = m_pfRegisterApplicationRestart(tchCmdLine, RESTART_NO_PATCH | RESTART_NO_REBOOT);
 		if (FAILED(hResult))
 			__leave;
 
@@ -359,7 +346,7 @@ __in_opt LPTSTR	lpCmdLine
 
 	__try
 	{
-		if (PROC_TYPE_CONSOLE == ms_ProcType || PROC_TYPE_SERVICE == ms_ProcType)
+		if (PROC_TYPE_CONSOLE == m_ProcType || PROC_TYPE_SERVICE == m_ProcType)
 		{
 			if (nArgc && pArgv)
 			{
@@ -381,36 +368,36 @@ __in_opt LPTSTR	lpCmdLine
 
 		if (ulLen)
 		{
-			ms_lpCmdLine = (LPTSTR)calloc(1, ulLen * sizeof(TCHAR));
-			if (!ms_lpCmdLine)
+			m_lpCmdLine = (LPTSTR)calloc(1, ulLen * sizeof(TCHAR));
+			if (!m_lpCmdLine)
 				__leave;
 
-			if (PROC_TYPE_CONSOLE == ms_ProcType || PROC_TYPE_SERVICE == ms_ProcType)
+			if (PROC_TYPE_CONSOLE == m_ProcType || PROC_TYPE_SERVICE == m_ProcType)
 			{
 				if (nArgc && pArgv)
 				{
 					i = 0;
 					while (i < nArgc)
 					{
-						_tcscat_s(ms_lpCmdLine, ulLen, pArgv[i++]);
+						_tcscat_s(m_lpCmdLine, ulLen, pArgv[i++]);
 
 						if (i < nArgc)
-							_tcscat_s(ms_lpCmdLine, ulLen, _T(" "));
+							_tcscat_s(m_lpCmdLine, ulLen, _T(" "));
 					}
 				}
 			}
 			else
 			{
 				if (lpCmdLine)
-					_tcscat_s(ms_lpCmdLine, ulLen, lpCmdLine);
+					_tcscat_s(m_lpCmdLine, ulLen, lpCmdLine);
 			}
 
-			lpPosition = StrRStrI(ms_lpCmdLine, NULL, ms_tchRestartTag);
+			lpPosition = StrRStrI(m_lpCmdLine, NULL, m_tchRestartTag);
 			if (lpPosition)
 			{
 				*lpPosition = _T('\0');
 
-				if (lpPosition > ms_lpCmdLine && _T(' ') == *(lpPosition - 1))
+				if (lpPosition > m_lpCmdLine && _T(' ') == *(lpPosition - 1))
 					*(lpPosition - 1) = _T('\0');
 
 				WaitForOldProcExit();
@@ -421,10 +408,10 @@ __in_opt LPTSTR	lpCmdLine
 	}
 	__finally
 	{
-		if (!bRet && ms_lpCmdLine)
+		if (!bRet && m_lpCmdLine)
 		{
-			free(ms_lpCmdLine);
-			ms_lpCmdLine = NULL;
+			free(m_lpCmdLine);
+			m_lpCmdLine = NULL;
 		}
 	}
 
@@ -455,13 +442,16 @@ __in PCRUSH_HANDLER_INFO pCrushHandlerInfo
 
 	__try
 	{
+		calloc(1, 2);
+		calloc(1, 3);
+
 		if (!OsVersion.Init())
 			__leave;
 
 		if (!GetFunc())
 			__leave;
 
-		ms_ProcType = CProcessType::GetProcType(TRUE, 0);
+		m_ProcType = CProcessType::GetProcType(TRUE, 0);
 
 		if (pCrushHandlerInfo)
 		{
@@ -469,7 +459,7 @@ __in PCRUSH_HANDLER_INFO pCrushHandlerInfo
 			{
 				case EH_TYPE_S:
 				{
-					ms_pTopLevelExceptionFilter = SetUnhandledExceptionFilter((PTOP_LEVEL_EXCEPTION_FILTER)ExceptionHandler);
+					m_pfTopLevelExceptionFilter = SetUnhandledExceptionFilter((PTOP_LEVEL_EXCEPTION_FILTER)ExceptionHandler);
 					break;
 				}
 				case EH_TYPE_V:
@@ -486,15 +476,15 @@ __in PCRUSH_HANDLER_INFO pCrushHandlerInfo
 				}
 			}
 
-			ms_MinidumpType = pCrushHandlerInfo->MiniDumpType;
+			m_MinidumpType = pCrushHandlerInfo->MiniDumpType;
 
-			ms_bRestart = pCrushHandlerInfo->bRestart;
-			if (ms_bRestart)
+			m_bRestart = pCrushHandlerInfo->bRestart;
+			if (m_bRestart)
 			{
-				ms_Restart = pCrushHandlerInfo->Restart;
-				_tcscat_s(ms_tchRestartTag, _countof(ms_tchRestartTag), pCrushHandlerInfo->tchRestartTag);
+				m_pfRestart = pCrushHandlerInfo->Restart;
+				_tcscat_s(m_tchRestartTag, _countof(m_tchRestartTag), pCrushHandlerInfo->tchRestartTag);
 
-				if (PROC_TYPE_CONSOLE == ms_ProcType || PROC_TYPE_SERVICE == ms_ProcType)
+				if (PROC_TYPE_CONSOLE == m_ProcType || PROC_TYPE_SERVICE == m_ProcType)
 				{
 					if (!InitCmdLine(pCrushHandlerInfo->Arg.nArgc, pCrushHandlerInfo->Arg.plpArgv, NULL))
 						__leave;
@@ -505,7 +495,7 @@ __in PCRUSH_HANDLER_INFO pCrushHandlerInfo
 						__leave;
 				}
 
-				if (ms_bCanUseRegisterRestart)
+				if (m_bCanUseRegisterRestart)
 				{
 					if (!RegisterRestart())
 						__leave;
@@ -692,7 +682,7 @@ __in _EXCEPTION_POINTERS* pExceptionInfo
 			GetCurrentProcess(),
 			GetCurrentProcessId(),
 			hFile,
-			ms_MinidumpType,
+			m_MinidumpType,
 			&MiniExceptionInfo,
 			NULL,
 			NULL
@@ -956,13 +946,13 @@ CSimpleDump::GetKernel32DllFunc()
 
 	__try
 	{
-		ms_hModuleKernel32Dll = LoadLibrary(_T("Kernel32.dll"));
-		if (!ms_hModuleKernel32Dll)
+		m_hModuleKernel32Dll = LoadLibrary(_T("Kernel32.dll"));
+		if (!m_hModuleKernel32Dll)
 			__leave;
 
-		RegisterApplicationRestart = (REGISTER_APPLICATION_RESTART)GetProcAddress(ms_hModuleKernel32Dll, "RegisterApplicationRestart");
-		if (RegisterApplicationRestart)
-			ms_bCanUseRegisterRestart = TRUE;
+		m_pfRegisterApplicationRestart = (REGISTER_APPLICATION_RESTART)GetProcAddress(m_hModuleKernel32Dll, "RegisterApplicationRestart");
+		if (m_pfRegisterApplicationRestart)
+			m_bCanUseRegisterRestart = TRUE;
 
 		bRet = TRUE;
 	}
@@ -1258,10 +1248,10 @@ void
 
 	__try
 	{
-		if (!_tcslen(ms_tchRestartTag))
+		if (!_tcslen(m_tchRestartTag))
 			__leave;
 
-		lpPosition = StrRChr(ms_tchRestartTag, NULL, _T('_'));
+		lpPosition = StrRChr(m_tchRestartTag, NULL, _T('_'));
 		if (!lpPosition)
 			__leave;
 
@@ -1270,7 +1260,7 @@ void
 		*lpPosition = _T('\0');
 
 		lpPosition = NULL;
-		lpPosition = StrRChr(ms_tchRestartTag, NULL, _T('_'));
+		lpPosition = StrRChr(m_tchRestartTag, NULL, _T('_'));
 		if (!lpPosition)
 			__leave;
 
@@ -1279,7 +1269,7 @@ void
 		*lpPosition = _T('\0');
 
 		lpPosition = NULL;
-		lpPosition = StrRChr(ms_tchRestartTag, NULL, _T('_'));
+		lpPosition = StrRChr(m_tchRestartTag, NULL, _T('_'));
 		if (!lpPosition)
 			__leave;
 
@@ -1317,4 +1307,68 @@ void
 	}
 
 	return ;
+}
+
+CSimpleDump *
+	CSimpleDump::GetInstance()
+{
+	if (!ms_pInstance)
+	{
+		do 
+		{
+			ms_pInstance = (CSimpleDump *)calloc(1, sizeof(CSimpleDump));
+			if (!ms_pInstance)
+				Sleep(1000);
+			else
+				break;
+		} while (TRUE);
+	}
+
+	return ms_pInstance;
+}
+
+VOID
+	CSimpleDump::ReleaseInstance()
+{
+	if (ms_pInstance)
+	{
+		free(ms_pInstance);
+		ms_pInstance = NULL;
+	}
+}
+
+CSimpleDump::CSimpleDump()
+{
+	m_MinidumpType = MiniDumpNormal;
+	m_bRestart = FALSE;
+	m_ProcType = PROC_TYPE_UNKNOWN;
+	m_lpCmdLine = NULL;
+
+	ZeroMemory(m_tchRestartTag, sizeof(m_tchRestartTag));
+
+	m_pfRestart = NULL;
+
+	m_hModuleKernel32Dll = NULL;
+	m_bCanUseRegisterRestart = FALSE;
+	m_pfRegisterApplicationRestart = NULL;
+
+	m_pfTopLevelExceptionFilter = NULL;
+}
+
+CSimpleDump::~CSimpleDump()
+{
+	m_MinidumpType = MiniDumpNormal;
+	m_bRestart = FALSE;
+	m_ProcType = PROC_TYPE_UNKNOWN;
+	m_lpCmdLine = NULL;
+
+	ZeroMemory(m_tchRestartTag, sizeof(m_tchRestartTag));
+
+	m_pfRestart = NULL;
+
+	m_hModuleKernel32Dll = NULL;
+	m_bCanUseRegisterRestart = FALSE;
+	m_pfRegisterApplicationRestart = NULL;
+
+	m_pfTopLevelExceptionFilter = NULL;
 }
