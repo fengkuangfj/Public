@@ -22,27 +22,27 @@ __in LPTSTR lpLogPath
 		if (!lpLogPath)
 			__leave;
 
-		if (_tcslen(ms_LogPath))
+		if (_tcslen(m_LogPath))
 			__leave;
 
-		_tcscat_s(ms_LogPath, _countof(ms_LogPath), lpLogPath);
+		_tcscat_s(m_LogPath, _countof(m_LogPath), lpLogPath);
 
-		lpPosition = _tcsrchr(ms_LogPath, _T('\\'));
+		lpPosition = _tcsrchr(m_LogPath, _T('\\'));
 		if (!lpPosition)
 			__leave;
 
-		CopyMemory(lpDir, ms_LogPath, (lpPosition - ms_LogPath) * sizeof(TCHAR));
+		CopyMemory(lpDir, m_LogPath, (lpPosition - m_LogPath) * sizeof(TCHAR));
 
 		SHCreateDirectoryEx(NULL, lpDir, NULL);
 
-		if (PathFileExists(ms_LogPath))
+		if (PathFileExists(m_LogPath))
 		{
-			if (!PathYetAnotherMakeUniqueName(ms_LogPath, ms_LogPath, NULL, NULL))
+			if (!PathYetAnotherMakeUniqueName(m_LogPath, m_LogPath, NULL, NULL))
 				__leave;
 		}
 
 		hFile = CreateFile(
-			ms_LogPath,
+			m_LogPath,
 			0,
 			0,
 			NULL,
@@ -53,9 +53,9 @@ __in LPTSTR lpLogPath
 		if (INVALID_HANDLE_VALUE == hFile)
 			__leave;
 
-		InitializeCriticalSection(&ms_CriticalSection);
+		InitializeCriticalSection(&m_CriticalSection);
 
-		ms_WriteReady = TRUE;
+		m_WriteReady = TRUE;
 
 		setlocale(LC_ALL, "");
 
@@ -66,9 +66,9 @@ __in LPTSTR lpLogPath
 
 		if (_tcslen(tchProcPath) >= _tcslen(_T("DbgView.exe")) &&
 			(0 == _tcsnicmp(tchProcPath + (_tcslen(tchProcPath) - _tcslen(_T("DbgView.exe"))), _T("DbgView.exe"), _tcslen(_T("DbgView.exe")))))
-			ms_bOutputDebugString = FALSE;
+			m_bOutputDebugString = FALSE;
 
-		ms_ProcType = CProcessType::GetProcType(TRUE, 0);
+		m_ProcType = CProcessType::GetProcType(TRUE, 0);
 
 		bRet = TRUE;
 	}
@@ -169,7 +169,7 @@ __in LPSTR		lpFmt,
 
 		strcat_s(chLog, _countof(chLog), "\n");
 
-		switch (ms_ProcType)
+		switch (m_ProcType)
 		{
 		case PROC_TYPE_NORMAL:
 		case PROC_TYPE_CONSOLE:
@@ -181,12 +181,12 @@ __in LPSTR		lpFmt,
 			break;
 		default:
 			{
-				printf("ms_ProcType error. (%d) \n", ms_ProcType);
+				printf("ms_ProcType error. (%d) \n", m_ProcType);
 				break;
 			}
 		}
 
-		if (ms_bOutputDebugString)
+		if (m_bOutputDebugString)
 			OutputDebugStringA(chLog);
 
 		if (LOG_LEVEL_ERROR == LogLevel)
@@ -202,7 +202,7 @@ __in LPSTR		lpFmt,
 			}
 			else
 			{
-				if (PROC_TYPE_SERVICE == ms_ProcType)
+				if (PROC_TYPE_SERVICE == m_ProcType)
 				{
 					if (!MessageBoxForService(_T("错误"), _T("发生严重错误"), MB_OK | MB_SERVICE_NOTIFICATION | MB_ICONERROR))
 						printf("MessageBoxForService failed. \n");
@@ -243,28 +243,28 @@ __in LPSTR lpLog
 	DWORD			dwWrite = 0;
 
 
-	if (!ms_WriteReady)
+	if (!m_WriteReady)
 		return TRUE;
 
 	__try
 	{
-		EnterCriticalSection(&ms_CriticalSection);
+		EnterCriticalSection(&m_CriticalSection);
 
 		if (!lpLog)
 			__leave;
 
 		StringCchPrintfA(chLog, _countof(chLog), "%hs\r\n", lpLog);
 
-		lpPositon = wcsrchr(ms_LogPath, _T('\\'));
+		lpPositon = wcsrchr(m_LogPath, _T('\\'));
 		if (!lpPositon)
 			__leave;
 
-		CopyMemory(lpDir, ms_LogPath, (lpPositon - ms_LogPath) * sizeof(TCHAR));
+		CopyMemory(lpDir, m_LogPath, (lpPositon - m_LogPath) * sizeof(TCHAR));
 
 		SHCreateDirectoryEx(NULL, lpDir, NULL);
 
 		hFile = CreateFile(
-			ms_LogPath,
+			m_LogPath,
 			GENERIC_READ | GENERIC_WRITE,
 			FILE_SHARE_READ | FILE_SHARE_WRITE,
 			NULL,
@@ -293,7 +293,7 @@ __in LPSTR lpLog
 			hFile = INVALID_HANDLE_VALUE;
 		}
 
-		LeaveCriticalSection(&ms_CriticalSection);
+		LeaveCriticalSection(&m_CriticalSection);
 	}
 
 	return bRet;
@@ -376,18 +376,18 @@ VOID
 
 CSimpleLog::CSimpleLog()
 {
-	ZeroMemory(ms_LogPath, sizeof(ms_LogPath));
-	ZeroMemory(&ms_CriticalSection, sizeof(ms_CriticalSection));
-	ms_WriteReady = FALSE;
-	ms_bOutputDebugString = TRUE;
-	ms_ProcType = PROC_TYPE_UNKNOWN;
+	ZeroMemory(m_LogPath, sizeof(m_LogPath));
+	ZeroMemory(&m_CriticalSection, sizeof(m_CriticalSection));
+	m_WriteReady = FALSE;
+	m_bOutputDebugString = TRUE;
+	m_ProcType = PROC_TYPE_UNKNOWN;
 }
 
 CSimpleLog::~CSimpleLog()
 {
-	ZeroMemory(ms_LogPath, sizeof(ms_LogPath));
-	ZeroMemory(&ms_CriticalSection, sizeof(ms_CriticalSection));
-	ms_WriteReady = FALSE;
-	ms_bOutputDebugString = TRUE;
-	ms_ProcType = PROC_TYPE_UNKNOWN;
+	ZeroMemory(m_LogPath, sizeof(m_LogPath));
+	ZeroMemory(&m_CriticalSection, sizeof(m_CriticalSection));
+	m_WriteReady = FALSE;
+	m_bOutputDebugString = TRUE;
+	m_ProcType = PROC_TYPE_UNKNOWN;
 }

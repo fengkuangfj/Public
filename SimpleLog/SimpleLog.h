@@ -61,11 +61,11 @@ public:
 private:
 	static CSimpleLog	*	ms_pInstance;
 
-	TCHAR					ms_LogPath[MAX_PATH];
-	CRITICAL_SECTION		ms_CriticalSection;
-	BOOL					ms_WriteReady;
-	BOOL					ms_bOutputDebugString;
-	PROC_TYPE				ms_ProcType;
+	TCHAR					m_LogPath[MAX_PATH];
+	CRITICAL_SECTION		m_CriticalSection;
+	BOOL					m_WriteReady;
+	BOOL					m_bOutputDebugString;
+	PROC_TYPE				m_ProcType;
 
 	CSimpleLog();
 
