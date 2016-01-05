@@ -1,6 +1,8 @@
 #pragma once
 
+#ifndef MOD_VOLUME_DETECTOR
 #define MOD_VOLUME_DETECTOR _T("¾íÌ½²â")
+#endif
 
 #include <Windows.h>
 #include <Dbt.h>
@@ -47,6 +49,14 @@ typedef struct _WM_DEVICECHANGE_WORKTHREAD_ARGUMENTS
 class CVolumeDetector
 {
 public:
+	static
+		CVolumeDetector *
+		GetInstance();
+
+	static
+		VOID
+		ReleaseInstance();
+
 	BOOL
 		Init(
 		__in LPVOLUME_DETECTOR_INIT_ARGUMENTS lpVolumeDetectorInitArguments
@@ -66,7 +76,13 @@ public:
 		);
 
 private:
-	static VOLUME_DETECTOR_INTERNAL ms_VolumeDetectorInternal;
+	static CVolumeDetector	*	ms_pInstance;
+
+	VOLUME_DETECTOR_INTERNAL	ms_VolumeDetectorInternal;
+
+	CVolumeDetector();
+
+	~CVolumeDetector();
 
 	HWND
 		CreateWnd(
@@ -75,8 +91,7 @@ private:
 		__in_opt WNDPROC	lpfnWndProc
 		);
 
-	static
-		BOOL
+	BOOL
 		BinaryToVolume(
 		__in	DWORD	dwBinary,
 		__out	LPTSTR	lpInBuf,

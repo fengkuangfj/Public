@@ -1,15 +1,13 @@
 ﻿#include "VolumeDetector.h"
 
-VOLUME_DETECTOR_INTERNAL CVolumeDetector::ms_VolumeDetectorInternal = {0};
+CVolumeDetector	* CVolumeDetector::ms_pInstance = NULL;
 
 BOOL
 	CVolumeDetector::Init(
 	__in LPVOLUME_DETECTOR_INIT_ARGUMENTS lpVolumeDetectorInitArguments
 	)
 {
-	BOOL	bRet = FALSE;
-
-	CWmi	Wmi;
+	BOOL bRet = FALSE;
 
 	printfEx(MOD_VOLUME_DETECTOR, PRINTF_LEVEL_INFORMATION, "begin");
 
@@ -21,7 +19,7 @@ BOOL
 			__leave;
 		}
 
-		if (!Wmi.Init())
+		if (!CWmi::GetInstance()->Init())
 		{
 			printfEx(MOD_VOLUME_DETECTOR, PRINTF_LEVEL_ERROR, "Wmi.Init failed");
 			__leave;
@@ -63,8 +61,8 @@ BOOL
 	{
 		if (!bRet)
 		{
-			if (!Wmi.Unload())
-				printfEx(MOD_VOLUME_DETECTOR, PRINTF_LEVEL_ERROR, "Wmi.Unload failed");
+			if (!Unload())
+				printfEx(MOD_VOLUME_DETECTOR, PRINTF_LEVEL_ERROR, "Unload failed");
 		}
 	}
 
@@ -76,9 +74,7 @@ BOOL
 BOOL
 	CVolumeDetector::Unload()
 {
-	BOOL	bRet = FALSE;
-
-	CWmi	Wmi;
+	BOOL bRet = FALSE;
 
 	printfEx(MOD_VOLUME_DETECTOR, PRINTF_LEVEL_INFORMATION, "begin");
 
@@ -87,7 +83,7 @@ BOOL
 		if (ms_VolumeDetectorInternal.hWindow)
 			SendMessage(ms_VolumeDetectorInternal.hWindow, WM_CLOSE, 0, 0);
 
-		if (!Wmi.Unload())
+		if (!CWmi::GetInstance()->Unload())
 			printfEx(MOD_VOLUME_DETECTOR, PRINTF_LEVEL_ERROR, "Wmi.Unload failed");
 
 		bRet = TRUE;
@@ -387,7 +383,7 @@ unsigned int
 			{
 				BitTestAndSet((LONG *)&dwVolume, i);
 
-				if (!BinaryToVolume(dwVolume, tchName, _countof(tchName)))
+				if (!CVolumeDetector::GetInstance()->BinaryToVolume(dwVolume, tchName, _countof(tchName)))
 				{
 					printfEx(MOD_VOLUME_DETECTOR, PRINTF_LEVEL_ERROR, "BinaryToVolume failed. 0x%08x - 0x%08x", lpWmDevicechangeWorkthreadArguments->DevBroadcastVolume.dbcv_unitmask, dwVolume);
 					__leave;
@@ -487,4 +483,42 @@ unsigned int
 	}
 
 	return 0;
+}
+
+CVolumeDetector *
+	CVolumeDetector::GetInstance()
+{
+	if (!ms_pInstance)
+	{
+		do 
+		{
+			ms_pInstance = (CVolumeDetector *)calloc(1, sizeof(CVolumeDetector));
+			if (!ms_pInstance)
+				Sleep(1000);
+			else
+				break;
+		} while (TRUE);
+	}
+
+	return ms_pInstance;
+}
+
+VOID
+	CVolumeDetector::ReleaseInstance()
+{
+	if (ms_pInstance)
+	{
+		free(ms_pInstance);
+		ms_pInstance = NULL;
+	}
+}
+
+CVolumeDetector::CVolumeDetector()
+{
+	ZeroMemory(&ms_VolumeDetectorInternal, sizeof(ms_VolumeDetectorInternal));
+}
+
+CVolumeDetector::~CVolumeDetector()
+{
+	ZeroMemory(&ms_VolumeDetectorInternal, sizeof(ms_VolumeDetectorInternal));
 }
