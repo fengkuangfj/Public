@@ -26,4 +26,9 @@ public:
 		__in BOOL				bCreateNewConsole,
 		__in LPCMD_RESULT_INFO	lpCmdResultInfo
 		);
+
+private:
+	CCommandLine();
+
+	~CCommandLine();
 };

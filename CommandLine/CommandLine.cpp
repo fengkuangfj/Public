@@ -232,3 +232,13 @@ BOOL
 
 	return bRet;
 }
+
+CCommandLine::CCommandLine()
+{
+	;
+}
+
+CCommandLine::~CCommandLine()
+{
+	;
+}
