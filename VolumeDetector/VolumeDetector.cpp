@@ -86,6 +86,8 @@ BOOL
 		if (!CWmi::GetInstance()->Unload())
 			printfEx(MOD_VOLUME_DETECTOR, PRINTF_LEVEL_ERROR, "Wmi.Unload failed");
 
+		CWmi::ReleaseInstance();
+
 		bRet = TRUE;
 	}
 	__finally
