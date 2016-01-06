@@ -138,3 +138,13 @@ BOOL
 
 	return bRet;
 }
+
+CUac::CUac()
+{
+	;
+}
+
+CUac::~CUac()
+{
+	;
+}

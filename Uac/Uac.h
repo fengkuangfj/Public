@@ -22,4 +22,9 @@ public:
 		Set(
 		__in UAC_LEVEL UacLevel
 		);
+
+private:
+	CUac();
+
+	~CUac();
 };
