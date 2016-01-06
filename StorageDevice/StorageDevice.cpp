@@ -198,3 +198,13 @@ BOOL
 
 	return bRet;
 }
+
+CStorageDevice::CStorageDevice()
+{
+	;
+}
+
+CStorageDevice::~CStorageDevice()
+{
+	;
+}

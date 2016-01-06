@@ -42,4 +42,9 @@ public:
 		__out	LPTSTR	lpOutBuf,
 		__in	ULONG	ulOutBufSizeCh
 		);
+
+private:
+	CStorageDevice();
+
+	~CStorageDevice();
 };
