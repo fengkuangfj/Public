@@ -57,3 +57,13 @@ BOOL
 
 	return bRet;
 }
+
+CStringInternal::CStringInternal()
+{
+	;
+}
+
+CStringInternal::~CStringInternal()
+{
+	;
+}

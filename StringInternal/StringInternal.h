@@ -17,4 +17,9 @@ public:
 		__in	ULONG	ulOutBufSizeCh,
 		__in	LPSTR	lpInBuf
 		);
+
+private:
+	CStringInternal();
+
+	~CStringInternal();
 };
