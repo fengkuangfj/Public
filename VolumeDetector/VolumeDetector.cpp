@@ -19,12 +19,6 @@ BOOL
 			__leave;
 		}
 
-		if (!CWmi::GetInstance()->Init())
-		{
-			printfEx(MOD_VOLUME_DETECTOR, PRINTF_LEVEL_ERROR, "Wmi.Init failed");
-			__leave;
-		}
-
 		if (!ms_VolumeDetectorInternal.hWindow)
 		{
 			ms_VolumeDetectorInternal.hWindow = lpVolumeDetectorInitArguments->hWindow;
@@ -82,12 +76,6 @@ BOOL
 	{
 		if (ms_VolumeDetectorInternal.hWindow)
 			SendMessage(ms_VolumeDetectorInternal.hWindow, WM_CLOSE, 0, 0);
-
-		if (!CWmi::GetInstance()->Unload())
-		{
-			printfEx(MOD_VOLUME_DETECTOR, PRINTF_LEVEL_ERROR, "Wmi.Unload failed");
-			bRet = FALSE;
-		}
 
 		CWmi::ReleaseInstance();
 	}
