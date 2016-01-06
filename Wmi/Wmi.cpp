@@ -477,6 +477,8 @@ BOOL
 
 	printfEx(MOD_WMI, PRINTF_LEVEL_INFORMATION, "end");
 
+	CPrintfEx::ReleaseInstance();
+
 	return bRet;
 }
 
