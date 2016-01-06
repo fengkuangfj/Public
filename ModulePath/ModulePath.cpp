@@ -48,3 +48,13 @@ BOOL
 
 	return bRet;
 }
+
+CModulePath::CModulePath()
+{
+	;
+}
+
+CModulePath::~CModulePath()
+{
+	;
+}

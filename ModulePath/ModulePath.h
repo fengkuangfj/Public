@@ -17,4 +17,9 @@ public:
 		__out		LPTSTR	lpOutBuf,
 		__in		ULONG	ulOutBufSizeCh
 		);
+
+private:
+	CModulePath();
+
+	~CModulePath();
 };
