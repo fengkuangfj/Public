@@ -224,9 +224,7 @@ CSimpleDump::ExceptionHandler(
 _In_ struct _EXCEPTION_POINTERS* pExceptionInfo
 )
 {
-	PEXCEPTION_RECORD		pExceptionRecored = NULL;
-
-	COperationSystemVersion	OsVersion;
+	PEXCEPTION_RECORD pExceptionRecored = NULL;
 
 
 	__try
@@ -258,7 +256,7 @@ _In_ struct _EXCEPTION_POINTERS* pExceptionInfo
 			pExceptionRecored = pExceptionRecored->ExceptionRecord;
 		} while (pExceptionRecored);
 
-		if (OS_VERSION_WINDOWS_VISTA > OsVersion.GetOSVersion())
+		if (OS_VERSION_WINDOWS_VISTA > COperationSystemVersion::GetInstance()->GetOSVersion())
 		{
 			if (CSimpleDump::GetInstance()->m_bRestart)
 			{
@@ -435,19 +433,11 @@ CSimpleDump::RegisterCrushHandler(
 __in PCRUSH_HANDLER_INFO pCrushHandlerInfo
 )
 {
-	HANDLE					hOutPut = INVALID_HANDLE_VALUE;
-
-	COperationSystemVersion	OsVersion;
+	HANDLE hOutPut = INVALID_HANDLE_VALUE;
 
 
 	__try
 	{
-		calloc(1, 2);
-		calloc(1, 3);
-
-		if (!OsVersion.Init())
-			__leave;
-
 		if (!GetFunc())
 			__leave;
 
@@ -1357,6 +1347,8 @@ CSimpleDump::CSimpleDump()
 
 CSimpleDump::~CSimpleDump()
 {
+	COperationSystemVersion::ReleaseInstance();
+
 	m_MinidumpType = MiniDumpNormal;
 	m_bRestart = FALSE;
 	m_ProcType = PROC_TYPE_UNKNOWN;
