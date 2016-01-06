@@ -857,6 +857,9 @@ DWORD
 					printfEx(MOD_SERVICE, PRINTF_LEVEL_ERROR, "[SERVICE_CONTROL_STOP] SetEvent failed. (%d)", GetLastError());
 
 				CService::GetInstance()->ReportSvcStatus(CService::GetInstance()->m_SvcStatus.dwCurrentState, NO_ERROR, 0);
+
+				CPrintfEx::ReleaseInstance();
+
 				break;
 			}
 		case SERVICE_CONTROL_PAUSE:
@@ -872,6 +875,8 @@ DWORD
 
 				if (!SetEvent(CService::GetInstance()->m_hSvcStopEvent))
 					printfEx(MOD_SERVICE, PRINTF_LEVEL_ERROR, "[SERVICE_CONTROL_SHUTDOWN] SetEvent failed. (%d)", GetLastError());
+
+				CPrintfEx::ReleaseInstance();
 
 				break;
 			}
@@ -899,6 +904,8 @@ DWORD
 
 				if (!SetEvent(CService::GetInstance()->m_hSvcStopEvent))
 					printfEx(MOD_SERVICE, PRINTF_LEVEL_ERROR, "[SERVICE_CONTROL_PRESHUTDOWN] SetEvent failed. (%d)", GetLastError());
+
+				CPrintfEx::ReleaseInstance();
 
 				break;
 			}
