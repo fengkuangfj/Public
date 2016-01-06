@@ -511,13 +511,19 @@ VOID
 CWmi::CWmi()
 {
 	m_pIWbemLocator	= NULL;
-	m_pIWbemServices	= NULL;
+	m_pIWbemServices = NULL;
 	m_bNeedCoUnInit	= FALSE;
+
+	if (!Init())
+		printfEx(MOD_WMI, PRINTF_LEVEL_ERROR, "Init failed");
 }
 
 CWmi::~CWmi()
 {
+	if (!Unload())
+		printfEx(MOD_WMI, PRINTF_LEVEL_ERROR, "Unload failed");
+
 	m_pIWbemLocator	= NULL;
-	m_pIWbemServices	= NULL;
+	m_pIWbemServices = NULL;
 	m_bNeedCoUnInit	= FALSE;
 }

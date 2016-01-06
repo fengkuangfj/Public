@@ -23,12 +23,6 @@ public:
 		VOID
 		ReleaseInstance();
 
-	BOOL
-		Init();
-
-	BOOL
-		Unload();
-
 	static
 		BOOL
 		Query(
@@ -53,4 +47,10 @@ private:
 	CWmi();
 
 	~CWmi();
+
+	BOOL
+		Init();
+
+	BOOL
+		Unload();
 };
