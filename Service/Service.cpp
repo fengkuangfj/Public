@@ -1290,7 +1290,6 @@ BOOL
 			m_hModule = NULL;
 		}
 
-		CVolumeDetector::ReleaseInstance();
 		COperationSystemVersion::ReleaseInstance();
 		CPrintfEx::ReleaseInstance();
 	}
