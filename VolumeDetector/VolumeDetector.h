@@ -35,6 +35,7 @@ typedef struct _VOLUME_DETECTOR_INIT_ARGUMENTS
 
 typedef struct _VOLUME_DETECTOR_INTERNAL
 {
+	TCHAR	tchModuleName[MAX_PATH];
 	HWND	hWindow;
 	WNDPROC	lpfnWndProc;
 	BOOL	bCreateMassageLoop;
@@ -58,12 +59,9 @@ public:
 		ReleaseInstance();
 
 	BOOL
-		Init(
+		SetArguments(
 		__in LPVOLUME_DETECTOR_INIT_ARGUMENTS lpVolumeDetectorInitArguments
 		);
-
-	BOOL
-		Unload();
 
 	BOOL
 		MessageLoop();
@@ -78,11 +76,17 @@ public:
 private:
 	static CVolumeDetector	*	ms_pInstance;
 
-	VOLUME_DETECTOR_INTERNAL	ms_VolumeDetectorInternal;
+	VOLUME_DETECTOR_INTERNAL	m_VolumeDetectorInternal;
 
 	CVolumeDetector();
 
 	~CVolumeDetector();
+
+	BOOL
+		Init();
+
+	BOOL
+		Unload();
 
 	HWND
 		CreateWnd(

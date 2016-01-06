@@ -3,7 +3,7 @@
 CVolumeDetector	* CVolumeDetector::ms_pInstance = NULL;
 
 BOOL
-	CVolumeDetector::Init(
+	CVolumeDetector::SetArguments(
 	__in LPVOLUME_DETECTOR_INIT_ARGUMENTS lpVolumeDetectorInitArguments
 	)
 {
@@ -19,33 +19,53 @@ BOOL
 			__leave;
 		}
 
-		if (!ms_VolumeDetectorInternal.hWindow)
+		m_VolumeDetectorInternal.hWindow = lpVolumeDetectorInitArguments->hWindow;
+		m_VolumeDetectorInternal.lpfnWndProc = lpVolumeDetectorInitArguments->lpfnWndProc;
+		m_VolumeDetectorInternal.bCreateMassageLoop = lpVolumeDetectorInitArguments->bCreateMassageLoop;
+
+		_tcscat_s(m_VolumeDetectorInternal.tchModuleName, _countof(m_VolumeDetectorInternal.tchModuleName), lpVolumeDetectorInitArguments->tchModuleName);
+
+		bRet = TRUE;
+	}
+	__finally
+	{
+		;
+	}
+
+	printfEx(MOD_VOLUME_DETECTOR, PRINTF_LEVEL_INFORMATION, "end");
+
+	return bRet;
+}
+
+BOOL
+	CVolumeDetector::Init()
+{
+	BOOL bRet = FALSE;
+
+	printfEx(MOD_VOLUME_DETECTOR, PRINTF_LEVEL_INFORMATION, "begin");
+
+	__try
+	{
+		if (!m_VolumeDetectorInternal.hWindow)
 		{
-			ms_VolumeDetectorInternal.hWindow = lpVolumeDetectorInitArguments->hWindow;
-			ms_VolumeDetectorInternal.lpfnWndProc = lpVolumeDetectorInitArguments->lpfnWndProc;
-			ms_VolumeDetectorInternal.bCreateMassageLoop = lpVolumeDetectorInitArguments->bCreateMassageLoop;
-
-			if (!ms_VolumeDetectorInternal.hWindow)
+			m_VolumeDetectorInternal.hWindow = CreateWnd(
+				_tcslen(m_VolumeDetectorInternal.tchModuleName) ? m_VolumeDetectorInternal.tchModuleName : NULL,
+				NULL,
+				m_VolumeDetectorInternal.lpfnWndProc
+				);
+			if (!m_VolumeDetectorInternal.hWindow)
 			{
-				ms_VolumeDetectorInternal.hWindow = CreateWnd(
-					_tcslen(lpVolumeDetectorInitArguments->tchModuleName) ? lpVolumeDetectorInitArguments->tchModuleName : NULL,
-					NULL,
-					ms_VolumeDetectorInternal.lpfnWndProc
-					);
-				if (!ms_VolumeDetectorInternal.hWindow)
-				{
-					printfEx(MOD_VOLUME_DETECTOR, PRINTF_LEVEL_ERROR, "CreateWnd failed");
-					__leave;
-				}
+				printfEx(MOD_VOLUME_DETECTOR, PRINTF_LEVEL_ERROR, "CreateWnd failed");
+				__leave;
 			}
+		}
 
-			if (ms_VolumeDetectorInternal.bCreateMassageLoop)
+		if (m_VolumeDetectorInternal.bCreateMassageLoop)
+		{
+			if (!MessageLoop())
 			{
-				if (!MessageLoop())
-				{
-					printfEx(MOD_VOLUME_DETECTOR, PRINTF_LEVEL_ERROR, "MessageLoop failed");
-					__leave;
-				}
+				printfEx(MOD_VOLUME_DETECTOR, PRINTF_LEVEL_ERROR, "MessageLoop failed");
+				__leave;
 			}
 		}
 
@@ -74,10 +94,8 @@ BOOL
 
 	__try
 	{
-		if (ms_VolumeDetectorInternal.hWindow)
-			SendMessage(ms_VolumeDetectorInternal.hWindow, WM_CLOSE, 0, 0);
-
-		CWmi::ReleaseInstance();
+		if (m_VolumeDetectorInternal.hWindow)
+			SendMessage(m_VolumeDetectorInternal.hWindow, WM_CLOSE, 0, 0);
 	}
 	__finally
 	{
@@ -506,10 +524,16 @@ VOID
 
 CVolumeDetector::CVolumeDetector()
 {
-	ZeroMemory(&ms_VolumeDetectorInternal, sizeof(ms_VolumeDetectorInternal));
+	ZeroMemory(&m_VolumeDetectorInternal, sizeof(m_VolumeDetectorInternal));
+
+	if (!Init())
+		printfEx(MOD_VOLUME_DETECTOR, PRINTF_LEVEL_ERROR, "Init failed");
 }
 
 CVolumeDetector::~CVolumeDetector()
 {
-	ZeroMemory(&ms_VolumeDetectorInternal, sizeof(ms_VolumeDetectorInternal));
+	if (!Unload())
+		printfEx(MOD_VOLUME_DETECTOR, PRINTF_LEVEL_ERROR, "Unload failed");
+
+	ZeroMemory(&m_VolumeDetectorInternal, sizeof(m_VolumeDetectorInternal));
 }
