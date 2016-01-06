@@ -39,9 +39,36 @@ CStackBacktrace::WalkFrameChaim()
 }
 
 BOOL
-CStackBacktrace::Init(
+CStackBacktrace::SetArguments(
 __in LPTSTR lpSymDir
 )
+{
+	BOOL bRet = FALSE;
+
+
+	__try
+	{
+		if (!lpSymDir)
+		{
+			printfEx(MOD_STACK_BACKTRACE, PRINTF_LEVEL_ERROR, "input argument error");
+			__leave;
+		}
+
+		if (!PathFileExists(lpSymDir))
+			__leave;
+
+		bRet = TRUE;
+	}
+	__finally
+	{
+		;
+	}
+
+	return bRet;
+}
+
+BOOL
+	CStackBacktrace::Init()
 {
 	BOOL			bRet = FALSE;
 
@@ -69,15 +96,6 @@ __in LPTSTR lpSymDir
 				__leave;
 			}
 		}
-
-		if (!lpSymDir)
-		{
-			printfEx(MOD_STACK_BACKTRACE, PRINTF_LEVEL_ERROR, "input argument error");
-			__leave;
-		}
-
-		if (!PathFileExists(lpSymDir))
-			__leave;
 
 		if (!m_hProcess)
 		{
@@ -163,7 +181,7 @@ __in LPTSTR lpSymDir
 					__leave;
 				}
 
-				if (!m_pfSymInitialize(m_hProcess, lpSymDir, TRUE))
+				if (!m_pfSymInitialize(m_hProcess, m_tchSymDir, TRUE))
 				{
 					printfEx(MOD_STACK_BACKTRACE, PRINTF_LEVEL_ERROR, "SymInitialize failed. (%d)", GetLastError());
 					__leave;
@@ -432,6 +450,8 @@ VOID
 
 CStackBacktrace::CStackBacktrace()
 {
+	ZeroMemory(m_tchSymDir, sizeof(m_tchSymDir));
+
 	m_pfRtlWalkFrameChain = NULL;
 	m_hProcess = NULL;
 	m_bCanUseStackBacktraceSym = FALSE;
@@ -444,10 +464,18 @@ CStackBacktrace::CStackBacktrace()
 	m_pfSymFromAddr = NULL;
 	m_pfUnDecorateSymbolName = NULL;
 	m_pfSymGetLineFromAddr64 = NULL;
+
+	if (!Init())
+		printfEx(MOD_STACK_BACKTRACE, PRINTF_LEVEL_ERROR, "Init failed");
 }
 
 CStackBacktrace::~CStackBacktrace()
 {
+	if (!Unload())
+		printfEx(MOD_STACK_BACKTRACE, PRINTF_LEVEL_ERROR, "Unload failed");
+
+	ZeroMemory(m_tchSymDir, sizeof(m_tchSymDir));
+
 	m_pfRtlWalkFrameChain = NULL;
 	m_hProcess = NULL;
 	m_bCanUseStackBacktraceSym = FALSE;

@@ -142,12 +142,9 @@ public:
 		ReleaseInstance();
 
 	BOOL
-		Init(
+		SetArguments(
 		__in LPTSTR lpSymDir
 		);
-
-	BOOL
-		Unload();
 
 	BOOL
 		StackBacktrace();
@@ -155,6 +152,7 @@ public:
 private:
 	static CStackBacktrace	*	ms_pInstance;
 
+	TCHAR						m_tchSymDir[MAX_PATH];
 	RTLWALKFRAMECHAIN			m_pfRtlWalkFrameChain;
 	HANDLE						m_hProcess;
 	BOOL						m_bCanUseStackBacktraceSym;
@@ -171,6 +169,12 @@ private:
 	CStackBacktrace();
 
 	~CStackBacktrace();
+
+	BOOL
+		Init();
+
+	BOOL
+		Unload();
 
 	BOOL
 		WalkFrameChaim();
