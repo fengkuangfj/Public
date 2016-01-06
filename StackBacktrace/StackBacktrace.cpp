@@ -237,6 +237,8 @@ CStackBacktrace::Unload()
 		m_pfUnDecorateSymbolName = NULL;
 		m_pfSymGetLineFromAddr64 = NULL;
 
+		CPrintfEx::ReleaseInstance();
+
 		bRet = TRUE;
 	}
 	__finally
