@@ -42,9 +42,6 @@ public:
 		VOID
 		ReleaseInstance();
 
-	BOOL
-		Init();
-
 	VOID
 		PrintfInternal(
 		__in LPTSTR			lpMod,
@@ -73,4 +70,10 @@ private:
 	CPrintfEx();
 
 	~CPrintfEx();
+
+	BOOL
+		Init();
+
+	BOOL
+		Unload();
 };

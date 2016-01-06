@@ -126,7 +126,7 @@ CPrintfEx::Init()
 	{
 		setlocale(LC_ALL, "");
 
-		if (!CProcessPath::Get(TRUE, 0, tchProcPath, _countof(tchProcPath)))
+		if (!CProcessPath::GetInstance()->Get(TRUE, 0, tchProcPath, _countof(tchProcPath)))
 			__leave;
 
 		if (_tcslen(tchProcPath) >= _tcslen(_T("DbgView.exe")) &&
@@ -136,6 +136,24 @@ CPrintfEx::Init()
 		m_ProcType = CProcessType::GetProcType(TRUE, 0);
 
 		bRet = TRUE;
+	}
+	__finally
+	{
+		;
+	}
+
+	return bRet;
+}
+
+BOOL
+	CPrintfEx::Unload()
+{
+	BOOL bRet = TRUE;
+
+
+	__try
+	{
+		CProcessPath::ReleaseInstance();
 	}
 	__finally
 	{
@@ -177,10 +195,14 @@ CPrintfEx::CPrintfEx()
 {
 	m_bOutputDebugString = TRUE;
 	m_ProcType = PROC_TYPE_UNKNOWN;
+
+	Init();
 }
 
 CPrintfEx::~CPrintfEx()
 {
+	Unload();
+
 	m_bOutputDebugString = TRUE;
 	m_ProcType = PROC_TYPE_UNKNOWN;
 }
