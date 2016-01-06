@@ -104,6 +104,8 @@ BOOL
 
 	printfEx(MOD_VOLUME_DETECTOR, PRINTF_LEVEL_INFORMATION, "end");
 
+	CPrintfEx::ReleaseInstance();
+
 	return bRet;
 }
 
