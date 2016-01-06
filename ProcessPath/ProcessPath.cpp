@@ -48,10 +48,10 @@ BOOL
 			__leave;
 		}
 
-		if (ms_QueryFullProcessImageName)
+		if (m_QueryFullProcessImageName)
 		{
 			dwProcPathLenCh = ulOutBufSizeCh;
-			if (!ms_QueryFullProcessImageName(hProc, 0, lpOutBuf, &dwProcPathLenCh))
+			if (!m_QueryFullProcessImageName(hProc, 0, lpOutBuf, &dwProcPathLenCh))
 			{
 				printf("QueryFullProcessImageName failed. (%d) \n", GetLastError());
 				__leave;
@@ -162,8 +162,8 @@ BOOL
 			__leave;
 		}
 
-		ms_QueryFullProcessImageName = (QUERY_FULL_PROCESS_IMAGE_NAME)GetProcAddress(m_hModule, "QueryFullProcessImageName");
-		if (!ms_QueryFullProcessImageName)
+		m_QueryFullProcessImageName = (QUERY_FULL_PROCESS_IMAGE_NAME)GetProcAddress(m_hModule, "QueryFullProcessImageName");
+		if (!m_QueryFullProcessImageName)
 		{
 			printf("GetProcAddress failed. (%d) \n", GetLastError());
 			__leave;
@@ -191,7 +191,7 @@ BOOL
 
 	__try
 	{
-		ms_QueryFullProcessImageName = NULL;
+		m_QueryFullProcessImageName = NULL;
 
 		if (m_hModule)
 		{

@@ -44,7 +44,7 @@ private:
 	static CProcessPath				*	ms_pInstance;
 
 	HMODULE								m_hModule;
-	QUERY_FULL_PROCESS_IMAGE_NAME		ms_QueryFullProcessImageName;
+	QUERY_FULL_PROCESS_IMAGE_NAME		m_QueryFullProcessImageName;
 
 	CProcessPath();
 
