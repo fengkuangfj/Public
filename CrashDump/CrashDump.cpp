@@ -359,3 +359,13 @@ BOOL
 
 	return bRet;
 }
+
+CCrashDump::CCrashDump()
+{
+	;
+}
+
+CCrashDump::~CCrashDump()
+{
+	;
+}

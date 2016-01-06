@@ -43,6 +43,10 @@ public:
 		);
 
 private:
+	CCrashDump();
+
+	~CCrashDump();
+
 	FILE_MODIFY_TIME_CMP
 		EqualModifyTime(
 		__in LPTSTR lpFrirst,
