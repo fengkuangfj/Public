@@ -133,6 +133,14 @@ _Out_ LPDWORD lpNumberOfBytesRead
 class CStackBacktrace
 {
 public:
+	static
+		CStackBacktrace *
+		GetInstance();
+
+	static
+		VOID
+		ReleaseInstance();
+
 	BOOL
 		Init(
 		__in LPTSTR lpSymDir
@@ -145,18 +153,24 @@ public:
 		StackBacktrace();
 
 private:
-	static RTLWALKFRAMECHAIN	RtlWalkFrameChain;
-	static HANDLE				ms_hProcess;
-	static BOOL					ms_bCanUseStackBacktraceSym;
-	static IMAGEHLPAPIVERSION	ImagehlpApiVersion;
-	static SYMINITIALIZE		SymInitialize;
-	static SYMCLEANUP			SymCleanup;
-	static SYMSETOPTIONS		SymSetOptions;
-	static SYMGETOPTIONS		SymGetOptions;
-	static STACKWALK64			StackWalk64;
-	static SYMFROMADDR			SymFromAddr;
-	static UNDECORATESYMBOLNAME UnDecorateSymbolName;
-	static SYMGETLINEFROMADDR64 SymGetLineFromAddr64;
+	static CStackBacktrace	*	ms_pInstance;
+
+	RTLWALKFRAMECHAIN			m_pfRtlWalkFrameChain;
+	HANDLE						m_hProcess;
+	BOOL						m_bCanUseStackBacktraceSym;
+	IMAGEHLPAPIVERSION			m_pfImagehlpApiVersion;
+	SYMINITIALIZE				m_pfSymInitialize;
+	SYMCLEANUP					m_pfSymCleanup;
+	SYMSETOPTIONS				m_pfSymSetOptions;
+	SYMGETOPTIONS				m_pfSymGetOptions;
+	STACKWALK64					m_pfStackWalk64;
+	SYMFROMADDR					m_pfSymFromAddr;
+	UNDECORATESYMBOLNAME		m_pfUnDecorateSymbolName;
+	SYMGETLINEFROMADDR64		m_pfSymGetLineFromAddr64;
+
+	CStackBacktrace();
+
+	~CStackBacktrace();
 
 	BOOL
 		WalkFrameChaim();

@@ -1,17 +1,6 @@
 #include "StackBacktrace.h"
 
-RTLWALKFRAMECHAIN		CStackBacktrace::RtlWalkFrameChain = NULL;
-HANDLE					CStackBacktrace::ms_hProcess = NULL;
-BOOL					CStackBacktrace::ms_bCanUseStackBacktraceSym = FALSE;
-IMAGEHLPAPIVERSION		CStackBacktrace::ImagehlpApiVersion = NULL;
-SYMINITIALIZE			CStackBacktrace::SymInitialize = NULL;
-SYMCLEANUP				CStackBacktrace::SymCleanup = NULL;
-SYMSETOPTIONS			CStackBacktrace::SymSetOptions = NULL;
-SYMGETOPTIONS			CStackBacktrace::SymGetOptions = NULL;
-STACKWALK64				CStackBacktrace::StackWalk64 = NULL;
-SYMFROMADDR				CStackBacktrace::SymFromAddr = NULL;
-UNDECORATESYMBOLNAME	CStackBacktrace::UnDecorateSymbolName = NULL;
-SYMGETLINEFROMADDR64	CStackBacktrace::SymGetLineFromAddr64 = NULL;
+CStackBacktrace	* CStackBacktrace::ms_pInstance = NULL;
 
 BOOL
 CStackBacktrace::WalkFrameChaim()
@@ -27,13 +16,13 @@ CStackBacktrace::WalkFrameChaim()
 
 	__try
 	{
-		if (!RtlWalkFrameChain)
+		if (!m_pfRtlWalkFrameChain)
 		{
 			bRet = TRUE;
 			__leave;
 		}
 
-		FrameCount = RtlWalkFrameChain(ReturnAddress, _countof(ReturnAddress), 0);
+		FrameCount = m_pfRtlWalkFrameChain(ReturnAddress, _countof(ReturnAddress), 0);
 		for (; FrameNumber < FrameCount; FrameNumber++)
 			printfEx(MOD_STACK_BACKTRACE, PRINTF_LEVEL_INFORMATION, "[FrameNumber]%02d [ReturnAddress]0x%08p", FrameNumber, ReturnAddress[FrameNumber]);
 
@@ -64,7 +53,7 @@ __in LPTSTR lpSymDir
 
 	__try
 	{
-		if (!RtlWalkFrameChain)
+		if (!m_pfRtlWalkFrameChain)
 		{
 			hModuleNtdll = GetModuleHandle(L"ntdll.dll");
 			if (!hModuleNtdll)
@@ -73,8 +62,8 @@ __in LPTSTR lpSymDir
 				__leave;
 			}
 
-			RtlWalkFrameChain = (RTLWALKFRAMECHAIN)GetProcAddress(hModuleNtdll, "RtlWalkFrameChain");
-			if (!RtlWalkFrameChain)
+			m_pfRtlWalkFrameChain = (RTLWALKFRAMECHAIN)GetProcAddress(hModuleNtdll, "RtlWalkFrameChain");
+			if (!m_pfRtlWalkFrameChain)
 			{
 				printfEx(MOD_STACK_BACKTRACE, PRINTF_LEVEL_ERROR, "GetProcAddress RtlWalkFrameChain failed. (%d)", GetLastError());
 				__leave;
@@ -90,10 +79,10 @@ __in LPTSTR lpSymDir
 		if (!PathFileExists(lpSymDir))
 			__leave;
 
-		if (!ms_hProcess)
+		if (!m_hProcess)
 		{
-			ms_hProcess = GetCurrentProcess();
-			if (!ms_hProcess)
+			m_hProcess = GetCurrentProcess();
+			if (!m_hProcess)
 			{
 				printfEx(MOD_STACK_BACKTRACE, PRINTF_LEVEL_ERROR, "GetCurrentProcess failed. (%d)", GetLastError());
 				__leave;
@@ -106,83 +95,83 @@ __in LPTSTR lpSymDir
 				__leave;
 			}
 
-			ImagehlpApiVersion = (IMAGEHLPAPIVERSION)GetProcAddress(hModuleDbghelp, "ImagehlpApiVersion");
-			if (ImagehlpApiVersion)
+			m_pfImagehlpApiVersion = (IMAGEHLPAPIVERSION)GetProcAddress(hModuleDbghelp, "ImagehlpApiVersion");
+			if (m_pfImagehlpApiVersion)
 			{
-				lpApiVersion = ImagehlpApiVersion();
+				lpApiVersion = m_pfImagehlpApiVersion();
 				if (!lpApiVersion)
 				{
 					printfEx(MOD_STACK_BACKTRACE, PRINTF_LEVEL_ERROR, "ImagehlpApiVersion failed. (%d)", GetLastError());
 					__leave;
 				}
 
-				ms_bCanUseStackBacktraceSym = TRUE;
+				m_bCanUseStackBacktraceSym = TRUE;
 
-				SymInitialize = (SYMINITIALIZE)GetProcAddress(hModuleDbghelp, "SymInitialize");
-				if (!SymInitialize)
+				m_pfSymInitialize = (SYMINITIALIZE)GetProcAddress(hModuleDbghelp, "SymInitialize");
+				if (!m_pfSymInitialize)
 				{
 					printfEx(MOD_STACK_BACKTRACE, PRINTF_LEVEL_ERROR, "GetProcAddress SymInitialize failed. (%d)", GetLastError());
 					__leave;
 				}
 
-				SymCleanup = (SYMCLEANUP)GetProcAddress(hModuleDbghelp, "SymCleanup");
-				if (!SymCleanup)
+				m_pfSymCleanup = (SYMCLEANUP)GetProcAddress(hModuleDbghelp, "SymCleanup");
+				if (!m_pfSymCleanup)
 				{
 					printfEx(MOD_STACK_BACKTRACE, PRINTF_LEVEL_ERROR, "GetProcAddress SymCleanup failed. (%d)", GetLastError());
 					__leave;
 				}
 
-				SymSetOptions = (SYMSETOPTIONS)GetProcAddress(hModuleDbghelp, "SymSetOptions");
-				if (!SymSetOptions)
+				m_pfSymSetOptions = (SYMSETOPTIONS)GetProcAddress(hModuleDbghelp, "SymSetOptions");
+				if (!m_pfSymSetOptions)
 				{
 					printfEx(MOD_STACK_BACKTRACE, PRINTF_LEVEL_ERROR, "GetProcAddress SymSetOptions failed. (%d)", GetLastError());
 					__leave;
 				}
 
-				SymGetOptions = (SYMGETOPTIONS)GetProcAddress(hModuleDbghelp, "SymGetOptions");
-				if (!SymGetOptions)
+				m_pfSymGetOptions = (SYMGETOPTIONS)GetProcAddress(hModuleDbghelp, "SymGetOptions");
+				if (!m_pfSymGetOptions)
 				{
 					printfEx(MOD_STACK_BACKTRACE, PRINTF_LEVEL_ERROR, "GetProcAddress SymGetOptions failed. (%d)", GetLastError());
 					__leave;
 				}
 
-				StackWalk64 = (STACKWALK64)GetProcAddress(hModuleDbghelp, "StackWalk64");
-				if (!StackWalk64)
+				m_pfStackWalk64 = (STACKWALK64)GetProcAddress(hModuleDbghelp, "StackWalk64");
+				if (!m_pfStackWalk64)
 				{
 					printfEx(MOD_STACK_BACKTRACE, PRINTF_LEVEL_ERROR, "GetProcAddress StackWalk64 failed. (%d)", GetLastError());
 					__leave;
 				}
 
-				SymFromAddr = (SYMFROMADDR)GetProcAddress(hModuleDbghelp, "SymFromAddr");
-				if (!SymFromAddr)
+				m_pfSymFromAddr = (SYMFROMADDR)GetProcAddress(hModuleDbghelp, "SymFromAddr");
+				if (!m_pfSymFromAddr)
 				{
 					printfEx(MOD_STACK_BACKTRACE, PRINTF_LEVEL_ERROR, "GetProcAddress SymFromAddr failed. (%d)", GetLastError());
 					__leave;
 				}
 
-				UnDecorateSymbolName = (UNDECORATESYMBOLNAME)GetProcAddress(hModuleDbghelp, "UnDecorateSymbolName");
-				if (!UnDecorateSymbolName)
+				m_pfUnDecorateSymbolName = (UNDECORATESYMBOLNAME)GetProcAddress(hModuleDbghelp, "UnDecorateSymbolName");
+				if (!m_pfUnDecorateSymbolName)
 				{
 					printfEx(MOD_STACK_BACKTRACE, PRINTF_LEVEL_ERROR, "GetProcAddress UnDecorateSymbolName failed. (%d)", GetLastError());
 					__leave;
 				}
 
-				SymGetLineFromAddr64 = (SYMGETLINEFROMADDR64)GetProcAddress(hModuleDbghelp, "SymGetLineFromAddr64");
-				if (!SymGetLineFromAddr64)
+				m_pfSymGetLineFromAddr64 = (SYMGETLINEFROMADDR64)GetProcAddress(hModuleDbghelp, "SymGetLineFromAddr64");
+				if (!m_pfSymGetLineFromAddr64)
 				{
 					printfEx(MOD_STACK_BACKTRACE, PRINTF_LEVEL_ERROR, "GetProcAddress SymGetLineFromAddr64 failed. (%d)", GetLastError());
 					__leave;
 				}
 
-				if (!SymInitialize(ms_hProcess, lpSymDir, TRUE))
+				if (!m_pfSymInitialize(m_hProcess, lpSymDir, TRUE))
 				{
 					printfEx(MOD_STACK_BACKTRACE, PRINTF_LEVEL_ERROR, "SymInitialize failed. (%d)", GetLastError());
 					__leave;
 				}
 
-				dwOptions = SymGetOptions();
+				dwOptions = m_pfSymGetOptions();
 				dwOptions |= SYMOPT_LOAD_LINES;
-				SymSetOptions(dwOptions);
+				m_pfSymSetOptions(dwOptions);
 			}
 		}
 
@@ -208,25 +197,25 @@ CStackBacktrace::Unload()
 
 	__try
 	{
-		if (ms_hProcess)
+		if (m_hProcess)
 		{
-			if (SymCleanup)
-				SymCleanup(ms_hProcess);
+			if (m_pfSymCleanup)
+				m_pfSymCleanup(m_hProcess);
 
-			ms_hProcess = NULL;
+			m_hProcess = NULL;
 		}
 
-		RtlWalkFrameChain = NULL;
-		ms_bCanUseStackBacktraceSym = NULL;
-		ImagehlpApiVersion = NULL;
-		SymInitialize = NULL;
-		SymCleanup = NULL;
-		SymSetOptions = NULL;
-		SymGetOptions = NULL;
-		StackWalk64 = NULL;
-		SymFromAddr = NULL;
-		UnDecorateSymbolName = NULL;
-		SymGetLineFromAddr64 = NULL;
+		m_pfRtlWalkFrameChain = NULL;
+		m_bCanUseStackBacktraceSym = NULL;
+		m_pfImagehlpApiVersion = NULL;
+		m_pfSymInitialize = NULL;
+		m_pfSymCleanup = NULL;
+		m_pfSymSetOptions = NULL;
+		m_pfSymGetOptions = NULL;
+		m_pfStackWalk64 = NULL;
+		m_pfSymFromAddr = NULL;
+		m_pfUnDecorateSymbolName = NULL;
+		m_pfSymGetLineFromAddr64 = NULL;
 
 		bRet = TRUE;
 	}
@@ -241,7 +230,7 @@ CStackBacktrace::Unload()
 BOOL
 CStackBacktrace::StackBacktrace()
 {
-	return ms_bCanUseStackBacktraceSym ? StackBacktraceSym() : WalkFrameChaim();
+	return m_bCanUseStackBacktraceSym ? StackBacktraceSym() : WalkFrameChaim();
 }
 
 BOOL
@@ -266,7 +255,7 @@ CStackBacktrace::StackBacktraceSym()
 
 	__try
 	{
-		if (!ms_bCanUseStackBacktraceSym)
+		if (!m_bCanUseStackBacktraceSym)
 		{
 			bRet = TRUE;
 			__leave;
@@ -299,9 +288,9 @@ CStackBacktrace::StackBacktraceSym()
 			pSymbol->SizeOfStruct = sizeof(SYMBOL_INFO);
 			pSymbol->MaxNameLen = MAX_PATH;
 
-			if (!StackWalk64(
+			if (!m_pfStackWalk64(
 				IMAGE_FILE_MACHINE_I386,
-				ms_hProcess,
+				m_hProcess,
 				hThread,
 				&StackFrame64,
 				&Context,
@@ -318,8 +307,8 @@ CStackBacktrace::StackBacktraceSym()
 				__leave;
 			}
 
-			if (!SymFromAddr(
-				ms_hProcess,
+			if (!m_pfSymFromAddr(
+				m_hProcess,
 				StackFrame64.AddrPC.Offset,
 				&dw64Displacement,
 				pSymbol
@@ -329,7 +318,7 @@ CStackBacktrace::StackBacktraceSym()
 				__leave;
 			}
 
-			if (!UnDecorateSymbolName(
+			if (!m_pfUnDecorateSymbolName(
 				pSymbol->Name,
 				chDecoratedName,
 				_countof(chDecoratedName),
@@ -344,8 +333,8 @@ CStackBacktrace::StackBacktraceSym()
 
 			Line.SizeOfStruct = sizeof(IMAGEHLP_LINE64);
 
-			if (!SymGetLineFromAddr64(
-				ms_hProcess,
+			if (!m_pfSymGetLineFromAddr64(
+				m_hProcess,
 				StackFrame64.AddrPC.Offset,
 				&dwDisplacement,
 				&Line
@@ -411,4 +400,64 @@ _Out_ LPDWORD lpNumberOfBytesRead
 	}
 
 	return bRet;
+}
+
+CStackBacktrace *
+	CStackBacktrace::GetInstance()
+{
+	if (!ms_pInstance)
+	{
+		do 
+		{
+			ms_pInstance = new CStackBacktrace;
+			if (!ms_pInstance)
+				Sleep(1000);
+			else
+				break;
+		} while (TRUE);
+	}
+
+	return ms_pInstance;
+}
+
+VOID
+	CStackBacktrace::ReleaseInstance()
+{
+	if (ms_pInstance)
+	{
+		delete ms_pInstance;
+		ms_pInstance = NULL;
+	}
+}
+
+CStackBacktrace::CStackBacktrace()
+{
+	m_pfRtlWalkFrameChain = NULL;
+	m_hProcess = NULL;
+	m_bCanUseStackBacktraceSym = FALSE;
+	m_pfImagehlpApiVersion = NULL;
+	m_pfSymInitialize = NULL;
+	m_pfSymCleanup = NULL;
+	m_pfSymSetOptions = NULL;
+	m_pfSymGetOptions = NULL;
+	m_pfStackWalk64 = NULL;
+	m_pfSymFromAddr = NULL;
+	m_pfUnDecorateSymbolName = NULL;
+	m_pfSymGetLineFromAddr64 = NULL;
+}
+
+CStackBacktrace::~CStackBacktrace()
+{
+	m_pfRtlWalkFrameChain = NULL;
+	m_hProcess = NULL;
+	m_bCanUseStackBacktraceSym = FALSE;
+	m_pfImagehlpApiVersion = NULL;
+	m_pfSymInitialize = NULL;
+	m_pfSymCleanup = NULL;
+	m_pfSymSetOptions = NULL;
+	m_pfSymGetOptions = NULL;
+	m_pfStackWalk64 = NULL;
+	m_pfSymFromAddr = NULL;
+	m_pfUnDecorateSymbolName = NULL;
+	m_pfSymGetLineFromAddr64 = NULL;
 }
