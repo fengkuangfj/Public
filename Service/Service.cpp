@@ -31,8 +31,6 @@ BOOL
 	OS_PROCESSOR_TYPE_USER_DEFINED	OsProcType						= OS_PROCESSOR_TYPE_UNKNOWN;
 	WCHAR							wchSubKey[MAX_PATH]				= {0};
 
-	COperationSystemVersion			OperationSystemVersion;
-
 
 	__try
 	{
@@ -43,7 +41,7 @@ BOOL
 			__leave;
 		}
 
-		OsProcType = OperationSystemVersion.GetOSProcessorType();
+		OsProcType = COperationSystemVersion::GetInstance()->GetOSProcessorType();
 		switch (OsProcType)
 		{
 		case OS_PROCESSOR_TYPE_X86:
@@ -772,8 +770,6 @@ BOOL
 		{NULL, NULL}
 	};
 
-	COperationSystemVersion	OsVersion;
-
 	printfEx(MOD_SERVICE, PRINTF_LEVEL_INFORMATION, "begin");
 
 	__try
@@ -781,12 +777,6 @@ BOOL
 		if (!lpServiceName || !InitMod || !UnloadMod)
 		{
 			printfEx(MOD_SERVICE, PRINTF_LEVEL_ERROR, "input arguments error. 0x%08p 0x%08p 0x%08p",lpServiceName, InitMod, UnloadMod);
-			__leave;
-		}
-
-		if (!OsVersion.Init())
-		{
-			printfEx(MOD_SERVICE, PRINTF_LEVEL_ERROR, "OsVersion.Init failed");
 			__leave;
 		}
 
@@ -950,9 +940,7 @@ VOID
 	DWORD dwWaitHint
 	)
 {
-	OS_VERSION_USER_DEFINED	OsVerAndProcType		= OS_VERSION_UNKNOWN;
-
-	COperationSystemVersion OperationSystemVersion;
+	OS_VERSION_USER_DEFINED	OsVerAndProcType = OS_VERSION_UNKNOWN;
 
 
 	__try
@@ -966,7 +954,7 @@ VOID
 			m_SvcStatus.dwControlsAccepted = 0;
 		else
 		{
-			OsVerAndProcType = OperationSystemVersion.GetOSVersion();
+			OsVerAndProcType = COperationSystemVersion::GetInstance()->GetOSVersion();
 			switch (OsVerAndProcType)
 			{
 			case OS_VERSION_WINDOWS_XP:
@@ -974,7 +962,7 @@ VOID
 			case OS_VERSION_WINDOWS_XP_SP2:
 			case OS_VERSION_WINDOWS_XP_SP3:
 				{
-					if (OS_PROCESSOR_TYPE_X86 != OperationSystemVersion.GetOSProcessorType())
+					if (OS_PROCESSOR_TYPE_X86 != COperationSystemVersion::GetInstance()->GetOSProcessorType())
 					{
 						printfEx(MOD_SERVICE, PRINTF_LEVEL_ERROR, "GetOSProcessorType error. %d", OsVerAndProcType);
 						__leave;
