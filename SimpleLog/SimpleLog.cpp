@@ -74,7 +74,7 @@ BOOL
 
 		CStackBacktrace::GetInstance()->SetArguments(lpDir);
 
-		if (!CProcessPath::Get(TRUE, 0, tchProcPath, _countof(tchProcPath)))
+		if (!CProcessPath::GetInstance()->Get(TRUE, 0, tchProcPath, _countof(tchProcPath)))
 			__leave;
 
 		if (_tcslen(tchProcPath) >= _tcslen(_T("DbgView.exe")) &&
@@ -113,6 +113,7 @@ CSimpleLog::Unload()
 
 	__try
 	{
+		CProcessPath::ReleaseInstance();
 		CStackBacktrace::ReleaseInstance();
 	}
 	__finally
