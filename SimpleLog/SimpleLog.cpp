@@ -17,11 +17,15 @@ __in LPTSTR lpLogPath
 
 		_tcscat_s(m_LogPath, _countof(m_LogPath), lpLogPath);
 
+		if (!Init())
+			__leave;
+
 		bRet = TRUE;
 	}
 	__finally
 	{
-		;
+		if (!bRet)
+			Unload();
 	}
 
 	return bRet;
@@ -388,8 +392,6 @@ CSimpleLog::CSimpleLog()
 	m_WriteReady = FALSE;
 	m_bOutputDebugString = TRUE;
 	m_ProcType = PROC_TYPE_UNKNOWN;
-
-	Init();
 }
 
 CSimpleLog::~CSimpleLog()
