@@ -74,7 +74,7 @@ BOOL
 BOOL
 	CVolumeDetector::Unload()
 {
-	BOOL bRet = FALSE;
+	BOOL bRet = TRUE;
 
 	printfEx(MOD_VOLUME_DETECTOR, PRINTF_LEVEL_INFORMATION, "begin");
 
@@ -84,11 +84,12 @@ BOOL
 			SendMessage(ms_VolumeDetectorInternal.hWindow, WM_CLOSE, 0, 0);
 
 		if (!CWmi::GetInstance()->Unload())
+		{
 			printfEx(MOD_VOLUME_DETECTOR, PRINTF_LEVEL_ERROR, "Wmi.Unload failed");
+			bRet = FALSE;
+		}
 
 		CWmi::ReleaseInstance();
-
-		bRet = TRUE;
 	}
 	__finally
 	{
