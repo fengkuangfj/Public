@@ -94,20 +94,30 @@ public:
 		);
 
 private:
-	static CService			*	ms_pInstance;
+	static CService						*	ms_pInstance;
 
-	SERVICE_STATUS_HANDLE		m_SvcStatusHandle;
-	TCHAR						m_tchServiceName[MAX_PATH];
-	SERVICE_STATUS				m_SvcStatus;
-	HANDLE						m_hSvcStopEvent;
-	DWORD						m_dwCheckPoint;
-	INITMOD						m_pfInitMod;
-	UNLOADMOD					m_pfUnloadMod;
-	INIT_MOD_ARGUMENTS			m_InitModArguments;
+	SERVICE_STATUS_HANDLE					m_SvcStatusHandle;
+	TCHAR									m_tchServiceName[MAX_PATH];
+	SERVICE_STATUS							m_SvcStatus;
+	HANDLE									m_hSvcStopEvent;
+	DWORD									m_dwCheckPoint;
+	INITMOD									m_pfInitMod;
+	UNLOADMOD								m_pfUnloadMod;
+	INIT_MOD_ARGUMENTS						m_InitModArguments;
+
+	WOW64_DISABLE_WOW64_FS_REDIRECTION		m_pfWow64DisableWow64FsRedirection;
+	WOW64_REVERT_WOW64_FS_REDIRECTION		m_pfWow64RevertWow64FsRedirection;
+	HMODULE									m_hModule;
 
 	CService();
 
 	~CService();
+
+	BOOL
+		Init();
+
+	BOOL
+		Unload();
 
 	static
 	VOID

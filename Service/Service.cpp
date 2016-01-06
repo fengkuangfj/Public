@@ -1,9 +1,6 @@
 #include "Service.h"
 
-WOW64_DISABLE_WOW64_FS_REDIRECTION		g_Wow64DisableWow64FsRedirection		= NULL;
-WOW64_REVERT_WOW64_FS_REDIRECTION		g_Wow64RevertWow64FsRedirection			= NULL;
-
-CService							*	CService::ms_pInstance = NULL;
+CService * CService::ms_pInstance = NULL;
 
 BOOL
 	CService::Install(
@@ -31,7 +28,6 @@ BOOL
 	LPWSTR							lpPosition						= NULL;
 	PVOID							pOldValue						= NULL;
 	BOOL							bWow64DisableWow64FsRedirection = FALSE;
-	HMODULE							hModule							= NULL;
 	OS_PROCESSOR_TYPE_USER_DEFINED	OsProcType						= OS_PROCESSOR_TYPE_UNKNOWN;
 	WCHAR							wchSubKey[MAX_PATH]				= {0};
 
@@ -47,13 +43,6 @@ BOOL
 			__leave;
 		}
 
-		hModule = LoadLibrary(_T("Kernel32.dll"));
-		if (!hModule)
-		{
-			printfEx(MOD_SERVICE, PRINTF_LEVEL_ERROR, "LoadLibrary failed. (%d)", GetLastError());
-			__leave;
-		}
-
 		OsProcType = OperationSystemVersion.GetOSProcessorType();
 		switch (OsProcType)
 		{
@@ -61,27 +50,13 @@ BOOL
 			break;
 		case OS_PROCESSOR_TYPE_X64:
 			{
-				if (!g_Wow64DisableWow64FsRedirection)
+				if (!m_pfWow64DisableWow64FsRedirection(&pOldValue))
 				{
-					g_Wow64DisableWow64FsRedirection = (WOW64_DISABLE_WOW64_FS_REDIRECTION)GetProcAddress(hModule, "Wow64DisableWow64FsRedirection");
-					if (g_Wow64DisableWow64FsRedirection)
-					{
-						if (!g_Wow64DisableWow64FsRedirection(&pOldValue))
-						{
-							printfEx(MOD_SERVICE, PRINTF_LEVEL_ERROR, "Wow64DisableWow64FsRedirection failed. (%d)", GetLastError());
-							__leave;
-						}
-
-						bWow64DisableWow64FsRedirection = TRUE;
-
-						g_Wow64RevertWow64FsRedirection = (WOW64_REVERT_WOW64_FS_REDIRECTION)GetProcAddress(hModule, "Wow64RevertWow64FsRedirection");
-						if (!g_Wow64RevertWow64FsRedirection)
-						{
-							printfEx(MOD_SERVICE, PRINTF_LEVEL_ERROR, "GetProcAddress failed. (%d)", GetLastError());
-							__leave;
-						}
-					}
+					printfEx(MOD_SERVICE, PRINTF_LEVEL_ERROR, "Wow64DisableWow64FsRedirection failed. (%d)", GetLastError());
+					__leave;
 				}
+
+				bWow64DisableWow64FsRedirection = TRUE;
 
 				break;
 			}
@@ -548,17 +523,8 @@ BOOL
 
 		if (bWow64DisableWow64FsRedirection)
 		{
-			if (g_Wow64RevertWow64FsRedirection)
-			{
-				g_Wow64RevertWow64FsRedirection(pOldValue);
-				pOldValue = NULL;
-			}
-		}
-
-		if (hModule)
-		{
-			FreeLibrary(hModule);
-			hModule = NULL;
+			m_pfWow64RevertWow64FsRedirection(pOldValue);
+			pOldValue = NULL;
 		}
 	}
 
@@ -1241,23 +1207,98 @@ VOID
 CService::CService()
 {
 	ZeroMemory(m_tchServiceName, sizeof(m_tchServiceName));
-	m_SvcStatusHandle			= NULL;
+	m_SvcStatusHandle = NULL;
 	ZeroMemory(&m_SvcStatus, sizeof(m_SvcStatus));
-	m_hSvcStopEvent				= NULL;
-	m_dwCheckPoint				= 1;
-	m_pfInitMod					= NULL;
-	m_pfUnloadMod					= NULL;
+	m_hSvcStopEvent = NULL;
+	m_dwCheckPoint = 1;
+	m_pfInitMod = NULL;
+	m_pfUnloadMod = NULL;
 	ZeroMemory(&m_InitModArguments, sizeof(m_InitModArguments));
+
+	if (!Init())
+		printfEx(MOD_SERVICE, PRINTF_LEVEL_ERROR, "Init failed");
 }
 
 CService::~CService()
 {
+	if (!Unload())
+		printfEx(MOD_SERVICE, PRINTF_LEVEL_ERROR, "Unload failed");
+
 	ZeroMemory(m_tchServiceName, sizeof(m_tchServiceName));
-	m_SvcStatusHandle			= NULL;
+	m_SvcStatusHandle = NULL;
 	ZeroMemory(&m_SvcStatus, sizeof(m_SvcStatus));
-	m_hSvcStopEvent				= NULL;
-	m_dwCheckPoint				= 1;
-	m_pfInitMod					= NULL;
-	m_pfUnloadMod					= NULL;
+	m_hSvcStopEvent = NULL;
+	m_dwCheckPoint = 1;
+	m_pfInitMod = NULL;
+	m_pfUnloadMod = NULL;
 	ZeroMemory(&m_InitModArguments, sizeof(m_InitModArguments));
+}
+
+BOOL
+	CService::Init()
+{
+
+	BOOL bRet = FALSE;
+
+
+	__try
+	{
+		m_hModule = LoadLibrary(_T("Kernel32.dll"));
+		if (!m_hModule)
+		{
+			printfEx(MOD_SERVICE, PRINTF_LEVEL_ERROR, "LoadLibrary failed. (%d)", GetLastError());
+			__leave;
+		}
+
+		m_pfWow64DisableWow64FsRedirection = (WOW64_DISABLE_WOW64_FS_REDIRECTION)GetProcAddress(m_hModule, "Wow64DisableWow64FsRedirection");
+		if (!m_pfWow64DisableWow64FsRedirection)
+		{
+			printfEx(MOD_SERVICE, PRINTF_LEVEL_ERROR, "GetProcAddress failed. (%d)", GetLastError());
+			__leave;
+		}
+
+		m_pfWow64RevertWow64FsRedirection = (WOW64_REVERT_WOW64_FS_REDIRECTION)GetProcAddress(m_hModule, "Wow64RevertWow64FsRedirection");
+		if (!m_pfWow64RevertWow64FsRedirection)
+		{
+			printfEx(MOD_SERVICE, PRINTF_LEVEL_ERROR, "GetProcAddress failed. (%d)", GetLastError());
+			__leave;
+		}
+
+		bRet = TRUE;
+	}
+	__finally
+	{
+		if (!bRet)
+		{
+			if (!Unload())
+				printfEx(MOD_SERVICE, PRINTF_LEVEL_ERROR, "Unload failed");
+		}
+	}
+
+	return bRet;
+}
+
+BOOL
+	CService::Unload()
+{
+	BOOL bRet = TRUE;
+
+
+	__try
+	{
+		m_pfWow64DisableWow64FsRedirection = NULL;
+		m_pfWow64RevertWow64FsRedirection = NULL;
+
+		if (m_hModule)
+		{
+			FreeLibrary(m_hModule);
+			m_hModule = NULL;
+		}
+	}
+	__finally
+	{
+		;
+	}
+
+	return bRet;
 }
