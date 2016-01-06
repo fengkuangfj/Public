@@ -43,6 +43,14 @@ typedef
 class CService
 {
 public:
+	static
+		CService *
+		GetInstance();
+
+	static
+		VOID
+		ReleaseInstance();
+
 	BOOL
 		Install(
 		__in		LPWSTR	lpServiceName,
@@ -86,40 +94,44 @@ public:
 		);
 
 private:
-	static SERVICE_STATUS_HANDLE	ms_SvcStatusHandle;
-	static TCHAR					ms_tchServiceName[MAX_PATH];
-	static SERVICE_STATUS			ms_SvcStatus;
-	static HANDLE					ms_hSvcStopEvent;
-	static DWORD					ms_dwCheckPoint;
-	static INITMOD					ms_InitMod;
-	static UNLOADMOD				ms_UnloadMod;
-	static INIT_MOD_ARGUMENTS		ms_InitModArguments;
+	static CService			*	ms_pInstance;
+
+	SERVICE_STATUS_HANDLE		m_SvcStatusHandle;
+	TCHAR						m_tchServiceName[MAX_PATH];
+	SERVICE_STATUS				m_SvcStatus;
+	HANDLE						m_hSvcStopEvent;
+	DWORD						m_dwCheckPoint;
+	INITMOD						m_pfInitMod;
+	UNLOADMOD					m_pfUnloadMod;
+	INIT_MOD_ARGUMENTS			m_InitModArguments;
+
+	CService();
+
+	~CService();
 
 	static
-		VOID
+	VOID
 		WINAPI
 		Main(
 		DWORD		dwArgc,
 		LPTSTR *	lpszArgv
 		);
 
-	static
-		VOID
+	VOID
 		ReportSvcStatus(
 		DWORD dwCurrentState,
 		DWORD dwWin32ExitCode,
 		DWORD dwWaitHint
 		);
 
-	static
-		BOOL
+	BOOL
 		Init(
 		DWORD		dwArgc,
 		LPTSTR *	lpszArgv
 		);
 
 	static
-		DWORD
+	DWORD
 		WINAPI
 		CtrlHandler(
 		_In_ DWORD	dwControl,

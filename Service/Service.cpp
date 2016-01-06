@@ -1,16 +1,9 @@
 #include "Service.h"
 
-WOW64_DISABLE_WOW64_FS_REDIRECTION	g_Wow64DisableWow64FsRedirection		= NULL;
-WOW64_REVERT_WOW64_FS_REDIRECTION	g_Wow64RevertWow64FsRedirection			= NULL;
+WOW64_DISABLE_WOW64_FS_REDIRECTION		g_Wow64DisableWow64FsRedirection		= NULL;
+WOW64_REVERT_WOW64_FS_REDIRECTION		g_Wow64RevertWow64FsRedirection			= NULL;
 
-TCHAR								CService::ms_tchServiceName[MAX_PATH]	= {0};
-SERVICE_STATUS_HANDLE				CService::ms_SvcStatusHandle			= NULL;
-SERVICE_STATUS						CService::ms_SvcStatus					= {0};
-HANDLE								CService::ms_hSvcStopEvent				= NULL;
-DWORD								CService::ms_dwCheckPoint				= 1;
-INITMOD								CService::ms_InitMod					= NULL;
-UNLOADMOD							CService::ms_UnloadMod					= NULL;
-INIT_MOD_ARGUMENTS					CService::ms_InitModArguments			= {0};
+CService							*	CService::ms_pInstance = NULL;
 
 BOOL
 	CService::Install(
@@ -831,20 +824,20 @@ BOOL
 			__leave;
 		}
 
-		ms_InitMod = InitMod;
-		ms_UnloadMod = UnloadMod;
+		m_pfInitMod = InitMod;
+		m_pfUnloadMod = UnloadMod;
 
 		if (lpInitModArguments)
 		{
 			if (_tcslen(lpInitModArguments->tchModuleName))
-				_tcscat_s(ms_InitModArguments.tchModuleName, _countof(ms_InitModArguments.tchModuleName), lpInitModArguments->tchModuleName);
+				_tcscat_s(m_InitModArguments.tchModuleName, _countof(m_InitModArguments.tchModuleName), lpInitModArguments->tchModuleName);
 
-			ms_InitModArguments.hWindow = lpInitModArguments->hWindow;
-			ms_InitModArguments.lpfnWndProc = lpInitModArguments->lpfnWndProc;
-			ms_InitModArguments.bCreateMassageLoop = lpInitModArguments->bCreateMassageLoop;
+			m_InitModArguments.hWindow = lpInitModArguments->hWindow;
+			m_InitModArguments.lpfnWndProc = lpInitModArguments->lpfnWndProc;
+			m_InitModArguments.bCreateMassageLoop = lpInitModArguments->bCreateMassageLoop;
 		}
 
-		_tcscat_s(ms_tchServiceName, _countof(ms_tchServiceName), lpServiceName);
+		_tcscat_s(m_tchServiceName, _countof(m_tchServiceName), lpServiceName);
 
 		printfEx(MOD_SERVICE, PRINTF_LEVEL_INFORMATION, "StartServiceCtrlDispatcher begin");
 		if (!StartServiceCtrlDispatcher(ServiceTableEntry))
@@ -898,16 +891,16 @@ DWORD
 			{
 				printfEx(MOD_SERVICE, PRINTF_LEVEL_INFORMATION, "SERVICE_CONTROL_STOP");
 
-				if (!ms_UnloadMod())
+				if (!CService::GetInstance()->m_pfUnloadMod())
 					printfEx(MOD_SERVICE, PRINTF_LEVEL_ERROR, "[SERVICE_CONTROL_STOP] ms_UnloadMod failed");
 
-				ReportSvcStatus(SERVICE_STOP_PENDING, NO_ERROR, 0);
+				CService::GetInstance()->ReportSvcStatus(SERVICE_STOP_PENDING, NO_ERROR, 0);
 
 				// Signal the service to stop.
-				if (!SetEvent(ms_hSvcStopEvent))
+				if (!SetEvent(CService::GetInstance()->m_hSvcStopEvent))
 					printfEx(MOD_SERVICE, PRINTF_LEVEL_ERROR, "[SERVICE_CONTROL_STOP] SetEvent failed. (%d)", GetLastError());
 
-				ReportSvcStatus(ms_SvcStatus.dwCurrentState, NO_ERROR, 0);
+				CService::GetInstance()->ReportSvcStatus(CService::GetInstance()->m_SvcStatus.dwCurrentState, NO_ERROR, 0);
 				break;
 			}
 		case SERVICE_CONTROL_PAUSE:
@@ -918,10 +911,10 @@ DWORD
 			{
 				printfEx(MOD_SERVICE, PRINTF_LEVEL_INFORMATION, "SERVICE_CONTROL_SHUTDOWN");
 
-				if (!ms_UnloadMod())
+				if (!CService::GetInstance()->m_pfUnloadMod())
 					printfEx(MOD_SERVICE, PRINTF_LEVEL_ERROR, "[SERVICE_CONTROL_SHUTDOWN] ms_UnloadMod failed");
 
-				if (!SetEvent(ms_hSvcStopEvent))
+				if (!SetEvent(CService::GetInstance()->m_hSvcStopEvent))
 					printfEx(MOD_SERVICE, PRINTF_LEVEL_ERROR, "[SERVICE_CONTROL_SHUTDOWN] SetEvent failed. (%d)", GetLastError());
 
 				break;
@@ -945,10 +938,10 @@ DWORD
 			{
 				printfEx(MOD_SERVICE, PRINTF_LEVEL_INFORMATION, "SERVICE_CONTROL_PRESHUTDOWN");
 
-				if (!ms_UnloadMod())
+				if (!CService::GetInstance()->m_pfUnloadMod())
 					printfEx(MOD_SERVICE, PRINTF_LEVEL_ERROR, "[SERVICE_CONTROL_PRESHUTDOWN] ms_UnloadMod failed");
 
-				if (!SetEvent(ms_hSvcStopEvent))
+				if (!SetEvent(CService::GetInstance()->m_hSvcStopEvent))
 					printfEx(MOD_SERVICE, PRINTF_LEVEL_ERROR, "[SERVICE_CONTROL_PRESHUTDOWN] SetEvent failed. (%d)", GetLastError());
 
 				break;
@@ -999,12 +992,12 @@ VOID
 	__try
 	{
 		// Fill in the SERVICE_STATUS structure.
-		ms_SvcStatus.dwCurrentState = dwCurrentState;
-		ms_SvcStatus.dwWin32ExitCode = dwWin32ExitCode;
-		ms_SvcStatus.dwWaitHint = dwWaitHint;
+		m_SvcStatus.dwCurrentState = dwCurrentState;
+		m_SvcStatus.dwWin32ExitCode = dwWin32ExitCode;
+		m_SvcStatus.dwWaitHint = dwWaitHint;
 
 		if (SERVICE_START_PENDING == dwCurrentState)
-			ms_SvcStatus.dwControlsAccepted = 0;
+			m_SvcStatus.dwControlsAccepted = 0;
 		else
 		{
 			OsVerAndProcType = OperationSystemVersion.GetOSVersion();
@@ -1021,7 +1014,7 @@ VOID
 						__leave;
 					}
 
-					ms_SvcStatus.dwControlsAccepted =
+					m_SvcStatus.dwControlsAccepted =
 						SERVICE_ACCEPT_STOP                  |  // 0x00000001
 						SERVICE_ACCEPT_PAUSE_CONTINUE        |  // 0x00000002
 						SERVICE_ACCEPT_SHUTDOWN              |  // 0x00000004
@@ -1039,7 +1032,7 @@ VOID
 			case OS_VERSION_WINDOWS_8_POINT1:
 			case OS_VERSION_WINDOWS_10:
 				{
-					ms_SvcStatus.dwControlsAccepted =
+					m_SvcStatus.dwControlsAccepted =
 						SERVICE_ACCEPT_STOP                  |  // 0x00000001
 						SERVICE_ACCEPT_PAUSE_CONTINUE        |  // 0x00000002
 						SERVICE_ACCEPT_SHUTDOWN              |  // 0x00000004
@@ -1063,12 +1056,12 @@ VOID
 		}
 
 		if ((SERVICE_RUNNING == dwCurrentState) || (SERVICE_STOPPED == dwCurrentState))
-			ms_SvcStatus.dwCheckPoint = 0;
+			m_SvcStatus.dwCheckPoint = 0;
 		else
-			ms_SvcStatus.dwCheckPoint = ms_dwCheckPoint++;
+			m_SvcStatus.dwCheckPoint = m_dwCheckPoint++;
 
 		// Report the status of the service to the SCM.
-		if (!SetServiceStatus(ms_SvcStatusHandle, &ms_SvcStatus))
+		if (!SetServiceStatus(m_SvcStatusHandle, &m_SvcStatus))
 		{
 			if (6 != GetLastError())
 				printfEx(MOD_SERVICE, PRINTF_LEVEL_ERROR, "SetServiceStatus failed. (%d)", GetLastError());
@@ -1113,22 +1106,22 @@ VOID
 	__try
 	{
 		// Register the handler function for the service
-		ms_SvcStatusHandle = RegisterServiceCtrlHandlerEx(ms_tchServiceName, CtrlHandler, NULL);
-		if (!ms_SvcStatusHandle )
+		CService::GetInstance()->m_SvcStatusHandle = RegisterServiceCtrlHandlerEx(CService::GetInstance()->m_tchServiceName, CtrlHandler, NULL);
+		if (!CService::GetInstance()->m_SvcStatusHandle )
 		{
 			printfEx(MOD_SERVICE, PRINTF_LEVEL_ERROR, "RegisterServiceCtrlHandler failed. (%d)", GetLastError());
 			__leave;
 		}
 
 		// These SERVICE_STATUS members remain as set here
-		ms_SvcStatus.dwServiceType = SERVICE_WIN32_OWN_PROCESS;
-		ms_SvcStatus.dwServiceSpecificExitCode = 0;
+		CService::GetInstance()->m_SvcStatus.dwServiceType = SERVICE_WIN32_OWN_PROCESS;
+		CService::GetInstance()->m_SvcStatus.dwServiceSpecificExitCode = 0;
 
 		// Report initial status to the SCM
-		ReportSvcStatus(SERVICE_START_PENDING, NO_ERROR, 3000);
+		CService::GetInstance()->ReportSvcStatus(SERVICE_START_PENDING, NO_ERROR, 3000);
 
 		// Perform service-specific initialization and work.
-		if (!Init(dwArgc, lpszArgv))
+		if (!CService::GetInstance()->Init(dwArgc, lpszArgv))
 		{
 			printfEx(MOD_SERVICE, PRINTF_LEVEL_ERROR, "Init failed");
 			__leave;
@@ -1176,8 +1169,8 @@ BOOL
 
 		// Create an event. The control handler function, SvcCtrlHandler,
 		// signals this event when it receives the stop control code.
-		ms_hSvcStopEvent = CreateEvent(NULL, TRUE, FALSE, NULL);
-		if (!ms_hSvcStopEvent)
+		m_hSvcStopEvent = CreateEvent(NULL, TRUE, FALSE, NULL);
+		if (!m_hSvcStopEvent)
 		{
 			printfEx(MOD_SERVICE, PRINTF_LEVEL_ERROR, "CreateEvent failed. (%d)", GetLastError());
 			ReportSvcStatus(SERVICE_STOPPED, NO_ERROR, 0);
@@ -1188,7 +1181,7 @@ BOOL
 		ReportSvcStatus(SERVICE_RUNNING, NO_ERROR, 0);
 
 		// TO_DO: Perform work until service stops.
-		if (!ms_InitMod(&ms_InitModArguments))
+		if (!m_pfInitMod(&m_InitModArguments))
 		{
 			printfEx(MOD_SERVICE, PRINTF_LEVEL_ERROR, "ms_Test failed");
 			__leave;
@@ -1201,7 +1194,7 @@ BOOL
 
 		// Check whether to stop the service.
 		printfEx(MOD_SERVICE, PRINTF_LEVEL_INFORMATION, "开始等待");
-		WaitForSingleObject(ms_hSvcStopEvent, INFINITE);
+		WaitForSingleObject(m_hSvcStopEvent, INFINITE);
 		printfEx(MOD_SERVICE, PRINTF_LEVEL_INFORMATION, "等待成功");
 
 		ReportSvcStatus(SERVICE_STOPPED, NO_ERROR, 0);
@@ -1215,4 +1208,56 @@ BOOL
 	printfEx(MOD_SERVICE, PRINTF_LEVEL_INFORMATION, "end");
 
 	return bRet;
+}
+
+CService *
+	CService::GetInstance()
+{
+	if (!ms_pInstance)
+	{
+		do 
+		{
+			ms_pInstance = new CService;
+			if (!ms_pInstance)
+				Sleep(1000);
+			else
+				break;
+		} while (TRUE);
+	}
+
+	return ms_pInstance;
+}
+
+VOID
+	CService::ReleaseInstance()
+{
+	if (ms_pInstance)
+	{
+		delete ms_pInstance;
+		ms_pInstance = NULL;
+	}
+}
+
+CService::CService()
+{
+	ZeroMemory(m_tchServiceName, sizeof(m_tchServiceName));
+	m_SvcStatusHandle			= NULL;
+	ZeroMemory(&m_SvcStatus, sizeof(m_SvcStatus));
+	m_hSvcStopEvent				= NULL;
+	m_dwCheckPoint				= 1;
+	m_pfInitMod					= NULL;
+	m_pfUnloadMod					= NULL;
+	ZeroMemory(&m_InitModArguments, sizeof(m_InitModArguments));
+}
+
+CService::~CService()
+{
+	ZeroMemory(m_tchServiceName, sizeof(m_tchServiceName));
+	m_SvcStatusHandle			= NULL;
+	ZeroMemory(&m_SvcStatus, sizeof(m_SvcStatus));
+	m_hSvcStopEvent				= NULL;
+	m_dwCheckPoint				= 1;
+	m_pfInitMod					= NULL;
+	m_pfUnloadMod					= NULL;
+	ZeroMemory(&m_InitModArguments, sizeof(m_InitModArguments));
 }
