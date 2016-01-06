@@ -3,9 +3,32 @@
 CSimpleLog * CSimpleLog::ms_pInstance = NULL;
 
 BOOL
-CSimpleLog::Init(
+CSimpleLog::SetArguments(
 __in LPTSTR lpLogPath
 )
+{
+	BOOL bRet = FALSE;
+
+
+	__try
+	{
+		if (!lpLogPath)
+			__leave;
+
+		_tcscat_s(m_LogPath, _countof(m_LogPath), lpLogPath);
+
+		bRet = TRUE;
+	}
+	__finally
+	{
+		;
+	}
+
+	return bRet;
+}
+
+BOOL
+	CSimpleLog::Init()
 {
 	BOOL			bRet = FALSE;
 
@@ -17,14 +40,6 @@ __in LPTSTR lpLogPath
 
 	__try
 	{
-		if (!lpLogPath)
-			__leave;
-
-		if (_tcslen(m_LogPath))
-			__leave;
-
-		_tcscat_s(m_LogPath, _countof(m_LogPath), lpLogPath);
-
 		lpPosition = _tcsrchr(m_LogPath, _T('\\'));
 		if (!lpPosition)
 			__leave;
@@ -57,7 +72,7 @@ __in LPTSTR lpLogPath
 
 		setlocale(LC_ALL, "");
 
-		CStackBacktrace::GetInstance()->Init(lpDir);
+		CStackBacktrace::GetInstance()->SetArguments(lpDir);
 
 		if (!CProcessPath::Get(TRUE, 0, tchProcPath, _countof(tchProcPath)))
 			__leave;
@@ -98,9 +113,6 @@ CSimpleLog::Unload()
 
 	__try
 	{
-		if (!CStackBacktrace::GetInstance()->Unload())
-			bRet = FALSE;
-
 		CStackBacktrace::ReleaseInstance();
 	}
 	__finally
@@ -375,10 +387,14 @@ CSimpleLog::CSimpleLog()
 	m_WriteReady = FALSE;
 	m_bOutputDebugString = TRUE;
 	m_ProcType = PROC_TYPE_UNKNOWN;
+
+	Init();
 }
 
 CSimpleLog::~CSimpleLog()
 {
+	Unload();
+
 	ZeroMemory(m_LogPath, sizeof(m_LogPath));
 	ZeroMemory(&m_CriticalSection, sizeof(m_CriticalSection));
 	m_WriteReady = FALSE;

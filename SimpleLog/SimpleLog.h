@@ -40,12 +40,9 @@ public:
 		ReleaseInstance();
 
 	BOOL
-		Init(
+		SetArguments(
 		__in LPTSTR lpLogPath
 		);
-
-	BOOL
-		Unload();
 
 	BOOL
 		Log(
@@ -70,6 +67,12 @@ private:
 	CSimpleLog();
 
 	~CSimpleLog();
+
+	BOOL
+		Init();
+
+	BOOL
+		Unload();
 
 	BOOL
 		Write(
