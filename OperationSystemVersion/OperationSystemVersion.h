@@ -56,8 +56,13 @@ typedef BOOL(WINAPI *GET_VERSION_EX)(LPOSVERSIONINFO);
 class COperationSystemVersion
 {
 public:
-	BOOL
-		Init();
+	static
+		COperationSystemVersion *
+		GetInstance();
+
+	static
+		VOID
+		ReleaseInstance();
 
 	OS_VERSION_USER_DEFINED
 		GetOSVersion();
@@ -66,23 +71,37 @@ public:
 		GetOSProcessorType();
 
 private:
-	static OS_VERSION_USER_DEFINED			ms_OsVersionUserDefined;
-	static OS_PROCESSOR_TYPE_USER_DEFINED	ms_ProcessorTypeUserDefined;
+	static COperationSystemVersion	*	ms_pInstance;
 
-	static IS_WINDOWS_SERVER				IsWindowsServer;
-	static IS_WINDOWS_10_OR_GREATER			IsWindows1OrGreater;
-	static IS_WINDOWS_8_POINT_1_OR_GREATER	IsWindows8Point1OrGreater;
-	static IS_WINDOWS_8_OR_GREATER			IsWindows8OrGreater;
-	static IS_WINDOWS_7_SP_1_OR_GREATER		IsWindows7SP1OrGreater;
-	static IS_WINDOWS_7_OR_GREATER			IsWindows7OrGreater;
-	static IS_WINDOWS_VISTA_SP2_OR_GREATER	IsWindowsVistaSP2OrGreater;
-	static IS_WINDOWS_VISTA_SP1_OR_GREATER	IsWindowsVistaSP1OrGreater;
-	static IS_WINDOWS_VISTA_OR_GREATER		IsWindowsVistaOrGreater;
-	static IS_WINDOWS_XP_SP3_OR_GREATER		IsWindowsXPSP3OrGreater;
-	static IS_WINDOWS_XP_SP2_OR_GREATER		IsWindowsXPSP2OrGreater;
-	static IS_WINDOWS_XP_SP1_OR_GREATER		IsWindowsXPSP1OrGreater;
-	static IS_WINDOWS_XP_OR_GREATER			IsWindowsXPOrGreater;
-	static GET_VERSION_EX					GetVersionEx;
+	OS_VERSION_USER_DEFINED				m_OsVersionUserDefined;
+	OS_PROCESSOR_TYPE_USER_DEFINED		m_ProcessorTypeUserDefined;
+
+	HMODULE								m_hModule;
+
+	IS_WINDOWS_SERVER					m_pfIsWindowsServer;
+	IS_WINDOWS_10_OR_GREATER			m_pfIsWindows1OrGreater;
+	IS_WINDOWS_8_POINT_1_OR_GREATER		m_pfIsWindows8Point1OrGreater;
+	IS_WINDOWS_8_OR_GREATER				m_pfIsWindows8OrGreater;
+	IS_WINDOWS_7_SP_1_OR_GREATER		m_pfIsWindows7SP1OrGreater;
+	IS_WINDOWS_7_OR_GREATER				m_pfIsWindows7OrGreater;
+	IS_WINDOWS_VISTA_SP2_OR_GREATER		m_pfIsWindowsVistaSP2OrGreater;
+	IS_WINDOWS_VISTA_SP1_OR_GREATER		m_pfIsWindowsVistaSP1OrGreater;
+	IS_WINDOWS_VISTA_OR_GREATER			m_pfIsWindowsVistaOrGreater;
+	IS_WINDOWS_XP_SP3_OR_GREATER		m_pfIsWindowsXPSP3OrGreater;
+	IS_WINDOWS_XP_SP2_OR_GREATER		m_pfIsWindowsXPSP2OrGreater;
+	IS_WINDOWS_XP_SP1_OR_GREATER		m_pfIsWindowsXPSP1OrGreater;
+	IS_WINDOWS_XP_OR_GREATER			m_pfIsWindowsXPOrGreater;
+	GET_VERSION_EX						m_pfGetVersionEx;
+
+	COperationSystemVersion();
+
+	~COperationSystemVersion();
+
+	BOOL
+		Init();
+
+	BOOL
+		Unload();
 
 	OS_VERSION_USER_DEFINED
 		GetOSVersionByIsOrGreater();

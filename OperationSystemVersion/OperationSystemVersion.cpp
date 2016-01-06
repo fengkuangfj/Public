@@ -1,72 +1,51 @@
 #include "OperationSystemVersion.h"
 
-OS_VERSION_USER_DEFINED			COperationSystemVersion::ms_OsVersionUserDefined = OS_VERSION_UNKNOWN;
-OS_PROCESSOR_TYPE_USER_DEFINED	COperationSystemVersion::ms_ProcessorTypeUserDefined = OS_PROCESSOR_TYPE_UNKNOWN;
-
-IS_WINDOWS_SERVER				COperationSystemVersion::IsWindowsServer = NULL;
-IS_WINDOWS_10_OR_GREATER		COperationSystemVersion::IsWindows1OrGreater = NULL;
-IS_WINDOWS_8_POINT_1_OR_GREATER	COperationSystemVersion::IsWindows8Point1OrGreater = NULL;
-IS_WINDOWS_8_OR_GREATER			COperationSystemVersion::IsWindows8OrGreater = NULL;
-IS_WINDOWS_7_SP_1_OR_GREATER	COperationSystemVersion::IsWindows7SP1OrGreater = NULL;
-IS_WINDOWS_7_OR_GREATER			COperationSystemVersion::IsWindows7OrGreater = NULL;
-IS_WINDOWS_VISTA_SP2_OR_GREATER	COperationSystemVersion::IsWindowsVistaSP2OrGreater = NULL;
-IS_WINDOWS_VISTA_SP1_OR_GREATER	COperationSystemVersion::IsWindowsVistaSP1OrGreater = NULL;
-IS_WINDOWS_VISTA_OR_GREATER		COperationSystemVersion::IsWindowsVistaOrGreater = NULL;
-IS_WINDOWS_XP_SP3_OR_GREATER	COperationSystemVersion::IsWindowsXPSP3OrGreater = NULL;
-IS_WINDOWS_XP_SP2_OR_GREATER	COperationSystemVersion::IsWindowsXPSP2OrGreater = NULL;
-IS_WINDOWS_XP_SP1_OR_GREATER	COperationSystemVersion::IsWindowsXPSP1OrGreater = NULL;
-IS_WINDOWS_XP_OR_GREATER		COperationSystemVersion::IsWindowsXPOrGreater = NULL;
-GET_VERSION_EX					COperationSystemVersion::GetVersionEx = NULL;
+COperationSystemVersion	* COperationSystemVersion::ms_pInstance = NULL;
 
 BOOL
 COperationSystemVersion::Init()
 {
-	BOOL	bRet = FALSE;
+	BOOL bRet = FALSE;
 
-	HMODULE hModule = NULL;
-
-
+	
 	__try
 	{
-		hModule = LoadLibrary(_T("Kernel32.dll"));
-		if (!hModule)
+		m_hModule = LoadLibrary(_T("Kernel32.dll"));
+		if (!m_hModule)
 			__leave;
 
-		IsWindowsServer = (IS_WINDOWS_SERVER)GetProcAddress(hModule, "IsWindowsServer");
-		IsWindows1OrGreater = (IS_WINDOWS_10_OR_GREATER)GetProcAddress(hModule, "IsWindows1OrGreater");
-		IsWindows8Point1OrGreater = (IS_WINDOWS_8_POINT_1_OR_GREATER)GetProcAddress(hModule, "IsWindows8Point1OrGreater");
-		IsWindows8OrGreater = (IS_WINDOWS_8_OR_GREATER)GetProcAddress(hModule, "IsWindows8OrGreater");
-		IsWindows7SP1OrGreater = (IS_WINDOWS_7_SP_1_OR_GREATER)GetProcAddress(hModule, "IsWindows7SP1OrGreater");
-		IsWindows7OrGreater = (IS_WINDOWS_7_OR_GREATER)GetProcAddress(hModule, "IsWindows7OrGreater");
-		IsWindowsVistaSP2OrGreater = (IS_WINDOWS_VISTA_SP2_OR_GREATER)GetProcAddress(hModule, "IsWindowsVistaSP2OrGreater");
-		IsWindowsVistaSP1OrGreater = (IS_WINDOWS_VISTA_SP1_OR_GREATER)GetProcAddress(hModule, "IsWindowsVistaSP1OrGreater");
-		IsWindowsVistaOrGreater = (IS_WINDOWS_VISTA_OR_GREATER)GetProcAddress(hModule, "IsWindowsVistaOrGreater");
-		IsWindowsXPSP3OrGreater = (IS_WINDOWS_XP_SP3_OR_GREATER)GetProcAddress(hModule, "IsWindowsXPSP3OrGreater");
-		IsWindowsXPSP2OrGreater = (IS_WINDOWS_XP_SP2_OR_GREATER)GetProcAddress(hModule, "IsWindowsXPSP2OrGreater");
-		IsWindowsXPSP1OrGreater = (IS_WINDOWS_XP_SP1_OR_GREATER)GetProcAddress(hModule, "IsWindowsXPSP1OrGreater");
-		IsWindowsXPOrGreater = (IS_WINDOWS_XP_OR_GREATER)GetProcAddress(hModule, "IsWindowsXPOrGreater");
-		if (IsWindowsXPOrGreater)
-			ms_OsVersionUserDefined = GetOSVersionByIsOrGreater();
+		m_pfIsWindowsServer = (IS_WINDOWS_SERVER)GetProcAddress(m_hModule, "IsWindowsServer");
+		m_pfIsWindows1OrGreater = (IS_WINDOWS_10_OR_GREATER)GetProcAddress(m_hModule, "IsWindows1OrGreater");
+		m_pfIsWindows8Point1OrGreater = (IS_WINDOWS_8_POINT_1_OR_GREATER)GetProcAddress(m_hModule, "IsWindows8Point1OrGreater");
+		m_pfIsWindows8OrGreater = (IS_WINDOWS_8_OR_GREATER)GetProcAddress(m_hModule, "IsWindows8OrGreater");
+		m_pfIsWindows7SP1OrGreater = (IS_WINDOWS_7_SP_1_OR_GREATER)GetProcAddress(m_hModule, "IsWindows7SP1OrGreater");
+		m_pfIsWindows7OrGreater = (IS_WINDOWS_7_OR_GREATER)GetProcAddress(m_hModule, "IsWindows7OrGreater");
+		m_pfIsWindowsVistaSP2OrGreater = (IS_WINDOWS_VISTA_SP2_OR_GREATER)GetProcAddress(m_hModule, "IsWindowsVistaSP2OrGreater");
+		m_pfIsWindowsVistaSP1OrGreater = (IS_WINDOWS_VISTA_SP1_OR_GREATER)GetProcAddress(m_hModule, "IsWindowsVistaSP1OrGreater");
+		m_pfIsWindowsVistaOrGreater = (IS_WINDOWS_VISTA_OR_GREATER)GetProcAddress(m_hModule, "IsWindowsVistaOrGreater");
+		m_pfIsWindowsXPSP3OrGreater = (IS_WINDOWS_XP_SP3_OR_GREATER)GetProcAddress(m_hModule, "IsWindowsXPSP3OrGreater");
+		m_pfIsWindowsXPSP2OrGreater = (IS_WINDOWS_XP_SP2_OR_GREATER)GetProcAddress(m_hModule, "IsWindowsXPSP2OrGreater");
+		m_pfIsWindowsXPSP1OrGreater = (IS_WINDOWS_XP_SP1_OR_GREATER)GetProcAddress(m_hModule, "IsWindowsXPSP1OrGreater");
+		m_pfIsWindowsXPOrGreater = (IS_WINDOWS_XP_OR_GREATER)GetProcAddress(m_hModule, "IsWindowsXPOrGreater");
+		if (m_pfIsWindowsXPOrGreater)
+			m_OsVersionUserDefined = GetOSVersionByIsOrGreater();
 		else
 		{
-			GetVersionEx = (GET_VERSION_EX)GetProcAddress(hModule, "GetVersionExW");
-			if (!GetVersionEx)
+			m_pfGetVersionEx = (GET_VERSION_EX)GetProcAddress(m_hModule, "GetVersionExW");
+			if (!m_pfGetVersionEx)
 				__leave;
 
-			ms_OsVersionUserDefined = GetOSVersionByGetVersionEx();
+			m_OsVersionUserDefined = GetOSVersionByGetVersionEx();
 		}
 
-		ms_ProcessorTypeUserDefined = GetOSProcessorTypeInternal();
+		m_ProcessorTypeUserDefined = GetOSProcessorTypeInternal();
 
 		bRet = TRUE;
 	}
 	__finally
 	{
-		if (hModule)
-		{
-			FreeLibrary(hModule);
-			hModule = NULL;
-		}
+		if (!bRet)
+			Unload();
 	}
 
 	return bRet;
@@ -75,7 +54,7 @@ COperationSystemVersion::Init()
 OS_VERSION_USER_DEFINED
 COperationSystemVersion::GetOSVersion()
 {
-	return ms_OsVersionUserDefined;
+	return m_OsVersionUserDefined;
 }
 
 OS_VERSION_USER_DEFINED
@@ -87,79 +66,79 @@ COperationSystemVersion::GetOSVersionByIsOrGreater()
 
 	__try
 	{
-		if (IsWindowsServer())
+		if (m_pfIsWindowsServer())
 		{
 			ret = OS_VERSION_WINDOWS_SERVER;
 			__leave;
 		}
 
-		if (IsWindows1OrGreater())
+		if (m_pfIsWindows1OrGreater())
 		{
 			ret = OS_VERSION_WINDOWS_10;
 			__leave;
 		}
 
-		if (IsWindows8Point1OrGreater())
+		if (m_pfIsWindows8Point1OrGreater())
 		{
 			ret = OS_VERSION_WINDOWS_8_POINT1;
 			__leave;
 		}
 
-		if (IsWindows8OrGreater())
+		if (m_pfIsWindows8OrGreater())
 		{
 			ret = OS_VERSION_WINDOWS_8;
 			__leave;
 		}
 
-		if (IsWindows7SP1OrGreater())
+		if (m_pfIsWindows7SP1OrGreater())
 		{
 			ret = OS_VERSION_WINDOWS_7_SP1;
 			__leave;
 		}
 
-		if (IsWindows7OrGreater())
+		if (m_pfIsWindows7OrGreater())
 		{
 			ret = OS_VERSION_WINDOWS_7;
 			__leave;
 		}
 
-		if (IsWindowsVistaSP2OrGreater())
+		if (m_pfIsWindowsVistaSP2OrGreater())
 		{
 			ret = OS_VERSION_WINDOWS_VISTA_PS2;
 			__leave;
 		}
 
-		if (IsWindowsVistaSP1OrGreater())
+		if (m_pfIsWindowsVistaSP1OrGreater())
 		{
 			ret = OS_VERSION_WINDOWS_VISTA_PS1;
 			__leave;
 		}
 
-		if (IsWindowsVistaOrGreater())
+		if (m_pfIsWindowsVistaOrGreater())
 		{
 			ret = OS_VERSION_WINDOWS_VISTA;
 			__leave;
 		}
 
-		if (IsWindowsXPSP3OrGreater())
+		if (m_pfIsWindowsXPSP3OrGreater())
 		{
 			ret = OS_VERSION_WINDOWS_XP_SP3;
 			__leave;
 		}
 
-		if (IsWindowsXPSP2OrGreater())
+		if (m_pfIsWindowsXPSP2OrGreater())
 		{
 			ret = OS_VERSION_WINDOWS_XP_SP2;
 			__leave;
 		}
 
-		if (IsWindowsXPSP1OrGreater())
+		if (m_pfIsWindowsXPSP1OrGreater())
 		{
 			ret = OS_VERSION_WINDOWS_XP_SP1;
 			__leave;
 		}
 
-		if (IsWindowsXPOrGreater())
+		if (m_pfIsWindowsXPOrGreater())
 		{
 			ret = OS_VERSION_WINDOWS_XP;
 			__leave;
@@ -184,7 +163,7 @@ COperationSystemVersion::GetOSVersionByGetVersionEx()
 	__try
 	{
 		OsVersionInfoEx.dwOSVersionInfoSize = sizeof(OSVERSIONINFOEX);
-		if (!GetVersionEx((LPOSVERSIONINFO)&OsVersionInfoEx))
+		if (!m_pfGetVersionEx((LPOSVERSIONINFO)&OsVersionInfoEx))
 			__leave;
 
 		switch (OsVersionInfoEx.dwPlatformId)
@@ -299,7 +278,7 @@ COperationSystemVersion::GetOSVersionByGetVersionEx()
 OS_PROCESSOR_TYPE_USER_DEFINED
 COperationSystemVersion::GetOSProcessorType()
 {
-	return ms_ProcessorTypeUserDefined;
+	return m_ProcessorTypeUserDefined;
 }
 
 OS_PROCESSOR_TYPE_USER_DEFINED
@@ -335,4 +314,85 @@ COperationSystemVersion::GetOSProcessorTypeInternal()
 	}
 
 	return ret;
+}
+
+BOOL
+	COperationSystemVersion::Unload()
+{
+	BOOL bRet = TRUE;
+
+
+	__try
+	{
+		m_pfIsWindowsServer = NULL;
+		m_pfIsWindows1OrGreater = NULL;
+		m_pfIsWindows8Point1OrGreater = NULL;
+		m_pfIsWindows8OrGreater = NULL;
+		m_pfIsWindows7SP1OrGreater = NULL;
+		m_pfIsWindows7OrGreater = NULL;
+		m_pfIsWindowsVistaSP2OrGreater = NULL;
+		m_pfIsWindowsVistaSP1OrGreater = NULL;
+		m_pfIsWindowsVistaOrGreater = NULL;
+		m_pfIsWindowsXPSP3OrGreater = NULL;
+		m_pfIsWindowsXPSP2OrGreater = NULL;
+		m_pfIsWindowsXPSP1OrGreater = NULL;
+		m_pfIsWindowsXPOrGreater = NULL;
+		m_pfGetVersionEx = NULL;
+
+		if (m_hModule)
+		{
+			FreeLibrary(m_hModule);
+			m_hModule = NULL;
+		}
+	}
+	__finally
+	{
+		;
+	}
+
+	return bRet;
+}
+
+COperationSystemVersion *
+	COperationSystemVersion::GetInstance()
+{
+	if (!ms_pInstance)
+	{
+		do 
+		{
+			ms_pInstance = new COperationSystemVersion;
+			if (!ms_pInstance)
+				Sleep(1000);
+			else
+				break;
+		} while (TRUE);
+	}
+
+	return ms_pInstance;
+}
+
+VOID
+	COperationSystemVersion::ReleaseInstance()
+{
+	if (ms_pInstance)
+	{
+		delete ms_pInstance;
+		ms_pInstance = NULL;
+	}
+}
+
+COperationSystemVersion::COperationSystemVersion()
+{
+	m_OsVersionUserDefined = OS_VERSION_UNKNOWN;
+	m_ProcessorTypeUserDefined = OS_PROCESSOR_TYPE_UNKNOWN;
+
+	Init();
+}
+
+COperationSystemVersion::~COperationSystemVersion()
+{
+	Unload();
+
+	m_OsVersionUserDefined = OS_VERSION_UNKNOWN;
+	m_ProcessorTypeUserDefined = OS_PROCESSOR_TYPE_UNKNOWN;
 }
