@@ -25,7 +25,14 @@ class CProcessPath
 {
 public:
 	static
-		BOOL
+		CProcessPath *
+		GetInstance();
+
+	static
+		VOID
+		ReleaseInstance();
+
+	BOOL
 		Get(
 		__in	BOOL	bCurrentProc,
 		__in	ULONG	ulPid,
@@ -34,5 +41,18 @@ public:
 		);
 
 private:
-	static QUERY_FULL_PROCESS_IMAGE_NAME ms_QueryFullProcessImageName;
+	static CProcessPath				*	ms_pInstance;
+
+	HMODULE								m_hModule;
+	QUERY_FULL_PROCESS_IMAGE_NAME		ms_QueryFullProcessImageName;
+
+	CProcessPath();
+
+	~CProcessPath();
+
+	BOOL
+		Init();
+
+	BOOL
+		Unload();
 };

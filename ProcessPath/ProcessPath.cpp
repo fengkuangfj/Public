@@ -1,6 +1,6 @@
 #include "ProcessPath.h"
 
-QUERY_FULL_PROCESS_IMAGE_NAME CProcessPath::ms_QueryFullProcessImageName = NULL;
+CProcessPath * CProcessPath::ms_pInstance = NULL;
 
 BOOL
 	CProcessPath::Get(
@@ -12,7 +12,6 @@ BOOL
 {
 	BOOL	bRet						= FALSE;
 
-	HMODULE hModule						= NULL;
 	HANDLE	hProc						= NULL;
 	DWORD	dwProcPathLenCh				= 0;
 	TCHAR	tchProcPathDev[MAX_PATH]	= {0};
@@ -48,16 +47,6 @@ BOOL
 			printf("OpenProcess failed. (%d) \n", GetLastError());
 			__leave;
 		}
-
-		hModule = LoadLibrary(_T("Kernel32.dll"));
-		if (!hModule)
-		{
-			printf("LoadLibrary failed. (%d) \n", GetLastError());
-			__leave;
-		}
-
-		if (!ms_QueryFullProcessImageName)
-			ms_QueryFullProcessImageName = (QUERY_FULL_PROCESS_IMAGE_NAME)GetProcAddress(hModule, "QueryFullProcessImageName");
 
 		if (ms_QueryFullProcessImageName)
 		{
@@ -108,17 +97,111 @@ BOOL
 	}
 	__finally
 	{
-		if (hModule)
-		{
-			FreeLibrary(hModule);
-			hModule = NULL;
-		}
-
 		if (hProc)
 		{
 			CloseHandle(hProc);
 			hProc = NULL;
 		}
+	}
+
+	return bRet;
+}
+
+CProcessPath *
+	CProcessPath::GetInstance()
+{
+	if (!ms_pInstance)
+	{
+		do 
+		{
+			ms_pInstance = new CProcessPath;
+			if (!ms_pInstance)
+				Sleep(1000);
+			else
+				break;
+		} while (TRUE);
+	}
+
+	return ms_pInstance;
+}
+
+VOID
+	CProcessPath::ReleaseInstance()
+{
+	if (ms_pInstance)
+	{
+		delete ms_pInstance;
+		ms_pInstance = NULL;
+	}
+}
+
+CProcessPath::CProcessPath()
+{
+	if (!Init())
+		printf("Init failed \n");
+}
+
+CProcessPath::~CProcessPath()
+{
+	if (!Unload())
+		printf("Unload failed \n");
+}
+
+BOOL
+	CProcessPath::Init()
+{
+	BOOL bRet = FALSE;
+
+
+	__try
+	{
+		m_hModule = LoadLibrary(_T("Kernel32.dll"));
+		if (!m_hModule)
+		{
+			printf("LoadLibrary failed. (%d) \n", GetLastError());
+			__leave;
+		}
+
+		ms_QueryFullProcessImageName = (QUERY_FULL_PROCESS_IMAGE_NAME)GetProcAddress(m_hModule, "QueryFullProcessImageName");
+		if (!ms_QueryFullProcessImageName)
+		{
+			printf("GetProcAddress failed. (%d) \n", GetLastError());
+			__leave;
+		}
+
+		bRet = TRUE;
+	}
+	__finally
+	{
+		if (!bRet)
+		{
+			if (!Unload())
+				printf("Unload failed \n");
+		}
+	}
+
+	return bRet;
+}
+
+BOOL
+	CProcessPath::Unload()
+{
+	BOOL bRet = TRUE;
+
+
+	__try
+	{
+		ms_QueryFullProcessImageName = NULL;
+
+		if (m_hModule)
+		{
+			FreeLibrary(m_hModule);
+			m_hModule = NULL;
+		}
+	}
+	__finally
+	{
+		;
 	}
 
 	return bRet;
