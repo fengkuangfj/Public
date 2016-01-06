@@ -1282,6 +1282,10 @@ BOOL
 			FreeLibrary(m_hModule);
 			m_hModule = NULL;
 		}
+
+		CVolumeDetector::ReleaseInstance();
+		COperationSystemVersion::ReleaseInstance();
+		CPrintfEx::ReleaseInstance();
 	}
 	__finally
 	{
