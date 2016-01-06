@@ -14,8 +14,6 @@ __in LPTSTR lpLogPath
 	TCHAR			lpDir[MAX_PATH] = { 0 };
 	TCHAR			tchProcPath[MAX_PATH] = { 0 };
 
-	CStackBacktrace StackBacktrace;
-
 
 	__try
 	{
@@ -59,7 +57,7 @@ __in LPTSTR lpLogPath
 
 		setlocale(LC_ALL, "");
 
-		StackBacktrace.Init(lpDir);
+		CStackBacktrace::GetInstance()->Init(lpDir);
 
 		if (!CProcessPath::Get(TRUE, 0, tchProcPath, _countof(tchProcPath)))
 			__leave;
@@ -95,17 +93,15 @@ __in LPTSTR lpLogPath
 BOOL
 CSimpleLog::Unload()
 {
-	BOOL			bRet = FALSE;
-
-	CStackBacktrace StackBacktrace;
+	BOOL bRet = TRUE;
 
 
 	__try
 	{
-		if (!StackBacktrace.Unload())
-			__leave;
+		if (!CStackBacktrace::GetInstance()->Unload())
+			bRet = FALSE;
 
-		bRet = TRUE;
+		CStackBacktrace::ReleaseInstance();
 	}
 	__finally
 	{
@@ -135,8 +131,6 @@ __in LPSTR		lpFmt,
 	CHAR			chFmtInfo[MAX_PATH] = { 0 };
 	CHAR			chLog[MAX_PATH * 2] = { 0 };
 	HANDLE			hOutput = INVALID_HANDLE_VALUE;
-
-	CStackBacktrace	StackBacktrace;
 
 
 	__try
@@ -191,7 +185,7 @@ __in LPSTR		lpFmt,
 
 		if (LOG_LEVEL_ERROR == LogLevel)
 		{
-			StackBacktrace.StackBacktrace();
+			CStackBacktrace::GetInstance()->StackBacktrace();
 
 			if (IsDebuggerPresent())
 			{
