@@ -128,3 +128,13 @@ BOOL
 
 	return bRet;
 }
+
+CShortCut::CShortCut()
+{
+	;
+}
+
+CShortCut::~CShortCut()
+{
+	;
+}

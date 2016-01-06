@@ -17,4 +17,9 @@ public:
 		__in LPTSTR lpPath,
 		__in LPTSTR lpName
 		);
+
+private:
+	CShortCut();
+
+	~CShortCut();
 };
