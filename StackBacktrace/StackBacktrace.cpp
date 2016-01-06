@@ -57,6 +57,8 @@ __in LPTSTR lpSymDir
 		if (!PathFileExists(lpSymDir))
 			__leave;
 
+		_tcscat_s(m_tchSymDir, _countof(m_tchSymDir), lpSymDir);
+
 		bRet = TRUE;
 	}
 	__finally
