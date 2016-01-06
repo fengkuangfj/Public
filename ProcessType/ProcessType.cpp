@@ -110,3 +110,13 @@ PROC_TYPE
 
 	return ProcType;
 }
+
+CProcessType::CProcessType()
+{
+	;
+}
+
+CProcessType::~CProcessType()
+{
+	;
+}

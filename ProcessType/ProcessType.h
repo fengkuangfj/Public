@@ -28,6 +28,10 @@ public:
 		);
 
 private:
+	CProcessType();
+
+	~CProcessType();
+
 	static
 		BOOL
 		GetSessionId(
