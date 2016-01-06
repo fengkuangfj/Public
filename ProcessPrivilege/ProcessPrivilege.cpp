@@ -170,3 +170,13 @@ BOOL
 
 	return bRet;
 }
+
+CProcessPrivilege::CProcessPrivilege()
+{
+	;
+}
+
+CProcessPrivilege::~CProcessPrivilege()
+{
+	;
+}

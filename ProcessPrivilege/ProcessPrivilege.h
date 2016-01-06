@@ -23,6 +23,10 @@ public:
 		);
 
 private:
+	CProcessPrivilege();
+
+	~CProcessPrivilege();
+
 	static
 		BOOL
 		Adjust(
