@@ -163,11 +163,6 @@ BOOL
 		}
 
 		m_QueryFullProcessImageName = (QUERY_FULL_PROCESS_IMAGE_NAME)GetProcAddress(m_hModule, "QueryFullProcessImageName");
-		if (!m_QueryFullProcessImageName)
-		{
-			printf("GetProcAddress failed. (%d) \n", GetLastError());
-			__leave;
-		}
 
 		bRet = TRUE;
 	}
