@@ -52,16 +52,13 @@ class CVolumeDetector
 public:
 	static
 		CVolumeDetector *
-		GetInstance();
+		GetInstance(
+		__in LPVOLUME_DETECTOR_INIT_ARGUMENTS lpVolumeDetectorInitArguments = NULL
+		);
 
 	static
 		VOID
 		ReleaseInstance();
-
-	BOOL
-		SetArguments(
-		__in LPVOLUME_DETECTOR_INIT_ARGUMENTS lpVolumeDetectorInitArguments
-		);
 
 	BOOL
 		MessageLoop();
@@ -78,12 +75,16 @@ private:
 
 	VOLUME_DETECTOR_INTERNAL	m_VolumeDetectorInternal;
 
-	CVolumeDetector();
+	CVolumeDetector(
+		__in LPVOLUME_DETECTOR_INIT_ARGUMENTS lpVolumeDetectorInitArguments
+		);
 
 	~CVolumeDetector();
 
 	BOOL
-		Init();
+		Init(
+		__in LPVOLUME_DETECTOR_INIT_ARGUMENTS lpVolumeDetectorInitArguments
+		);
 
 	BOOL
 		Unload();

@@ -3,7 +3,7 @@
 CVolumeDetector	* CVolumeDetector::ms_pInstance = NULL;
 
 BOOL
-	CVolumeDetector::SetArguments(
+	CVolumeDetector::Init(
 	__in LPVOLUME_DETECTOR_INIT_ARGUMENTS lpVolumeDetectorInitArguments
 	)
 {
@@ -25,27 +25,6 @@ BOOL
 
 		_tcscat_s(m_VolumeDetectorInternal.tchModuleName, _countof(m_VolumeDetectorInternal.tchModuleName), lpVolumeDetectorInitArguments->tchModuleName);
 
-		bRet = TRUE;
-	}
-	__finally
-	{
-		;
-	}
-
-	printfEx(MOD_VOLUME_DETECTOR, PRINTF_LEVEL_INFORMATION, "end");
-
-	return bRet;
-}
-
-BOOL
-	CVolumeDetector::Init()
-{
-	BOOL bRet = FALSE;
-
-	printfEx(MOD_VOLUME_DETECTOR, PRINTF_LEVEL_INFORMATION, "begin");
-
-	__try
-	{
 		if (!m_VolumeDetectorInternal.hWindow)
 		{
 			m_VolumeDetectorInternal.hWindow = CreateWnd(
@@ -497,13 +476,15 @@ unsigned int
 }
 
 CVolumeDetector *
-	CVolumeDetector::GetInstance()
+	CVolumeDetector::GetInstance(
+	__in LPVOLUME_DETECTOR_INIT_ARGUMENTS lpVolumeDetectorInitArguments
+	)
 {
 	if (!ms_pInstance)
 	{
 		do 
 		{
-			ms_pInstance = new CVolumeDetector;
+			ms_pInstance = new CVolumeDetector(lpVolumeDetectorInitArguments);
 			if (!ms_pInstance)
 				Sleep(1000);
 			else
@@ -524,11 +505,13 @@ VOID
 	}
 }
 
-CVolumeDetector::CVolumeDetector()
+CVolumeDetector::CVolumeDetector(
+	__in LPVOLUME_DETECTOR_INIT_ARGUMENTS lpVolumeDetectorInitArguments
+	)
 {
 	ZeroMemory(&m_VolumeDetectorInternal, sizeof(m_VolumeDetectorInternal));
 
-	if (!Init())
+	if (!Init(lpVolumeDetectorInitArguments))
 		printfEx(MOD_VOLUME_DETECTOR, PRINTF_LEVEL_ERROR, "Init failed");
 }
 
