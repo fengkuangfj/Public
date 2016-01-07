@@ -245,6 +245,8 @@ COperationSystemVersion::GetOSVersionByGetVersionEx()
 							{
 								if (VER_NT_WORKSTATION == OsVersionInfoEx.wProductType)
 									ret = OS_VERSION_WINDOWS_8_POINT1;
+								else
+									ret = OS_VERSION_WINDOWS_SERVER_2012_R2;
 
 								break;
 							}
@@ -254,6 +256,25 @@ COperationSystemVersion::GetOSVersionByGetVersionEx()
 
 						break;
 					}
+					case 10:
+						{
+							switch (OsVersionInfoEx.dwMinorVersion)
+							{
+							case 0:
+								{
+									if (VER_NT_WORKSTATION == OsVersionInfoEx.wProductType)
+										ret = OS_VERSION_WINDOWS_10;
+									else
+										ret = OS_VERSION_WINDOWS_SERVER_2016_TECHNICAL_PREVIEW;
+
+									break;
+								}
+							default:
+								break;
+							}
+
+							break;
+						}
 					default:
 						break;
 				}
