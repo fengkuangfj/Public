@@ -68,7 +68,9 @@ private:
 	~CSimpleLog();
 
 	BOOL
-		Init();
+		Init(
+		__in LPTSTR lpLogPath
+		);
 
 	BOOL
 		Unload();

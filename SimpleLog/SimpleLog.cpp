@@ -3,7 +3,9 @@
 CSimpleLog * CSimpleLog::ms_pInstance = NULL;
 
 BOOL
-	CSimpleLog::Init()
+	CSimpleLog::Init(
+	__in LPTSTR lpLogPath
+	)
 {
 	BOOL			bRet = FALSE;
 
@@ -15,6 +17,11 @@ BOOL
 
 	__try
 	{
+		if (!lpLogPath)
+			__leave;
+
+		_tcscat_s(m_LogPath, _countof(m_LogPath), lpLogPath);
+
 		lpPosition = _tcsrchr(m_LogPath, _T('\\'));
 		if (!lpPosition)
 			__leave;
@@ -47,7 +54,7 @@ BOOL
 
 		setlocale(LC_ALL, "");
 
-		CStackBacktrace::SetArguments(lpDir);
+		CStackBacktrace::GetInstance(lpDir);
 
 		if (!CProcessPath::GetInstance()->Get(TRUE, 0, tchProcPath, _countof(tchProcPath)))
 			__leave;
@@ -368,10 +375,7 @@ CSimpleLog::CSimpleLog(
 	m_bOutputDebugString = TRUE;
 	m_ProcType = PROC_TYPE_UNKNOWN;
 
-	if (lpLogPath)
-		_tcscat_s(m_LogPath, _countof(m_LogPath), lpLogPath);
-
-	Init();
+	Init(lpLogPath);
 }
 
 CSimpleLog::~CSimpleLog()
