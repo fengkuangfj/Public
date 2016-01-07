@@ -39,11 +39,16 @@ CStackBacktrace::WalkFrameChaim()
 }
 
 BOOL
-CStackBacktrace::SetArguments(
-__in LPTSTR lpSymDir
-)
+	CStackBacktrace::Init(
+	__in LPTSTR lpSymDir
+	)
 {
-	BOOL bRet = FALSE;
+	BOOL			bRet = FALSE;
+
+	HMODULE			hModuleNtdll = NULL;
+	DWORD			dwOptions = 0;
+	HMODULE			hModuleDbghelp = NULL;
+	LPAPI_VERSION	lpApiVersion = NULL;
 
 
 	__try
@@ -59,29 +64,6 @@ __in LPTSTR lpSymDir
 
 		_tcscat_s(m_tchSymDir, _countof(m_tchSymDir), lpSymDir);
 
-		bRet = TRUE;
-	}
-	__finally
-	{
-		;
-	}
-
-	return bRet;
-}
-
-BOOL
-	CStackBacktrace::Init()
-{
-	BOOL			bRet = FALSE;
-
-	HMODULE			hModuleNtdll = NULL;
-	DWORD			dwOptions = 0;
-	HMODULE			hModuleDbghelp = NULL;
-	LPAPI_VERSION	lpApiVersion = NULL;
-
-
-	__try
-	{
 		if (!m_pfRtlWalkFrameChain)
 		{
 			hModuleNtdll = GetModuleHandle(L"ntdll.dll");
@@ -425,13 +407,15 @@ _Out_ LPDWORD lpNumberOfBytesRead
 }
 
 CStackBacktrace *
-	CStackBacktrace::GetInstance()
+	CStackBacktrace::GetInstance(
+	__in LPTSTR lpSymDir
+	)
 {
 	if (!ms_pInstance)
 	{
 		do 
 		{
-			ms_pInstance = new CStackBacktrace;
+			ms_pInstance = new CStackBacktrace(lpSymDir);
 			if (!ms_pInstance)
 				Sleep(1000);
 			else
@@ -452,7 +436,9 @@ VOID
 	}
 }
 
-CStackBacktrace::CStackBacktrace()
+CStackBacktrace::CStackBacktrace(
+	__in LPTSTR lpSymDir
+	)
 {
 	ZeroMemory(m_tchSymDir, sizeof(m_tchSymDir));
 
@@ -469,7 +455,7 @@ CStackBacktrace::CStackBacktrace()
 	m_pfUnDecorateSymbolName = NULL;
 	m_pfSymGetLineFromAddr64 = NULL;
 
-	if (!Init())
+	if (!Init(lpSymDir))
 		printfEx(MOD_STACK_BACKTRACE, PRINTF_LEVEL_ERROR, "Init failed");
 }
 

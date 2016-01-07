@@ -135,16 +135,13 @@ class CStackBacktrace
 public:
 	static
 		CStackBacktrace *
-		GetInstance();
+		GetInstance(
+		__in LPTSTR lpSymDir = NULL
+		);
 
 	static
 		VOID
 		ReleaseInstance();
-
-	BOOL
-		SetArguments(
-		__in LPTSTR lpSymDir
-		);
 
 	BOOL
 		StackBacktrace();
@@ -166,12 +163,16 @@ private:
 	UNDECORATESYMBOLNAME		m_pfUnDecorateSymbolName;
 	SYMGETLINEFROMADDR64		m_pfSymGetLineFromAddr64;
 
-	CStackBacktrace();
+	CStackBacktrace(
+		__in LPTSTR lpSymDir
+		);
 
 	~CStackBacktrace();
 
 	BOOL
-		Init();
+		Init(
+		__in LPTSTR lpSymDir
+		);
 
 	BOOL
 		Unload();
