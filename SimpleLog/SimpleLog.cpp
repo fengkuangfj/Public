@@ -344,11 +344,14 @@ CSimpleLog *
 	{
 		do 
 		{
-			ms_pInstance = new CSimpleLog(lpLogPath);
+			ms_pInstance = new CSimpleLog();
 			if (!ms_pInstance)
 				Sleep(1000);
 			else
+			{
+				ms_pInstance->Init(lpLogPath);
 				break;
+			}
 		} while (TRUE);
 	}
 
@@ -365,17 +368,13 @@ VOID
 	}
 }
 
-CSimpleLog::CSimpleLog(
-	__in LPTSTR lpLogPath
-	)
+CSimpleLog::CSimpleLog()
 {
 	ZeroMemory(m_LogPath, sizeof(m_LogPath));
 	ZeroMemory(&m_CriticalSection, sizeof(m_CriticalSection));
 	m_WriteReady = FALSE;
 	m_bOutputDebugString = TRUE;
 	m_ProcType = PROC_TYPE_UNKNOWN;
-
-	Init(lpLogPath);
 }
 
 CSimpleLog::~CSimpleLog()

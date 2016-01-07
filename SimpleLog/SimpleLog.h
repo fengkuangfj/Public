@@ -61,9 +61,7 @@ private:
 	BOOL					m_bOutputDebugString;
 	PROC_TYPE				m_ProcType;
 
-	CSimpleLog(
-		__in LPTSTR lpLogPath
-		);
+	CSimpleLog();
 
 	~CSimpleLog();
 
