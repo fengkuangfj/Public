@@ -33,16 +33,13 @@ class CSimpleLog
 public:
 	static
 		CSimpleLog *
-		GetInstance();
+		GetInstance(
+		__in LPTSTR lpLogPath = NULL
+		);
 
 	static
 		VOID
 		ReleaseInstance();
-
-	BOOL
-		SetArguments(
-		__in LPTSTR lpLogPath
-		);
 
 	BOOL
 		Log(
@@ -64,7 +61,9 @@ private:
 	BOOL					m_bOutputDebugString;
 	PROC_TYPE				m_ProcType;
 
-	CSimpleLog();
+	CSimpleLog(
+		__in LPTSTR lpLogPath
+		);
 
 	~CSimpleLog();
 
