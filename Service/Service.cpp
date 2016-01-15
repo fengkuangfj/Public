@@ -1246,18 +1246,7 @@ BOOL
 		}
 
 		m_pfWow64DisableWow64FsRedirection = (WOW64_DISABLE_WOW64_FS_REDIRECTION)GetProcAddress(m_hModule, "Wow64DisableWow64FsRedirection");
-		if (!m_pfWow64DisableWow64FsRedirection)
-		{
-			printfEx(MOD_SERVICE, PRINTF_LEVEL_ERROR, "GetProcAddress failed. (%d)", GetLastError());
-			__leave;
-		}
-
 		m_pfWow64RevertWow64FsRedirection = (WOW64_REVERT_WOW64_FS_REDIRECTION)GetProcAddress(m_hModule, "Wow64RevertWow64FsRedirection");
-		if (!m_pfWow64RevertWow64FsRedirection)
-		{
-			printfEx(MOD_SERVICE, PRINTF_LEVEL_ERROR, "GetProcAddress failed. (%d)", GetLastError());
-			__leave;
-		}
 
 		bRet = TRUE;
 	}
