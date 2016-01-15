@@ -755,6 +755,71 @@ BOOL
 }
 
 BOOL
+	CService::Enable(
+	__in LPWSTR lpServiceName
+	)
+{
+	BOOL		bRet		= FALSE;
+
+	SC_HANDLE	hScManager	= NULL;
+	SC_HANDLE	hService	= NULL;
+
+
+	__try
+	{
+		hScManager = OpenSCManager(NULL, NULL, SC_MANAGER_ALL_ACCESS);
+		if (!hScManager)
+		{
+			printf("OpenSCManager failed. (%d) \n", GetLastError());
+			__leave;
+		}
+
+		hService = OpenService(hScManager, lpServiceName, SERVICE_ALL_ACCESS);
+		if (!hService)
+		{
+			printf("OpenService failed. (%d) \n", GetLastError());
+			__leave;
+		}
+
+		if (!ChangeServiceConfig(
+			hService,
+			SERVICE_NO_CHANGE,
+			SERVICE_AUTO_START,
+			SERVICE_NO_CHANGE,
+			NULL,
+			NULL,
+			NULL,
+			NULL,
+			NULL,
+			NULL,
+			NULL
+			))
+		{
+			printf("ChangeServiceConfig failed. (%d) \n", GetLastError());
+			__leave;
+		}
+
+		bRet = TRUE;
+	}
+	__finally
+	{
+		if (hService)
+		{
+			CloseServiceHandle(hService);
+			hService = NULL;
+		}
+
+		if (hScManager)
+		{
+			CloseServiceHandle(hScManager);
+			hScManager = NULL;
+		}
+	}
+
+	return bRet;
+}
+
+BOOL
 	CService::Register(
 	__in		LPTSTR					lpServiceName,
 	__in		INITMOD					InitMod,

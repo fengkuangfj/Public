@@ -85,6 +85,11 @@ public:
 		);
 
 	BOOL
+		Enable(
+		__in LPWSTR lpServiceName
+		);
+
+	BOOL
 		Register(
 		__in		LPTSTR					lpServiceName,
 		__in		INITMOD					InitMod,
