@@ -55,6 +55,7 @@ typedef BOOL(WINAPI *IS_WINDOWS_XP_SP2_OR_GREATER)(void);
 typedef BOOL(WINAPI *IS_WINDOWS_XP_SP1_OR_GREATER)(void);
 typedef BOOL(WINAPI *IS_WINDOWS_XP_OR_GREATER)(void);
 typedef BOOL(WINAPI *GET_VERSION_EX)(LPOSVERSIONINFO);
+typedef VOID (NTAPI* RTL_GET_NT_VERSION_NUMBERS)(LPDWORD pdwMajorVersion, LPDWORD pdwMinorVersion, LPDWORD pdwBuildNumber);
 
 class COperationSystemVersion
 {
@@ -79,7 +80,8 @@ private:
 	OS_VERSION_USER_DEFINED				m_OsVersionUserDefined;
 	OS_PROCESSOR_TYPE_USER_DEFINED		m_ProcessorTypeUserDefined;
 
-	HMODULE								m_hModule;
+	HMODULE								m_hModuleKernel32;
+	HMODULE								m_hModuleNtdll;
 
 	IS_WINDOWS_SERVER					m_pfIsWindowsServer;
 	IS_WINDOWS_10_OR_GREATER			m_pfIsWindows1OrGreater;
@@ -95,6 +97,7 @@ private:
 	IS_WINDOWS_XP_SP1_OR_GREATER		m_pfIsWindowsXPSP1OrGreater;
 	IS_WINDOWS_XP_OR_GREATER			m_pfIsWindowsXPOrGreater;
 	GET_VERSION_EX						m_pfGetVersionEx;
+	RTL_GET_NT_VERSION_NUMBERS			m_pfRtlGetNtVersionNumbers;
 
 	COperationSystemVersion();
 
@@ -111,6 +114,9 @@ private:
 
 	OS_VERSION_USER_DEFINED
 		GetOSVersionByGetVersionEx();
+
+	OS_VERSION_USER_DEFINED
+		GetOSVersionByRtlGetNtVersionNumbersAndGetVersionEx();
 
 	OS_PROCESSOR_TYPE_USER_DEFINED
 		GetOSProcessorTypeInternal();
