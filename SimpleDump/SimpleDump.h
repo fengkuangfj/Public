@@ -14,7 +14,7 @@
 #include <Psapi.h>
 
 #include "..\\OperationSystemVersion\\OperationSystemVersion.h"
-#include "..\\ProcessType\\ProcessType.h"
+#include "..\\ProcessControl\\ProcessControl.h"
 
 #pragma comment(lib, "DbgHelp.lib")
 #pragma comment(lib, "Shlwapi.lib")

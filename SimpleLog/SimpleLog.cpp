@@ -56,14 +56,14 @@ BOOL
 
 		CStackBacktrace::GetInstance(lpDir);
 
-		if (!CProcessPath::GetInstance()->Get(TRUE, 0, tchProcPath, _countof(tchProcPath)))
+		if (!CProcessControl::GetInstance()->Get(TRUE, 0, tchProcPath, _countof(tchProcPath)))
 			__leave;
 
 		if (_tcslen(tchProcPath) >= _tcslen(_T("DbgView.exe")) &&
 			(0 == _tcsnicmp(tchProcPath + (_tcslen(tchProcPath) - _tcslen(_T("DbgView.exe"))), _T("DbgView.exe"), _tcslen(_T("DbgView.exe")))))
 			m_bOutputDebugString = FALSE;
 
-		m_ProcType = CProcessType::GetProcType(TRUE, 0);
+		m_ProcType = CProcessControl::GetProcType(TRUE, 0);
 
 		bRet = TRUE;
 	}
@@ -95,7 +95,7 @@ CSimpleLog::Unload()
 
 	__try
 	{
-		CProcessPath::ReleaseInstance();
+		CProcessControl::ReleaseInstance();
 		CStackBacktrace::ReleaseInstance();
 	}
 	__finally

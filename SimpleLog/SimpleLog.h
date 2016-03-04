@@ -13,9 +13,8 @@
 #include <Shlobj.h>
 #include <Wtsapi32.h>
 
-#include "..\\ProcessPath\\ProcessPath.h"
+#include "..\\ProcessControl\\ProcessControl.h"
 #include "..\\StackBacktrace\\StackBacktrace.h"
-#include "..\\ProcessType\\ProcessType.h"
 
 #pragma comment(lib, "Wtsapi32.lib")
 

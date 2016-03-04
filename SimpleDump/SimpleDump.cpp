@@ -441,7 +441,7 @@ __in PCRUSH_HANDLER_INFO pCrushHandlerInfo
 		if (!GetFunc())
 			__leave;
 
-		m_ProcType = CProcessType::GetProcType(TRUE, 0);
+		m_ProcType = CProcessControl::GetProcType(TRUE, 0);
 
 		if (pCrushHandlerInfo)
 		{

@@ -10,8 +10,7 @@
 #include <locale.h>
 #include <time.h>
 
-#include "..\\ProcessPath\\ProcessPath.h"
-#include "..\\ProcessType\\ProcessType.h"
+#include "..\\ProcessControl\\ProcessControl.h"
 
 typedef
 BOOL
