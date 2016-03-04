@@ -492,9 +492,9 @@ VOID
 
 	__try
 	{
-		if (!GetModuleFileName(NULL, tchProcPath, MAX_PATH))
+		if (!CModulePath::Get(NULL, tchProcPath, _countof(tchProcPath)))
 		{
-			printf("[DeleteMyself] : GetModuleFileName failed. (%d) \n", GetLastError());
+			printf("[%s] CModulePath::Get failed. \n", __FUNCTION__);
 			__leave;
 		}
 
@@ -522,61 +522,70 @@ VOID
 
 	__try
 	{
-		if (!GetEnvironmentVariable(_T("COMSPEC"), tchCmd, MAX_PATH))
+		if (!GetEnvironmentVariable(_T("COMSPEC"), tchCmd, _countof(tchCmd)))
 		{
-			printf("[DeleteMyself] : GetEnvironmentVariable failed. (%d) \n", GetLastError());
+			printf("[%s] GetEnvironmentVariable failed. (%d) \n", __FUNCTION__, GetLastError());
 			__leave;
 		}
 
-		if (!GetModuleFileName(NULL, tchProcPath, MAX_PATH))
+		if (!CModulePath::Get(NULL, tchProcPath, _countof(tchProcPath)))
 		{
-			printf("[DeleteMyself] : GetModuleFileName failed. (%d) \n", GetLastError());
+			printf("[%s] GetModuleFileName failed. (%d) \n", __FUNCTION__, GetLastError());
 			__leave;
 		}
 
-		_tcscat_s(tchCmd, MAX_PATH, _T(" /c del \""));
-		_tcscat_s(tchCmd, MAX_PATH, tchProcPath);
-		_tcscat_s(tchCmd, MAX_PATH, _T("\""));
+		_tcscat_s(tchCmd, _countof(tchCmd), _T(" /c del \""));
+		_tcscat_s(tchCmd, _countof(tchCmd), tchProcPath);
+		_tcscat_s(tchCmd, _countof(tchCmd), _T("\" /f /q"));
 
-		// 设置本程序进程的执行级别为实时执行，这本程序马上获取CPU执行权，快速退出。
 		if (!SetPriorityClass(GetCurrentProcess(), REALTIME_PRIORITY_CLASS))
 		{
-			printf("[DeleteMyself] : SetPriorityClass failed. (%d) \n", GetLastError());
+			printf("[%s] SetPriorityClass failed. (%d) \n", __FUNCTION__, GetLastError());
 			__leave;
 		}
 
-		// 		if (!SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_TIME_CRITICAL))
-		// 		{
-		// 			printf("[DeleteMyself] : SetThreadPriority failed. (%d) \n", GetLastError());
-		// 			__leave;
-		// 		}
+		if (!SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_TIME_CRITICAL))
+		{
+			printf("[%s] SetThreadPriority failed. (%d) \n", __FUNCTION__, GetLastError());
+			__leave;
+		}
 
 		StartupInfo.cb = sizeof(STARTUPINFO);
 		StartupInfo.dwFlags = STARTF_USESHOWWINDOW;
 		StartupInfo.wShowWindow = SW_HIDE;
 
-		if (!CreateProcess(NULL, tchCmd, NULL, NULL, FALSE, CREATE_SUSPENDED | CREATE_NO_WINDOW | DETACHED_PROCESS, NULL, NULL, &StartupInfo, &ProcInfo))
+		if (!CreateProcess(
+			NULL,
+			tchCmd,
+			NULL,
+			NULL,
+			FALSE,
+			CREATE_SUSPENDED | DETACHED_PROCESS,
+			NULL,
+			NULL,
+			&StartupInfo,
+			&ProcInfo
+			))
 		{
-			printf("[DeleteMyself] : CreateProcess failed. (%d) \n", GetLastError());
+			printf("[%s] CreateProcess failed. (%d) \n", __FUNCTION__, GetLastError());
 			__leave;
 		}
 
-		// 设置命令行进程的执行级别为空闲执行,这使本程序有足够的时间从内存中退出。
 		if (!SetPriorityClass(ProcInfo.hProcess, IDLE_PRIORITY_CLASS))
 		{
-			printf("[DeleteMyself] : SetPriorityClass failed. (%d) \n", GetLastError());
+			printf("[%s] SetPriorityClass failed. (%d) \n", __FUNCTION__, GetLastError());
 			__leave;
 		}
 
-		// 		if (!SetThreadPriority(ProcInfo.hThread, THREAD_PRIORITY_IDLE))
-		// 		{
-		// 			printf("[DeleteMyself] : SetThreadPriority failed. (%d) \n", GetLastError());
-		// 			__leave;
-		// 		}
-
-		if (ResumeThread(ProcInfo.hThread) == -1)
+		if (!SetThreadPriority(ProcInfo.hThread, THREAD_PRIORITY_IDLE))
 		{
-			printf("[DeleteMyself] : ResumeThread failed. (%d) \n", GetLastError());
+			printf("[%s] SetThreadPriority failed. (%d) \n", __FUNCTION__, GetLastError());
+			__leave;
+		}
+
+		if (-1 == ResumeThread(ProcInfo.hThread))
+		{
+			printf("[%s] ResumeThread failed. (%d) \n", __FUNCTION__, GetLastError());
 			__leave;
 		}
 	}
@@ -588,8 +597,6 @@ VOID
 		if (ProcInfo.hThread)
 			CloseHandle(ProcInfo.hThread);
 	}
-
-	ExitProcess(ERROR_SUCCESS);
 
 	return ;
 }

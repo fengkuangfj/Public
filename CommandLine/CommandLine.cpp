@@ -73,7 +73,7 @@ BOOL
 			NULL,
 			NULL,
 			TRUE,
-			bCreateNewConsole ? CREATE_NEW_CONSOLE : 0,
+			bCreateNewConsole ? CREATE_NEW_CONSOLE : DETACHED_PROCESS,
 			NULL,
 			NULL,
 			&StartupInfo,
