@@ -254,6 +254,7 @@ CStackBacktrace::StackBacktraceSym()
 	CONTEXT					Context = { 0 };
 	CHAR					chHomeDir[MAX_PATH] = { 0 };
 	CHAR					chLog[MAX_PATH] = { 0 };
+	DWORD					dwMachineType = 0;
 
 	printfEx(MOD_STACK_BACKTRACE, PRINTF_LEVEL_INFORMATION, "last");
 
@@ -271,12 +272,39 @@ CStackBacktrace::StackBacktraceSym()
 
 		Context.ContextFlags = CONTEXT_ALL;
 
-		StackFrame64.AddrPC.Mode = AddrModeFlat;
+#ifdef _X86_
+		dwMachineType = IMAGE_FILE_MACHINE_I386;
 		StackFrame64.AddrPC.Offset = Context.Eip;
-		StackFrame64.AddrStack.Mode = AddrModeFlat;
+		StackFrame64.AddrPC.Mode = AddrModeFlat;
 		StackFrame64.AddrStack.Offset = Context.Esp;
-		StackFrame64.AddrFrame.Mode = AddrModeFlat;
+		StackFrame64.AddrStack.Mode = AddrModeFlat;
 		StackFrame64.AddrFrame.Offset = Context.Ebp;
+		StackFrame64.AddrFrame.Mode = AddrModeFlat;
+#else
+#ifdef _AMD64_
+		dwMachineType = IMAGE_FILE_MACHINE_AMD64;
+		StackFrame64.AddrPC.Offset = Context.Rip;
+		StackFrame64.AddrPC.Mode = AddrModeFlat;
+		StackFrame64.AddrFrame.Offset = Context.Rsp;
+		StackFrame64.AddrFrame.Mode = AddrModeFlat;
+		StackFrame64.AddrStack.Offset = Context.Rsp;
+		StackFrame64.AddrStack.Mode = AddrModeFlat;
+#else
+#ifdef _IA64_
+		dwMachineType = IMAGE_FILE_MACHINE_IA64;
+		StackFrame64.AddrPC.Offset = Context.StIIP;
+		StackFrame64.AddrPC.Mode = AddrModeFlat;
+		StackFrame64.AddrFrame.Offset = Context.IntSp;
+		StackFrame64.AddrFrame.Mode = AddrModeFlat;
+		StackFrame64.AddrBStore.Offset = Context.RsBSP;
+		StackFrame64.AddrBStore.Mode = AddrModeFlat;
+		StackFrame64.AddrStack.Offset = Context.IntSp;
+		StackFrame64.AddrStack.Mode = AddrModeFlat;
+#else
+		#error "Platform is not supported" 
+#endif
+#endif
+#endif
 
 		pSymbol = (PSYMBOL_INFO)calloc(1, sizeof(SYMBOL_INFO) - sizeof(CHAR) + MAX_PATH);
 		if (!pSymbol)
@@ -293,7 +321,7 @@ CStackBacktrace::StackBacktraceSym()
 			pSymbol->MaxNameLen = MAX_PATH;
 
 			if (!m_pfStackWalk64(
-				IMAGE_FILE_MACHINE_I386,
+				dwMachineType,
 				m_hProcess,
 				hThread,
 				&StackFrame64,
@@ -380,7 +408,9 @@ _In_  DWORD   nSize,
 _Out_ LPDWORD lpNumberOfBytesRead
 )
 {
-	BOOL bRet = FALSE;
+	BOOL	bRet = FALSE;
+
+	SIZE_T	NumberOfBytesRead = 0;
 
 
 	__try
@@ -390,13 +420,15 @@ _Out_ LPDWORD lpNumberOfBytesRead
 			(LPCVOID)lpBaseAddress,
 			lpBuffer,
 			nSize,
-			lpNumberOfBytesRead
+			&NumberOfBytesRead
 			);
 		if (!bRet)
 		{
 			printfEx(MOD_STACK_BACKTRACE, PRINTF_LEVEL_ERROR, "ReadProcessMemory failed. (%d)", GetLastError());
 			__leave;
 		}
+
+		*lpNumberOfBytesRead = NumberOfBytesRead;
 	}
 	__finally
 	{

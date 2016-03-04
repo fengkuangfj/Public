@@ -184,10 +184,11 @@ __in LPSTR		lpFmt,
 
 			if (IsDebuggerPresent())
 			{
-				__asm
-				{
-					int 3
-				}
+				__debugbreak();
+// 				__asm
+// 				{
+// 					int 3
+// 				}
 			}
 			else
 			{
