@@ -184,7 +184,7 @@ BOOL
 		if (!bRet)
 		{
 			if (!Unload())
-				printfEx(MOD_STACK_BACKTRACE, PRINTF_LEVEL_INFORMATION, "Unload failed");
+				printfEx(MOD_STACK_BACKTRACE, PRINTF_LEVEL_ERROR, "Unload failed");
 		}
 	}
 
