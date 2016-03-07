@@ -3,6 +3,9 @@
 #include <Windows.h>
 #include <Shlobj.h>
 #include <tchar.h>
+#include <Shlwapi.h>
+
+#pragma comment(lib, "Shlwapi.lib")
 
 #include "..\\Public.h"
 
@@ -16,8 +19,16 @@ public:
 	static
 		BOOL
 		Create(
-		__in LPTSTR lpPath,
-		__in LPTSTR lpName
+		__in	LPTSTR	lpPath,
+		__in	LPTSTR	lpName,
+		__out	LPTSTR	lpLnkPath,
+		__in	ULONG	ulLenlpLnkPathCh
+		);
+
+	static
+		BOOL
+		Delete(
+		__in LPTSTR lpLnkPath
 		);
 
 private:

@@ -2,8 +2,10 @@
 
 BOOL
 	CShortCut::Create(
-	__in LPTSTR lpPath,
-	__in LPTSTR lpName
+	__in	LPTSTR	lpPath,
+	__in	LPTSTR	lpName,
+	__out	LPTSTR	lpLnkPath,
+	__in	ULONG	ulLenlpLnkPathCh
 	)
 {
 	BOOL				bRet					= FALSE;
@@ -18,9 +20,9 @@ BOOL
 
 	__try
 	{
-		if (!lpPath || !lpName)
+		if (!lpPath || !lpName || !lpLnkPath || !ulLenlpLnkPathCh)
 		{
-			printfPublic("input parameter error. 0x%p 0x%p", lpPath, lpName);
+			printfPublic("input parameter error. lpPath(0x%p) lpName(0x%p) lpLnkPath(0x%p) ulLenlpLnkPathCh(%d)", lpPath, lpName, lpLnkPath, ulLenlpLnkPathCh);
 			__leave;
 		}
 
@@ -112,6 +114,8 @@ BOOL
 
 		printfPublic("%S -> %S", lpPath, tchLnkPath);
 
+		_tcscat_s(lpLnkPath, ulLenlpLnkPathCh, tchLnkPath);
+
 		bRet = TRUE;
 	}
 	__finally
@@ -137,4 +141,39 @@ CShortCut::CShortCut()
 CShortCut::~CShortCut()
 {
 	;
+}
+
+BOOL
+	CShortCut::Delete(
+	__in LPTSTR lpLnkPath
+	)
+{
+	BOOL bRet = FALSE;
+
+
+	__try
+	{
+		if (!lpLnkPath)
+		{
+			printfPublic("input argument error");
+			__leave;
+		}
+
+		if (PathFileExists(lpLnkPath))
+		{
+			if (!DeleteFile(lpLnkPath))
+			{
+				printfPublic("DeleteFile failed. (%d)", GetLastError());
+				__leave;
+			}
+		}
+
+		bRet = TRUE;
+	}
+	__finally
+	{
+		;
+	}
+
+	return bRet;
 }
