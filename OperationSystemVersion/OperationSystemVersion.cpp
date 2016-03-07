@@ -12,7 +12,10 @@ COperationSystemVersion::Init()
 	{
 		m_hModuleKernel32 = LoadLibrary(_T("Kernel32.dll"));
 		if (!m_hModuleKernel32)
+		{
+			printfEx(MOD_OPERATION_SYSTEM_VERSION, PRINTF_LEVEL_ERROR, "LoadLibrary failed. (%d)", GetLastError());
 			__leave;
+		}
 
 		m_pfIsWindowsServer = (IS_WINDOWS_SERVER)GetProcAddress(m_hModuleKernel32, "IsWindowsServer");
 		m_pfIsWindows1OrGreater = (IS_WINDOWS_10_OR_GREATER)GetProcAddress(m_hModuleKernel32, "IsWindows1OrGreater");
@@ -33,11 +36,17 @@ COperationSystemVersion::Init()
 		{
 			m_pfGetVersionEx = (GET_VERSION_EX)GetProcAddress(m_hModuleKernel32, "GetVersionExW");
 			if (!m_pfGetVersionEx)
+			{
+				printfEx(MOD_OPERATION_SYSTEM_VERSION, PRINTF_LEVEL_ERROR, "GetProcAddress failed. (%d)", GetLastError());
 				__leave;
+			}
 
 			m_hModuleNtdll = LoadLibrary(_T("ntdll.dll"));
 			if (!m_hModuleNtdll)
+			{
+				printfEx(MOD_OPERATION_SYSTEM_VERSION, PRINTF_LEVEL_ERROR, "LoadLibrary failed. (%d)", GetLastError());
 				__leave;
+			}
 
 			m_pfRtlGetNtVersionNumbers = (RTL_GET_NT_VERSION_NUMBERS)GetProcAddress(m_hModuleNtdll, "RtlGetNtVersionNumbers");
 			if (m_pfRtlGetNtVersionNumbers)
@@ -172,7 +181,10 @@ COperationSystemVersion::GetOSVersionByGetVersionEx()
 	{
 		OsVersionInfoEx.dwOSVersionInfoSize = sizeof(OSVERSIONINFOEX);
 		if (!m_pfGetVersionEx((LPOSVERSIONINFO)&OsVersionInfoEx))
+		{
+			printfEx(MOD_OPERATION_SYSTEM_VERSION, PRINTF_LEVEL_ERROR, "m_pfGetVersionEx failed. (%d)", GetLastError());
 			__leave;
+		}
 
 		switch (OsVersionInfoEx.dwPlatformId)
 		{
@@ -316,7 +328,10 @@ OS_VERSION_USER_DEFINED
 	{
 		OsVersionInfoEx.dwOSVersionInfoSize = sizeof(OSVERSIONINFOEX);
 		if (!m_pfGetVersionEx((LPOSVERSIONINFO)&OsVersionInfoEx))
+		{
+			printfEx(MOD_OPERATION_SYSTEM_VERSION, PRINTF_LEVEL_ERROR, "m_pfGetVersionEx failed. (%d)", GetLastError());
 			__leave;
+		}
 
 		m_pfRtlGetNtVersionNumbers(&OsVersionInfoEx.dwMajorVersion, &OsVersionInfoEx.dwMinorVersion, &OsVersionInfoEx.dwBuildNumber);
 
@@ -480,7 +495,10 @@ COperationSystemVersion::GetOSProcessorTypeInternal()
 				break;
 			}
 			default:
-				__leave;
+				{
+					printfEx(MOD_OPERATION_SYSTEM_VERSION, PRINTF_LEVEL_ERROR, "systemInfo.wProcessorArchitecture error. (%d)", systemInfo.wProcessorArchitecture);
+					__leave;
+				}
 		}
 	}
 	__finally
@@ -526,6 +544,8 @@ BOOL
 			FreeLibrary(m_hModuleKernel32);
 			m_hModuleKernel32 = NULL;
 		}
+
+		CPrintfEx::ReleaseInstance();
 	}
 	__finally
 	{

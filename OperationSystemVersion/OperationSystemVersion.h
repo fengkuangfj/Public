@@ -3,9 +3,9 @@
 #include <Windows.h>
 #include <tchar.h>
 
-#ifndef MOD_OPERATION_SYSTEM_VERSION
+#include "..\\PrintfEx\\PrintfEx.h"
+
 #define MOD_OPERATION_SYSTEM_VERSION _T("操作系统版本")
-#endif
 
 // https://msdn.microsoft.com/zh-cn/office/ms724832
 typedef enum _OS_VERSION_USER_DEFINED

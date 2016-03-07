@@ -1,13 +1,11 @@
 #pragma once
 
-#ifndef MOD_MODULE_PATH
-#define MOD_MODULE_PATH _T("模块路径")
-#endif
-
 #include <Windows.h>
 #include <stdio.h>
 
 #include "..\\Public.h"
+
+#define MOD_MODULE_PATH _T("模块路径")
 
 class CModulePath
 {

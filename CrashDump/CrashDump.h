@@ -1,7 +1,5 @@
 #pragma once
 
-#define MOD_CRASH_DUMP _T("À¶ÆÁ×ª´¢")
-
 #include <Windows.h>
 #include <tchar.h>
 #include <strsafe.h>
@@ -12,6 +10,8 @@
 
 #pragma comment(lib, "Shlwapi.lib")
 #pragma comment(lib, "Shell32.lib")
+
+#define MOD_CRASH_DUMP _T("À¶ÆÁ×ª´¢")
 
 typedef enum _CRASH_DUMP_TYPE
 {
