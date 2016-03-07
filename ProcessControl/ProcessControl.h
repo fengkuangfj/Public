@@ -149,11 +149,9 @@ public:
 		__in ULONG	ulPid
 		);
 
-	static
 	VOID
 		DeleteMyselfBySHChangeNotify();
 
-	static
 	VOID
 		DeleteMyselfByCreateProcess();
 
