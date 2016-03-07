@@ -155,14 +155,28 @@ BOOL
 
 	__try
 	{
-		m_hModule = LoadLibrary(_T("Kernel32.dll"));
-		if (!m_hModule)
+		m_hModuleKernel32 = LoadLibrary(_T("Kernel32.dll"));
+		if (!m_hModuleKernel32)
 		{
 			printfPublic("LoadLibrary failed. (%d)", GetLastError());
 			__leave;
 		}
 
-		m_QueryFullProcessImageName = (QUERY_FULL_PROCESS_IMAGE_NAME)GetProcAddress(m_hModule, "QueryFullProcessImageName");
+		m_QueryFullProcessImageName = (QUERY_FULL_PROCESS_IMAGE_NAME)GetProcAddress(m_hModuleKernel32, "QueryFullProcessImageName");
+
+		m_hModuleNtdll = LoadLibrary(_T("Ntdll.dll"));
+		if (!m_hModuleNtdll)
+		{
+			printfPublic("LoadLibrary failed. (%d)", GetLastError());
+			__leave;
+		}
+
+		m_NtQueryInformationProcess = (NT_QUERY_INFORMATION_PROCESS)GetProcAddress(m_hModuleNtdll, "NtQueryInformationProcess");
+		if (!m_NtQueryInformationProcess)
+		{
+			printfPublic("GetProcAddress failed. (%d)", GetLastError());
+			__leave;
+		}
 
 		bRet = TRUE;
 	}
@@ -188,10 +202,18 @@ BOOL
 	{
 		m_QueryFullProcessImageName = NULL;
 
-		if (m_hModule)
+		if (m_hModuleKernel32)
 		{
-			FreeLibrary(m_hModule);
-			m_hModule = NULL;
+			FreeLibrary(m_hModuleKernel32);
+			m_hModuleKernel32 = NULL;
+		}
+
+		m_NtQueryInformationProcess = NULL;
+
+		if (m_hModuleNtdll)
+		{
+			FreeLibrary(m_hModuleNtdll);
+			m_hModuleNtdll = NULL;
 		}
 	}
 	__finally
@@ -599,4 +621,114 @@ VOID
 	}
 
 	return ;
+}
+
+BOOL
+	CProcessControl::GetParentPid(
+	__in	ULONG	ulPid,
+	__out	PULONG	pulParentPid 
+	)
+{
+	BOOL						bRet = FALSE;
+
+	HANDLE						hProcess = NULL;
+	HANDLE						hProcessParent = NULL;
+	PROCESS_BASIC_INFORMATION	ProcessBasicInfo = {0};
+	ULONG						ulRet = 0;
+	NTSTATUS					ntStatus = 0;
+	FILETIME					CreateTime		= {0};
+	FILETIME					ExitTime			= {0};
+	FILETIME					KernelTime		= {0};
+	FILETIME					USerTime			= {0};
+	FILETIME					ParentCreateTime		= {0};
+	FILETIME					ParentExitTime			= {0};
+	FILETIME					ParentKernelTime		= {0};
+	FILETIME					ParentUSerTime			= {0};
+
+
+	__try
+	{
+		if (!ulPid || !pulParentPid)
+		{
+			printfPublic("input arguments error. ulPid(%d) pulParentPid(0x%p)", ulPid, pulParentPid);
+			__leave;
+		}
+
+		hProcess = OpenProcess(PROCESS_QUERY_INFORMATION, FALSE, ulPid);
+		if (!hProcess)
+		{
+			printfPublic("OpenProcess failed. (%d)", GetLastError());
+			__leave;
+		}
+
+		ntStatus = m_NtQueryInformationProcess(
+			 hProcess,
+			 ProcessBasicInformation,
+			 &ProcessBasicInfo,
+			 sizeof(ProcessBasicInfo),
+			 &ulRet			 
+			 );
+		if (!NT_SUCCESS(ntStatus))
+		{
+			printfPublic("m_NtQueryInformationProcess failed. (0x%x)", ntStatus);
+			__leave;
+		}
+
+		hProcessParent = OpenProcess(PROCESS_QUERY_INFORMATION, FALSE, (DWORD)ProcessBasicInfo.Reserved3);
+		if (!hProcessParent)
+			__leave;
+
+		if (!ProcessBasicInfo.UniqueProcessId)
+		{
+			bRet = TRUE;
+			__leave;
+		}
+	
+		if (!GetProcessTimes(
+			hProcessParent,
+			&ParentCreateTime,
+			&ParentExitTime,
+			&ParentKernelTime,
+			&ParentUSerTime
+			))
+		{
+			printfPublic("GetProcessTimes failed. (%d)", GetLastError());
+			__leave;
+		}
+
+		if (!GetProcessTimes(
+			hProcess,
+			&CreateTime,
+			&ExitTime,
+			&KernelTime,
+			&USerTime
+			))
+		{
+			printfPublic("GetProcessTimes failed. (%d)", GetLastError());
+			__leave;
+		}
+
+		if (-1 != CompareFileTime(&ParentCreateTime, &CreateTime))
+			__leave;
+
+		*pulParentPid = (ULONG)ProcessBasicInfo.Reserved3;
+
+		bRet = TRUE;
+	}
+	__finally
+	{
+		if (hProcess)
+		{
+			CloseHandle(hProcess);
+			hProcess = NULL;
+		}
+
+		if (hProcessParent)
+		{
+			CloseHandle(hProcessParent);
+			hProcessParent = NULL;
+		}
+	}
+	
+	return bRet;
 }
