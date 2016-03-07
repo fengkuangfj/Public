@@ -133,7 +133,7 @@ CPrintfEx::Init()
 			(0 == _tcsnicmp(tchProcPath + (_tcslen(tchProcPath) - _tcslen(_T("DbgView.exe"))), _T("DbgView.exe"), _tcslen(_T("DbgView.exe")))))
 			m_bOutputDebugString = FALSE;
 
-		m_ProcType = CProcessControl::GetProcType(TRUE, 0);
+		m_ProcType = CProcessControl::GetInstance()->GetProcType(TRUE, 0);
 
 		bRet = TRUE;
 	}

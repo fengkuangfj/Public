@@ -132,20 +132,17 @@ public:
 		__in	ULONG	ulOutBufSizeCh
 		);
 
-	static
 	PROC_TYPE
 		GetProcType(
 		__in BOOL	bCurrentProc,
 		__in ULONG	ulPid
 		);
 
-	static
 	BOOL
 		RunAs(
 		__in LPTSTR lpPath
 		);
 
-	static
 	BOOL
 		Raise(
 		__in BOOL	bCurrentProcess,

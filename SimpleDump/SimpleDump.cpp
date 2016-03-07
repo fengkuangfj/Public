@@ -483,7 +483,7 @@ __in PCRUSH_HANDLER_INFO pCrushHandlerInfo
 			__leave;
 		}
 
-		m_ProcType = CProcessControl::GetProcType(TRUE, 0);
+		m_ProcType = CProcessControl::GetInstance()->GetProcType(TRUE, 0);
 
 		if (pCrushHandlerInfo)
 		{
@@ -1529,5 +1529,6 @@ CSimpleDump::~CSimpleDump()
 
 	m_pfTopLevelExceptionFilter = NULL;
 
+	CProcessControl::ReleaseInstance();
 	CPrintfEx::ReleaseInstance();
 }
