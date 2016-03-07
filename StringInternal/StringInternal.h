@@ -5,7 +5,7 @@
 #include <Windows.h>
 #include <tchar.h>
 
-#include "..\\PrintfEx\\PrintfEx.h"
+#include "..\\Public.h"
 
 class CStringInternal
 {

@@ -1,10 +1,13 @@
 #pragma once
 
 #include <Windows.h>
+#include <tchar.h>
 
-#include "..\\PrintfEx\\PrintfEx.h"
+#include "..\\Public.h"
 
+#ifndef MOD_UAC
 #define MOD_UAC _T("UAC")
+#endif
 
 typedef enum _UAC_LEVEL
 {

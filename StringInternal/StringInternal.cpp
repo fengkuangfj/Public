@@ -17,28 +17,28 @@ BOOL
 	{
 		if (!lpInBuf || !lpOutBuf || !ulOutBufSizeCh)
 		{
-			printfEx(MOD_STRING_INTERNAL, PRINTF_LEVEL_ERROR, "input arguments error. 0x%p 0x%p %d", lpInBuf, lpOutBuf, ulOutBufSizeCh);
+			printfPublic("input arguments error. lpInBuf(0x%p) lpOutBuf(0x%p) ulOutBufSizeCh(%d) \n", lpInBuf, lpOutBuf, ulOutBufSizeCh);
 			__leave;
 		}
 
 		ulSizeCh = MultiByteToWideChar(CP_ACP, 0, lpInBuf, -1, NULL, 0);
 		if (!ulSizeCh)
 		{
-			printfEx(MOD_STRING_INTERNAL, PRINTF_LEVEL_ERROR, "pre MultiByteToWideChar failed. (%d)", GetLastError());
+			printfPublic("pre MultiByteToWideChar failed. (%d) \n", GetLastError());
 			__leave;
 		}
 
 		lpTemp = (LPTSTR)calloc(1, ulSizeCh * sizeof(TCHAR));
 		if (!lpTemp)
 		{
-			printfEx(MOD_STRING_INTERNAL, PRINTF_LEVEL_ERROR, "calloc failed. (%d)", GetLastError());
+			printfPublic("calloc failed. (%d) \n", GetLastError());
 			__leave;
 		}
 
 		ulSizeCh = MultiByteToWideChar(CP_ACP, 0, lpInBuf, -1, lpTemp, ulSizeCh);
 		if (!ulSizeCh)
 		{
-			printfEx(MOD_STRING_INTERNAL, PRINTF_LEVEL_ERROR, "post MultiByteToWideChar failed. (%d)", GetLastError());
+			printfPublic("post MultiByteToWideChar failed. (%d) \n", GetLastError());
 			__leave;
 		}
 
