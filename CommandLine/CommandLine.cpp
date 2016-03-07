@@ -21,22 +21,32 @@ BOOL
 	TCHAR				tchStdOutputRead[4096]			= {0};
 	DWORD				dwStdOutputNumberOfBytesRead	= 0;
 	ULONG				ulLoopReadStdOutput				= 0;
+	DWORD				dwResultWaitForSingleObject		= 0;
 
 
 	__try
 	{
 		if (!lpCmdLine)
+		{
+			printfPublic("input argument error. \n");
 			__leave;
+		}
 
 		if (lpCmdResultInfo)
 		{
 			if (!bWaitUntilCmdExit)
+			{
+				printfPublic("input argument error. \n");
 				__leave;
+			}
 		}
 
 		uResult = GetSystemDirectory(CmdLine, _countof(CmdLine));
 		if (!uResult)
+		{
+			printfPublic("GetSystemDirectory failed. (%d) \n", GetLastError());
 			__leave;
+		}
 
 		_tcscat_s(CmdLine, _countof(CmdLine), _T("\\cmd.exe /c "));
 		_tcscat_s(CmdLine, _countof(CmdLine), lpCmdLine);
@@ -55,16 +65,28 @@ BOOL
 			SecurityAttributes.bInheritHandle = TRUE;
 
 			if (!CreatePipe(&hReadStdOutput, &StartupInfo.hStdOutput, &SecurityAttributes, 0))
+			{
+				printfPublic("CreatePipe failed. (%d) \n", GetLastError());
 				__leave;
+			}
 
 			if (!SetHandleInformation(hReadStdOutput, HANDLE_FLAG_INHERIT, HANDLE_FLAG_INHERIT))
+			{
+				printfPublic("SetHandleInformation failed. (%d) \n", GetLastError());
 				__leave;
+			}
 
 			if (!CreatePipe(&hReadStdError, &StartupInfo.hStdError, &SecurityAttributes, 0))
+			{
+				printfPublic("CreatePipe failed. (%d) \n", GetLastError());
 				__leave;
+			}
 
 			if (!SetHandleInformation(hReadStdError, HANDLE_FLAG_INHERIT, HANDLE_FLAG_INHERIT))
+			{
+				printfPublic("SetHandleInformation failed. (%d) \n", GetLastError());
 				__leave;
+			}
 		}
 
 		if (!CreateProcess(
@@ -79,7 +101,10 @@ BOOL
 			&StartupInfo,
 			&ProcessInfo
 			))
+		{
+			printfPublic("CreateProcess failed. (%d) \n", GetLastError());
 			__leave;
+		}
 
 		if (lpCmdResultInfo)
 		{
@@ -100,8 +125,12 @@ BOOL
 		{
 			if (ProcessInfo.hProcess)
 			{
-				if (WAIT_OBJECT_0 != WaitForSingleObject(ProcessInfo.hProcess, INFINITE))
+				dwResultWaitForSingleObject = WaitForSingleObject(ProcessInfo.hProcess, INFINITE);
+				if (WAIT_OBJECT_0 != dwResultWaitForSingleObject)
+				{
+					printfPublic("WaitForSingleObject failed. (%d) \n", dwResultWaitForSingleObject);
 					__leave;
+				}
 			}
 		}
 
@@ -120,7 +149,10 @@ BOOL
 					}
 
 					if (!CStringInternal::ASCIIToUNICODE(tchStdOutputRead, _countof(tchStdOutputRead), chStdOutputRead))
+					{
+						printfPublic("CStringInternal::ASCIIToUNICODE failed. \n");
 						__leave;
+					}
 
 					if (lpCmdResultInfo->lpResult && lpCmdResultInfo->ulResultBufferSizeCh)
 					{
@@ -160,7 +192,10 @@ BOOL
 							break;
 
 						if (!CStringInternal::ASCIIToUNICODE(tchStdOutputRead, _countof(tchStdOutputRead), chStdOutputRead))
+						{
+							printfPublic("CStringInternal::ASCIIToUNICODE failed. \n");
 							__leave;
+						}
 
 						if (lpCmdResultInfo->lpResult && lpCmdResultInfo->ulResultBufferSizeCh)
 						{

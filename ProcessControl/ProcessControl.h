@@ -9,6 +9,7 @@
 #include <Psapi.h>
 #include <Shlobj.h>
 
+#include "..\\Public.h"
 #include "..\\ModulePath\\ModulePath.h"
 
 #pragma comment(lib, "Psapi.lib")

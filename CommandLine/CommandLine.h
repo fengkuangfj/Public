@@ -3,6 +3,7 @@
 #include <Windows.h>
 #include <tchar.h>
 
+#include "..\\Public.h"
 #include "..\\StringInternal\\StringInternal.h"
 
 #define MOD_COMMAND_LINE _T("√¸¡Ó––"£©

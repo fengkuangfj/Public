@@ -8,6 +8,8 @@
 #include <Shlobj.h>
 #include <Shlwapi.h>
 
+#include "..\\Public.h"
+
 #pragma comment(lib, "Shlwapi.lib")
 #pragma comment(lib, "Shell32.lib")
 

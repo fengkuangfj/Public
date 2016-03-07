@@ -33,7 +33,10 @@ BOOL
 					&hKey
 					);
 				if (ERROR_SUCCESS != lResult)
+				{
+					printfPublic("RegOpenKeyEx failed. (%d) \n", lResult);
 					__leave;
+				}
 
 				// 将CrashDumpEnabled的值置为2(核心内存转储)
 				dwValue = 2;
@@ -46,7 +49,10 @@ BOOL
 					sizeof(DWORD)
 					);
 				if (ERROR_SUCCESS != lResult)
+				{
+					printfPublic("RegSetValueEx failed. (%d) \n", lResult);
 					__leave;
+				}
 
 				// 将OverWrite的值置为1
 				dwValue = 1;
@@ -59,12 +65,18 @@ BOOL
 					sizeof(DWORD)
 					);
 				if (ERROR_SUCCESS != lResult)
+				{
+					printfPublic("RegSetValueEx failed. (%d) \n", lResult);
 					__leave;
+				}
 
 				// 使注册表立即写入文件
 				lResult = RegFlushKey(hKey);
 				if (ERROR_SUCCESS != lResult)
+				{
+					printfPublic("RegFlushKey failed. (%d) \n", lResult);
 					__leave;
+				}
 
 				break;
 			}
@@ -103,7 +115,10 @@ FILE_MODIFY_TIME_CMP
 	__try
 	{
 		if (!lpFrirst || !lpSecend)
+		{
+			printfPublic("input arguments error. lpFrirst(0x%08p) lpSecend(0x%08p) \n", lpFrirst, lpSecend);
 			__leave;
+		}
 
 		if (!PathFileExists(lpFrirst))
 			__leave;
@@ -163,7 +178,10 @@ BOOL
 	__try
 	{
 		if (!lpDumpDir || !lpOrgDumpPath || !lpNewDumpPath)
+		{
+			printfPublic("input arguments error. lpDumpDir(0x%08p) lpOrgDumpPath(0x%08p) lpNewDumpPath(0x%08p) \n", lpDumpDir, lpOrgDumpPath, lpNewDumpPath);
 			__leave;
+		}
 
 		if (!PathFileExists(lpOrgDumpPath))
 			__leave;
@@ -175,10 +193,16 @@ BOOL
 		_tcscat_s(lpNewDumpPath, MAX_PATH, lpDumpDir);
 
 		if (!FileTimeToLocalFileTime(&Win32FindData.ftLastWriteTime, &LocalFileTime))
+		{
+			printfPublic("FileTimeToLocalFileTime failed. (%d) \n", GetLastError());
 			__leave;
+		}
 
 		if (!FileTimeToSystemTime(&LocalFileTime, &LocalSystemTime))
+		{
+			printfPublic("FileTimeToLocalFileTime failed. (%d) \n", GetLastError());
 			__leave;
+		}
 
 		StringCbPrintf(Tmp, MAX_PATH * sizeof(TCHAR), _T("\\%04d"), LocalSystemTime.wYear);
 		_tcscat_s(lpNewDumpPath, MAX_PATH, Tmp);
@@ -246,14 +270,20 @@ BOOL
 			&hKey
 			);
 		if (ERROR_SUCCESS != lResult)
+		{
+			printfPublic("RegOpenKeyEx failed. (%d) \n", lResult);
 			__leave;
+		}
 
 		dwQuery = 1;
 		do
 		{
 			lpBuf = calloc(1, dwQuery);
 			if (!lpBuf)
+			{
+				printfPublic("calloc failed. (%d) \n", GetLastError());
 				__leave;
+			}
 
 			lResult = RegQueryValueEx(
 				hKey,
@@ -266,7 +296,10 @@ BOOL
 			if (ERROR_SUCCESS != lResult)
 			{
 				if (ERROR_MORE_DATA != lResult)
+				{
+					printfPublic("RegQueryValueEx failed. (%d) \n", lResult);
 					__leave;
+				}
 
 				if (lpBuf)
 				{
@@ -282,7 +315,10 @@ BOOL
 		if (0 == _tcsncmp((LPTSTR)lpBuf, _T("%SystemRoot%"), _tcslen(_T("%SystemRoot%"))))
 		{
 			if (!GetSystemWindowsDirectory(tchDumpFile, _countof(tchDumpFile)))
+			{
+				printfPublic("GetSystemWindowsDirectory failed. (%d) \n", lResult);
 				__leave;
+			}
 
 			_tcscat_s(tchDumpFile, _countof(tchDumpFile), (LPTSTR)lpBuf + _tcslen(_T("%SystemRoot%")));
 		}
@@ -310,35 +346,56 @@ BOOL
 					__leave;
 
 				if (!PathYetAnotherMakeUniqueName(tchNewDumpFile, tchNewDumpFile, NULL, lpPosition + 1))
+				{
+					printfPublic("PathYetAnotherMakeUniqueName failed. (%d) \n", lResult);
 					__leave;
+				}
 			}
 
 			if (!MoveFile(tchDumpFile, tchNewDumpFile))
+			{
+				printfPublic("MoveFile failed. (%d) \n", lResult);
 				__leave;
+			}
 
 			__leave;
 		}
 
 		// 比我们的软件的安装时间晚，先复制至安装目录下，再重命名
 		if (!GenerateDumpFilePath(lpDumpDir, tchDumpFile, tchNewDumpFile))
+		{
+			printfPublic("GenerateDumpFilePath failed. \n");
 			__leave;
+		}
 
 		if (!CopyFile(tchDumpFile, tchNewDumpFile, TRUE))
+		{
+			printfPublic("CopyFile failed. (%d) \n", GetLastError());
 			__leave;
+		}
 
 		_tcscpy_s(tchNewDumpFile, _countof(tchNewDumpFile), tchDumpFile);
 		if (PathFileExists(tchNewDumpFile))
 		{
 			lpPosition = _tcsrchr(tchNewDumpFile, _T('\\'));
 			if (!lpPosition)
+			{
+				printfPublic("_tcsrchr failed. \n");
 				__leave;
+			}
 
 			if (!PathYetAnotherMakeUniqueName(tchNewDumpFile, tchNewDumpFile, NULL, lpPosition + 1))
+			{
+				printfPublic("PathYetAnotherMakeUniqueName failed. (%d) \n", GetLastError());
 				__leave;
+			}
 		}
 
 		if (!MoveFile(tchDumpFile, tchNewDumpFile))
+		{
+			printfPublic("MoveFile failed. (%d) \n", GetLastError());
 			__leave;
+		}
 
 		bRet = TRUE;
 	}

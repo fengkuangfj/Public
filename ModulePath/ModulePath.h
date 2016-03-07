@@ -7,6 +7,8 @@
 #include <Windows.h>
 #include <stdio.h>
 
+#include "..\\Public.h"
+
 class CModulePath
 {
 public:
