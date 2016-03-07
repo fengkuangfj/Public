@@ -1,9 +1,5 @@
 ﻿#pragma once
 
-#ifndef MOD_SIMPLE_DUMP
-#define MOD_SIMPLE_DUMP							_T("简单转储")
-#endif
-
 #include <Windows.h>
 #include <time.h>
 #include <tchar.h>
@@ -13,6 +9,7 @@
 #include <Winver.h>
 #include <Psapi.h>
 
+#include "..\\PrintfEx\\PrintfEx.h"
 #include "..\\OperationSystemVersion\\OperationSystemVersion.h"
 #include "..\\ProcessControl\\ProcessControl.h"
 
@@ -20,6 +17,10 @@
 #pragma comment(lib, "Shlwapi.lib")
 #pragma comment(lib, "Version.lib")
 #pragma comment(lib, "Psapi.lib")
+
+#ifndef MOD_SIMPLE_DUMP
+#define MOD_SIMPLE_DUMP							_T("简单转储")
+#endif
 
 #ifndef CMD_LINE_MAX_CHARS
 #define	CMD_LINE_MAX_CHARS 						32768

@@ -7,7 +7,9 @@
 
 #pragma comment(lib, "Advapi32.lib")
 
+#ifndef MOD_SERVICE
 #define MOD_SERVICE _T("·þÎñ")
+#endif
 
 typedef struct _INIT_MOD_ARGUMENTS
 {

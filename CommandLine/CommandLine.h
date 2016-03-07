@@ -6,7 +6,9 @@
 #include "..\\Public.h"
 #include "..\\StringInternal\\StringInternal.h"
 
+#ifndef MOD_COMMAND_LINE
 #define MOD_COMMAND_LINE _T("√¸¡Ó––"£©
+#endif
 
 typedef struct _CMD_RESULT_INFO
 {

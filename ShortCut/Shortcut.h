@@ -1,12 +1,14 @@
 #pragma once
 
-#define MOD_SHORTCUT _T("快捷方式")
-
 #include <Windows.h>
 #include <Shlobj.h>
 #include <tchar.h>
 
 #include "..\\Public.h"
+
+#ifndef MOD_SHORTCUT
+#define MOD_SHORTCUT _T("快捷方式")
+#endif
 
 class CShortCut
 {

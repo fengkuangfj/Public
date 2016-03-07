@@ -11,7 +11,9 @@
 #pragma comment(lib, "Shlwapi.lib")
 #pragma comment(lib, "Shell32.lib")
 
+#ifndef MOD_CRASH_DUMP
 #define MOD_CRASH_DUMP _T("À¶ÆÁ×ª´¢")
+#endif
 
 typedef enum _CRASH_DUMP_TYPE
 {

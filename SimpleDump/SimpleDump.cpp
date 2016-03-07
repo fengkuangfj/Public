@@ -22,7 +22,10 @@ __in	ULONG	ulCharacters
 	__try
 	{
 		if (!pCmdLine || !ulCharacters)
+		{
+			printfEx(MOD_VOLUME_DETECTOR, PRINTF_LEVEL_ERROR, "input argument error");
 			__leave;
+		}
 
 		if (PROC_TYPE_NORMAL == m_ProcType)
 			_tcscat_s(pCmdLine, ulCharacters, _T(" "));

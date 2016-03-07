@@ -5,7 +5,9 @@
 
 #include "..\\Public.h"
 
+#ifndef MOD_MODULE_PATH
 #define MOD_MODULE_PATH _T("Ä£¿éÂ·¾¶")
+#endif
 
 class CModulePath
 {

@@ -9,7 +9,9 @@
 #include "..\\Public.h"
 #include "..\\ProcessControl\\ProcessControl.h"
 
+#ifndef MOD_PRINTF_EX
 #define MOD_PRINTF_EX _T("PrintfEx")
+#endif
 
 typedef
 BOOL

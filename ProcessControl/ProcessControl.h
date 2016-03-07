@@ -12,7 +12,9 @@
 #pragma comment(lib, "Shell32.lib")
 #pragma comment(lib, "Advapi32.lib")
 
+#ifndef MOD_PROCESS_CONTROL
 #define MOD_PROCESS_CONTROL _T("½ø³Ì¿ØÖÆ")
+#endif
 
 typedef enum _PROC_TYPE
 {
