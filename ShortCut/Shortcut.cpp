@@ -20,7 +20,7 @@ BOOL
 	{
 		if (!lpPath || !lpName)
 		{
-			printfPublic("input parameter error. 0x%p 0x%p \n", lpPath, lpName);
+			printfPublic("input parameter error. 0x%p 0x%p", lpPath, lpName);
 			__leave;
 		}
 
@@ -33,13 +33,13 @@ BOOL
 			);
 		if (FAILED(hResult))
 		{
-			printfPublic("SHGetFolderLocation failed. (0x%x) \n", hResult);
+			printfPublic("SHGetFolderLocation failed. (0x%x)", hResult);
 			__leave;
 		}
 
 		if (!SHGetPathFromIDList(lpItemIdList, tchLnkPath))
 		{
-			printfPublic("SHGetPathFromIDList failed. (%d) \n", GetLastError());
+			printfPublic("SHGetPathFromIDList failed. (%d)", GetLastError());
 			__leave;
 		}
 
@@ -50,7 +50,7 @@ BOOL
 		hResult = CoInitialize(NULL);
 		if (FAILED(hResult))
 		{
-			printfPublic("CoInitialize failed. (0x%x) \n", hResult);
+			printfPublic("CoInitialize failed. (0x%x)", hResult);
 			__leave;
 		}
 
@@ -65,7 +65,7 @@ BOOL
 			);
 		if (FAILED(hResult))
 		{
-			printfPublic("CoCreateInstance failed. (0x%x) \n", hResult);
+			printfPublic("CoCreateInstance failed. (0x%x)", hResult);
 			__leave;
 		}
 
@@ -75,21 +75,21 @@ BOOL
 			);
 		if (FAILED(hResult))
 		{
-			printfPublic("QueryInterface failed. (0x%x) \n", hResult);
+			printfPublic("QueryInterface failed. (0x%x)", hResult);
 			__leave;
 		}
 
 		hResult = pIShellLink->SetPath(lpPath);
 		if (FAILED(hResult))
 		{
-			printfPublic("SetPath failed. %S (0x%x) \n", lpPath, hResult);
+			printfPublic("SetPath failed. %S (0x%x)", lpPath, hResult);
 			__leave;
 		}
 
 		hResult = pIShellLink->SetShowCmd(SW_SHOWNORMAL);
 		if (FAILED(hResult))
 		{
-			printfPublic("SetShowCmd failed. (0x%x) \n", hResult);
+			printfPublic("SetShowCmd failed. (0x%x)", hResult);
 			__leave;
 		}
 
@@ -99,18 +99,18 @@ BOOL
 			);
 		if (FAILED(hResult))
 		{
-			printfPublic("Resolve failed. (0x%x) \n", hResult);
+			printfPublic("Resolve failed. (0x%x)", hResult);
 			__leave;
 		}
 
 		hResult = pIPersistFile->Save(tchLnkPath, TRUE);
 		if (FAILED(hResult))
 		{
-			printfPublic("Save failed. %S (0x%x) \n", tchLnkPath, hResult);
+			printfPublic("Save failed. %S (0x%x)", tchLnkPath, hResult);
 			__leave;
 		}
 
-		printfPublic("%S -> %S \n", lpPath, tchLnkPath);
+		printfPublic("%S -> %S", lpPath, tchLnkPath);
 
 		bRet = TRUE;
 	}

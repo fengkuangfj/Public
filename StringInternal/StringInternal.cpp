@@ -17,28 +17,28 @@ BOOL
 	{
 		if (!lpInBuf || !lpOutBuf || !ulOutBufSizeCh)
 		{
-			printfPublic("input arguments error. lpInBuf(0x%p) lpOutBuf(0x%p) ulOutBufSizeCh(%d) \n", lpInBuf, lpOutBuf, ulOutBufSizeCh);
+			printfPublic("input arguments error. lpInBuf(0x%p) lpOutBuf(0x%p) ulOutBufSizeCh(%d)", lpInBuf, lpOutBuf, ulOutBufSizeCh);
 			__leave;
 		}
 
 		ulSizeCh = MultiByteToWideChar(CP_ACP, 0, lpInBuf, -1, NULL, 0);
 		if (!ulSizeCh)
 		{
-			printfPublic("pre MultiByteToWideChar failed. (%d) \n", GetLastError());
+			printfPublic("pre MultiByteToWideChar failed. (%d)", GetLastError());
 			__leave;
 		}
 
 		lpTemp = (LPTSTR)calloc(1, ulSizeCh * sizeof(TCHAR));
 		if (!lpTemp)
 		{
-			printfPublic("calloc failed. (%d) \n", GetLastError());
+			printfPublic("calloc failed. (%d)", GetLastError());
 			__leave;
 		}
 
 		ulSizeCh = MultiByteToWideChar(CP_ACP, 0, lpInBuf, -1, lpTemp, ulSizeCh);
 		if (!ulSizeCh)
 		{
-			printfPublic("post MultiByteToWideChar failed. (%d) \n", GetLastError());
+			printfPublic("post MultiByteToWideChar failed. (%d)", GetLastError());
 			__leave;
 		}
 

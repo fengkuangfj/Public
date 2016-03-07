@@ -16,7 +16,7 @@ BOOL
 	{
 		if (!lpOutBuf || !ulOutBufSizeCh)
 		{
-			printfPublic("input arguments error. 0x%p %d \n", lpOutBuf, ulOutBufSizeCh);
+			printfPublic("input arguments error. 0x%p %d", lpOutBuf, ulOutBufSizeCh);
 			__leave;
 		}
 
@@ -27,7 +27,7 @@ BOOL
 			hModule = GetModuleHandle(NULL);
 			if (!hModule)
 			{
-				printfPublic("GetModuleHandle failed. (%d) \n", GetLastError());
+				printfPublic("GetModuleHandle failed. (%d)", GetLastError());
 				__leave;
 			}
 		}
@@ -35,7 +35,7 @@ BOOL
 		dwResult = GetModuleFileName(hModule, lpOutBuf, ulOutBufSizeCh);
 		if (!dwResult)
 		{
-			printfPublic("GetModuleFileName failed. (%d) \n", GetLastError());
+			printfPublic("GetModuleFileName failed. (%d)", GetLastError());
 			__leave;
 		}
 

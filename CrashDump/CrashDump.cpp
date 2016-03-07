@@ -34,7 +34,7 @@ BOOL
 					);
 				if (ERROR_SUCCESS != lResult)
 				{
-					printfPublic("RegOpenKeyEx failed. (0x%x) \n", lResult);
+					printfPublic("RegOpenKeyEx failed. (0x%x)", lResult);
 					__leave;
 				}
 
@@ -50,7 +50,7 @@ BOOL
 					);
 				if (ERROR_SUCCESS != lResult)
 				{
-					printfPublic("RegSetValueEx failed. (0x%x) \n", lResult);
+					printfPublic("RegSetValueEx failed. (0x%x)", lResult);
 					__leave;
 				}
 
@@ -66,7 +66,7 @@ BOOL
 					);
 				if (ERROR_SUCCESS != lResult)
 				{
-					printfPublic("RegSetValueEx failed. (0x%x) \n", lResult);
+					printfPublic("RegSetValueEx failed. (0x%x)", lResult);
 					__leave;
 				}
 
@@ -74,7 +74,7 @@ BOOL
 				lResult = RegFlushKey(hKey);
 				if (ERROR_SUCCESS != lResult)
 				{
-					printfPublic("RegFlushKey failed. (0x%x) \n", lResult);
+					printfPublic("RegFlushKey failed. (0x%x)", lResult);
 					__leave;
 				}
 
@@ -116,7 +116,7 @@ FILE_MODIFY_TIME_CMP
 	{
 		if (!lpFrirst || !lpSecend)
 		{
-			printfPublic("input arguments error. lpFrirst(0x%p) lpSecend(0x%p) \n", lpFrirst, lpSecend);
+			printfPublic("input arguments error. lpFrirst(0x%p) lpSecend(0x%p)", lpFrirst, lpSecend);
 			__leave;
 		}
 
@@ -179,7 +179,7 @@ BOOL
 	{
 		if (!lpDumpDir || !lpOrgDumpPath || !lpNewDumpPath)
 		{
-			printfPublic("input arguments error. lpDumpDir(0x%p) lpOrgDumpPath(0x%p) lpNewDumpPath(0x%p) \n", lpDumpDir, lpOrgDumpPath, lpNewDumpPath);
+			printfPublic("input arguments error. lpDumpDir(0x%p) lpOrgDumpPath(0x%p) lpNewDumpPath(0x%p)", lpDumpDir, lpOrgDumpPath, lpNewDumpPath);
 			__leave;
 		}
 
@@ -194,13 +194,13 @@ BOOL
 
 		if (!FileTimeToLocalFileTime(&Win32FindData.ftLastWriteTime, &LocalFileTime))
 		{
-			printfPublic("FileTimeToLocalFileTime failed. (%d) \n", GetLastError());
+			printfPublic("FileTimeToLocalFileTime failed. (%d)", GetLastError());
 			__leave;
 		}
 
 		if (!FileTimeToSystemTime(&LocalFileTime, &LocalSystemTime))
 		{
-			printfPublic("FileTimeToLocalFileTime failed. (%d) \n", GetLastError());
+			printfPublic("FileTimeToLocalFileTime failed. (%d)", GetLastError());
 			__leave;
 		}
 
@@ -271,7 +271,7 @@ BOOL
 			);
 		if (ERROR_SUCCESS != lResult)
 		{
-			printfPublic("RegOpenKeyEx failed. (0x%x) \n", lResult);
+			printfPublic("RegOpenKeyEx failed. (0x%x)", lResult);
 			__leave;
 		}
 
@@ -281,7 +281,7 @@ BOOL
 			lpBuf = calloc(1, dwQuery);
 			if (!lpBuf)
 			{
-				printfPublic("calloc failed. (%d) \n", GetLastError());
+				printfPublic("calloc failed. (%d)", GetLastError());
 				__leave;
 			}
 
@@ -297,7 +297,7 @@ BOOL
 			{
 				if (ERROR_MORE_DATA != lResult)
 				{
-					printfPublic("RegQueryValueEx failed. (0x%x) \n", lResult);
+					printfPublic("RegQueryValueEx failed. (0x%x)", lResult);
 					__leave;
 				}
 
@@ -316,7 +316,7 @@ BOOL
 		{
 			if (!GetSystemWindowsDirectory(tchDumpFile, _countof(tchDumpFile)))
 			{
-				printfPublic("GetSystemWindowsDirectory failed. (0x%x) \n", lResult);
+				printfPublic("GetSystemWindowsDirectory failed. (0x%x)", lResult);
 				__leave;
 			}
 
@@ -347,14 +347,14 @@ BOOL
 
 				if (!PathYetAnotherMakeUniqueName(tchNewDumpFile, tchNewDumpFile, NULL, lpPosition + 1))
 				{
-					printfPublic("PathYetAnotherMakeUniqueName failed. (0x%x) \n", lResult);
+					printfPublic("PathYetAnotherMakeUniqueName failed. (0x%x)", lResult);
 					__leave;
 				}
 			}
 
 			if (!MoveFile(tchDumpFile, tchNewDumpFile))
 			{
-				printfPublic("MoveFile failed. (0x%x) \n", lResult);
+				printfPublic("MoveFile failed. (0x%x)", lResult);
 				__leave;
 			}
 
@@ -364,13 +364,13 @@ BOOL
 		// 比我们的软件的安装时间晚，先复制至安装目录下，再重命名
 		if (!GenerateDumpFilePath(lpDumpDir, tchDumpFile, tchNewDumpFile))
 		{
-			printfPublic("GenerateDumpFilePath failed. \n");
+			printfPublic("GenerateDumpFilePath failed");
 			__leave;
 		}
 
 		if (!CopyFile(tchDumpFile, tchNewDumpFile, TRUE))
 		{
-			printfPublic("CopyFile failed. (%d) \n", GetLastError());
+			printfPublic("CopyFile failed. (%d)", GetLastError());
 			__leave;
 		}
 
@@ -380,20 +380,20 @@ BOOL
 			lpPosition = _tcsrchr(tchNewDumpFile, _T('\\'));
 			if (!lpPosition)
 			{
-				printfPublic("_tcsrchr failed. \n");
+				printfPublic("_tcsrchr failed");
 				__leave;
 			}
 
 			if (!PathYetAnotherMakeUniqueName(tchNewDumpFile, tchNewDumpFile, NULL, lpPosition + 1))
 			{
-				printfPublic("PathYetAnotherMakeUniqueName failed. (%d) \n", GetLastError());
+				printfPublic("PathYetAnotherMakeUniqueName failed. (%d)", GetLastError());
 				__leave;
 			}
 		}
 
 		if (!MoveFile(tchDumpFile, tchNewDumpFile))
 		{
-			printfPublic("MoveFile failed. (%d) \n", GetLastError());
+			printfPublic("MoveFile failed. (%d)", GetLastError());
 			__leave;
 		}
 

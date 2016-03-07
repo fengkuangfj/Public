@@ -23,7 +23,7 @@ BOOL
 	{
 		if (!lpOutBuf || !ulOutBufSizeCh || (!bCurrentProc && !ulPid))
 		{
-			printfPublic("input arguments error. %d %d 0x%p %d \n", bCurrentProc, ulPid, lpOutBuf, ulOutBufSizeCh);
+			printfPublic("input arguments error. %d %d 0x%p %d", bCurrentProc, ulPid, lpOutBuf, ulOutBufSizeCh);
 			__leave;
 		}
 
@@ -33,7 +33,7 @@ BOOL
 		{
 			if (!CModulePath::Get(NULL, lpOutBuf, ulOutBufSizeCh))
 			{
-				printfPublic("Get failed. \n");
+				printfPublic("Get failed");
 				__leave;
 			}
 
@@ -44,7 +44,7 @@ BOOL
 		hProc = OpenProcess(PROCESS_QUERY_INFORMATION, FALSE, ulPid);
 		if (!hProc)
 		{
-			printfPublic("OpenProcess failed. (%d) \n", GetLastError());
+			printfPublic("OpenProcess failed. (%d)", GetLastError());
 			__leave;
 		}
 
@@ -53,7 +53,7 @@ BOOL
 			dwProcPathLenCh = ulOutBufSizeCh;
 			if (!m_QueryFullProcessImageName(hProc, 0, lpOutBuf, &dwProcPathLenCh))
 			{
-				printfPublic("QueryFullProcessImageName failed. (%d) \n", GetLastError());
+				printfPublic("QueryFullProcessImageName failed. (%d)", GetLastError());
 				__leave;
 			}
 
@@ -63,7 +63,7 @@ BOOL
 
 		if (!GetProcessImageFileName(hProc, tchProcPathDev, _countof(tchProcPathDev)))
 		{
-			printfPublic("GetProcessImageFileName failed. (%d) \n", GetLastError());
+			printfPublic("GetProcessImageFileName failed. (%d)", GetLastError());
 			__leave;
 		}
 
@@ -77,7 +77,7 @@ BOOL
 					continue;
 				else
 				{
-					printfPublic("QueryDosDevice failed. (%d) \n", GetLastError());
+					printfPublic("QueryDosDevice failed. (%d)", GetLastError());
 					__leave;
 				}
 			}
@@ -138,13 +138,13 @@ VOID
 CProcessControl::CProcessControl()
 {
 	if (!Init())
-		printfPublic("Init failed \n");
+		printfPublic("Init failed");
 }
 
 CProcessControl::~CProcessControl()
 {
 	if (!Unload())
-		printfPublic("Unload failed \n");
+		printfPublic("Unload failed");
 }
 
 BOOL
@@ -158,7 +158,7 @@ BOOL
 		m_hModule = LoadLibrary(_T("Kernel32.dll"));
 		if (!m_hModule)
 		{
-			printfPublic("LoadLibrary failed. (%d) \n", GetLastError());
+			printfPublic("LoadLibrary failed. (%d)", GetLastError());
 			__leave;
 		}
 
@@ -171,7 +171,7 @@ BOOL
 		if (!bRet)
 		{
 			if (!Unload())
-				printfPublic("Unload failed \n");
+				printfPublic("Unload failed");
 		}
 	}
 
@@ -220,7 +220,7 @@ BOOL
 	{
 		if ((!bCurrentProc && !ulPid) || !pnSid)
 		{
-			printfPublic("input arguments error. \n");
+			printfPublic("input arguments error");
 			__leave;
 		}
 
@@ -231,14 +231,14 @@ BOOL
 			hProcess = OpenProcess(PROCESS_ALL_ACCESS, FALSE, ulPid);
 			if (!hProcess)
 			{
-				printfPublic("OpenProcess failed. (%d) \n", GetLastError());
+				printfPublic("OpenProcess failed. (%d)", GetLastError());
 				__leave;
 			}
 		}
 
 		if (!OpenProcessToken(hProcess, TOKEN_ALL_ACCESS, &hToken))
 		{
-			printfPublic("OpenProcessToken failed. (%d) \n", GetLastError());
+			printfPublic("OpenProcessToken failed. (%d)", GetLastError());
 			__leave;
 		}
 
@@ -250,7 +250,7 @@ BOOL
 			&dwReturnLength		
 			))
 		{
-			printfPublic("GetTokenInformation failed. (%d) \n", GetLastError());
+			printfPublic("GetTokenInformation failed. (%d)", GetLastError());
 			__leave;
 		}
 
@@ -285,7 +285,7 @@ PROC_TYPE
 		hOutPut = GetStdHandle(STD_OUTPUT_HANDLE);
 		if (INVALID_HANDLE_VALUE == hOutPut)
 		{
-			printfPublic("GetStdHandle failed. (%d) \n", GetLastError());
+			printfPublic("GetStdHandle failed. (%d)", GetLastError());
 			__leave;
 		}
 
@@ -297,7 +297,7 @@ PROC_TYPE
 
 			if (!GetSessionId(TRUE, 0, &nSid))
 			{
-				printfPublic("GetSessionId failed. \n");
+				printfPublic("GetSessionId failed");
 				__leave;
 			}
 
@@ -331,7 +331,7 @@ BOOL
 	{
 		if (!bCurrentProcess && !ulPid)
 		{
-			printfPublic("input arguments error. \n");
+			printfPublic("input arguments error");
 			__leave;
 		}
 
@@ -342,20 +342,20 @@ BOOL
 			hProcess = OpenProcess(PROCESS_ALL_ACCESS, FALSE, ulPid);
 			if (!hProcess)
 			{
-				printfPublic("OpenProcess failed. (%d) \n", GetLastError());
+				printfPublic("OpenProcess failed. (%d)", GetLastError());
 				__leave;
 			}
 		}
 
 		if (!OpenProcessToken(hProcess, TOKEN_ADJUST_PRIVILEGES, &hToken))
 		{
-			printfPublic("OpenProcessToken failed. (%d) \n", GetLastError());
+			printfPublic("OpenProcessToken failed. (%d)", GetLastError());
 			__leave;
 		}
 
 		if (!LookupPrivilegeValue(NULL, lpName, &TokenPrivileges.Privileges[0].Luid))
 		{
-			printfPublic("LookupPrivilegeValue failed. (%d) \n", GetLastError());
+			printfPublic("LookupPrivilegeValue failed. (%d)", GetLastError());
 			__leave;
 		}
 
@@ -364,7 +364,7 @@ BOOL
 
 		if (!AdjustTokenPrivileges(hToken, FALSE, &TokenPrivileges, sizeof(TokenPrivileges), NULL, NULL))
 		{
-			printfPublic("AdjustTokenPrivileges failed. (%d) \n", GetLastError());
+			printfPublic("AdjustTokenPrivileges failed. (%d)", GetLastError());
 			__leave;
 		}
 
@@ -396,7 +396,7 @@ BOOL
 	{
 		if (!lpPath)
 		{
-			printfPublic("input argument error. \n");
+			printfPublic("input argument error");
 			__leave;
 		}
 
@@ -407,7 +407,7 @@ BOOL
 
 		if (!ShellExecuteEx(&ShellExecuteInfo))
 		{
-			printfPublic("ShellExecuteEx failed. (%d) \n", GetLastError());
+			printfPublic("ShellExecuteEx failed. (%d)", GetLastError());
 			__leave;
 		}
 
@@ -434,7 +434,7 @@ BOOL
 	{
 		if (!bCurrentProcess && !ulPid)
 		{
-			printfPublic("input arguments error. \n");
+			printfPublic("input arguments error");
 			__leave;
 		}
 
@@ -494,7 +494,7 @@ VOID
 	{
 		if (!CModulePath::Get(NULL, tchProcPath, _countof(tchProcPath)))
 		{
-			printfPublic("CModulePath::Get failed. \n");
+			printfPublic("CModulePath::Get failed");
 			__leave;
 		}
 
@@ -524,13 +524,13 @@ VOID
 	{
 		if (!GetEnvironmentVariable(_T("COMSPEC"), tchCmd, _countof(tchCmd)))
 		{
-			printfPublic("GetEnvironmentVariable failed. (%d) \n", GetLastError());
+			printfPublic("GetEnvironmentVariable failed. (%d)", GetLastError());
 			__leave;
 		}
 
 		if (!CModulePath::Get(NULL, tchProcPath, _countof(tchProcPath)))
 		{
-			printfPublic("GetModuleFileName failed. (%d) \n", GetLastError());
+			printfPublic("GetModuleFileName failed. (%d)", GetLastError());
 			__leave;
 		}
 
@@ -540,13 +540,13 @@ VOID
 
 		if (!SetPriorityClass(GetCurrentProcess(), REALTIME_PRIORITY_CLASS))
 		{
-			printfPublic("SetPriorityClass failed. (%d) \n", GetLastError());
+			printfPublic("SetPriorityClass failed. (%d)", GetLastError());
 			__leave;
 		}
 
 		if (!SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_TIME_CRITICAL))
 		{
-			printfPublic("SetThreadPriority failed. (%d) \n", GetLastError());
+			printfPublic("SetThreadPriority failed. (%d)", GetLastError());
 			__leave;
 		}
 
@@ -567,25 +567,25 @@ VOID
 			&ProcInfo
 			))
 		{
-			printfPublic("CreateProcess failed. (%d) \n", GetLastError());
+			printfPublic("CreateProcess failed. (%d)", GetLastError());
 			__leave;
 		}
 
 		if (!SetPriorityClass(ProcInfo.hProcess, IDLE_PRIORITY_CLASS))
 		{
-			printfPublic("SetPriorityClass failed. (%d) \n", GetLastError());
+			printfPublic("SetPriorityClass failed. (%d)", GetLastError());
 			__leave;
 		}
 
 		if (!SetThreadPriority(ProcInfo.hThread, THREAD_PRIORITY_IDLE))
 		{
-			printfPublic("SetThreadPriority failed. (%d) \n", GetLastError());
+			printfPublic("SetThreadPriority failed. (%d)", GetLastError());
 			__leave;
 		}
 
 		if (-1 == ResumeThread(ProcInfo.hThread))
 		{
-			printfPublic("ResumeThread failed. (%d) \n", GetLastError());
+			printfPublic("ResumeThread failed. (%d)", GetLastError());
 			__leave;
 		}
 	}

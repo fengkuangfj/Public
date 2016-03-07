@@ -25,7 +25,7 @@ BOOL
 			);
 		if (ERROR_SUCCESS != lResult)
 		{
-			printfPublic("RegOpenKeyEx failed. (%d) \n", lResult);
+			printfPublic("RegOpenKeyEx failed. (%d)", lResult);
 			__leave;
 		}
 
@@ -69,7 +69,7 @@ BOOL
 			}
 		default:
 			{
-				printfPublic("UacLevel error. (%d) \n", UacLevel);
+				printfPublic("UacLevel error. (%d)", UacLevel);
 				__leave;
 			}
 		}
@@ -84,13 +84,13 @@ BOOL
 			);
 		if (ERROR_SUCCESS != lResult)
 		{
-			printfPublic("RegSetValueEx failed. ConsentPromptBehaviorAdmin (%d) \n", lResult);
+			printfPublic("RegSetValueEx failed. ConsentPromptBehaviorAdmin (%d)", lResult);
 			__leave;
 		}
 
 		if (!hKey)
 		{
-			printfPublic("hKey error \n");
+			printfPublic("hKey error");
 			__leave;
 		}
 
@@ -104,7 +104,7 @@ BOOL
 			);
 		if (ERROR_SUCCESS != lResult)
 		{
-			printfPublic("RegSetValueEx failed. EnableLUA (%d) \n", lResult);
+			printfPublic("RegSetValueEx failed. EnableLUA (%d)", lResult);
 			__leave;
 		}
 
@@ -118,7 +118,7 @@ BOOL
 			);
 		if (ERROR_SUCCESS != lResult)
 		{
-			printfPublic("RegSetValueEx failed. PromptOnSecureDesktop (%d) \n", lResult);
+			printfPublic("RegSetValueEx failed. PromptOnSecureDesktop (%d)", lResult);
 			__leave;
 		}
 
