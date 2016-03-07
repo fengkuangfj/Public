@@ -37,7 +37,6 @@ BOOL
 		if (!lpServiceName || !lpPath || !dwServiceType)
 		{
 			printfEx(MOD_SERVICE, PRINTF_LEVEL_ERROR, "input arguments error. 0x%08p 0x%08p %d", lpServiceName, lpPath, dwServiceType);
-
 			__leave;
 		}
 
@@ -545,20 +544,20 @@ BOOL
 		hScManager = OpenSCManager(NULL, NULL, SC_MANAGER_ALL_ACCESS);
 		if (!hScManager)
 		{
-			printf("OpenSCManager failed. (%d) \n", GetLastError());
+			printfEx(MOD_SERVICE, PRINTF_LEVEL_ERROR, "OpenSCManager failed. (%d)", GetLastError());
 			__leave;
 		}
 
 		hService = OpenService(hScManager, lpServiceName, SERVICE_ALL_ACCESS);
 		if (!hService)
 		{
-			printf("OpenService failed. (%d) \n", GetLastError());
+			printfEx(MOD_SERVICE, PRINTF_LEVEL_ERROR, "OpenService failed. (%d)", GetLastError());
 			__leave;
 		}
 
 		if (!StartService(hService, 0, NULL))
 		{
-			printf("StartService failed. (%d) \n", GetLastError());
+			printfEx(MOD_SERVICE, PRINTF_LEVEL_ERROR, "StartService failed. (%d)", GetLastError());
 			__leave;
 		}
 
@@ -599,20 +598,20 @@ BOOL
 		hScManager = OpenSCManager(NULL, NULL, SC_MANAGER_ALL_ACCESS);
 		if (!hScManager)
 		{
-			printf("OpenSCManager failed. (%d) \n", GetLastError());
+			printfEx(MOD_SERVICE, PRINTF_LEVEL_ERROR, "OpenSCManager failed. (%d)", GetLastError());
 			__leave;
 		}
 
 		hService = OpenService(hScManager, lpServiceName, SERVICE_ALL_ACCESS);
 		if (!hService)
 		{
-			printf("OpenService failed. (%d) \n", GetLastError());
+			printfEx(MOD_SERVICE, PRINTF_LEVEL_ERROR, "OpenService failed. (%d)", GetLastError());
 			__leave;
 		}
 
 		if (!ControlService(hService, SERVICE_CONTROL_STOP, &ServiceStatus))
 		{
-			printf("ControlService failed. (%d) \n", GetLastError());
+			printfEx(MOD_SERVICE, PRINTF_LEVEL_ERROR, "ControlService failed. (%d)", GetLastError());
 			__leave;
 		}
 
@@ -652,20 +651,20 @@ BOOL
 		hScManager = OpenSCManager(NULL, NULL, SC_MANAGER_ALL_ACCESS);
 		if (!hScManager)
 		{
-			printf("OpenSCManager failed. (%d) \n", GetLastError());
+			printfEx(MOD_SERVICE, PRINTF_LEVEL_ERROR, "OpenSCManager failed. (%d)", GetLastError());
 			__leave;
 		}
 
 		hService = OpenService(hScManager, lpServiceName, SERVICE_ALL_ACCESS);
 		if (!hService)
 		{
-			printf("OpenService failed. (%d) \n", GetLastError());
+			printfEx(MOD_SERVICE, PRINTF_LEVEL_ERROR, "OpenService failed. (%d)", GetLastError());
 			__leave;
 		}
 
 		if (!DeleteService(hService))
 		{
-			printf("DeleteService failed. (%d) \n", GetLastError());
+			printfEx(MOD_SERVICE, PRINTF_LEVEL_ERROR, "DeleteService failed. (%d)", GetLastError());
 			__leave;
 		}
 
@@ -705,14 +704,14 @@ BOOL
 		hScManager = OpenSCManager(NULL, NULL, SC_MANAGER_ALL_ACCESS);
 		if (!hScManager)
 		{
-			printf("OpenSCManager failed. (%d) \n", GetLastError());
+			printfEx(MOD_SERVICE, PRINTF_LEVEL_ERROR, "OpenSCManager failed. (%d)", GetLastError());
 			__leave;
 		}
 
 		hService = OpenService(hScManager, lpServiceName, SERVICE_ALL_ACCESS);
 		if (!hService)
 		{
-			printf("OpenService failed. (%d) \n", GetLastError());
+			printfEx(MOD_SERVICE, PRINTF_LEVEL_ERROR, "OpenService failed. (%d)", GetLastError());
 			__leave;
 		}
 
@@ -730,7 +729,7 @@ BOOL
 			NULL
 			))
 		{
-			printf("ChangeServiceConfig failed. (%d) \n", GetLastError());
+			printfEx(MOD_SERVICE, PRINTF_LEVEL_ERROR, "ChangeServiceConfig failed. (%d)", GetLastError());
 			__leave;
 		}
 
@@ -770,14 +769,14 @@ BOOL
 		hScManager = OpenSCManager(NULL, NULL, SC_MANAGER_ALL_ACCESS);
 		if (!hScManager)
 		{
-			printf("OpenSCManager failed. (%d) \n", GetLastError());
+			printfEx(MOD_SERVICE, PRINTF_LEVEL_ERROR, "OpenSCManager failed. (%d)", GetLastError());
 			__leave;
 		}
 
 		hService = OpenService(hScManager, lpServiceName, SERVICE_ALL_ACCESS);
 		if (!hService)
 		{
-			printf("OpenService failed. (%d) \n", GetLastError());
+			printfEx(MOD_SERVICE, PRINTF_LEVEL_ERROR, "OpenService failed. (%d)", GetLastError());
 			__leave;
 		}
 
@@ -795,7 +794,7 @@ BOOL
 			NULL
 			))
 		{
-			printf("ChangeServiceConfig failed. (%d) \n", GetLastError());
+			printfEx(MOD_SERVICE, PRINTF_LEVEL_ERROR, "ChangeServiceConfig failed. (%d)", GetLastError());
 			__leave;
 		}
 

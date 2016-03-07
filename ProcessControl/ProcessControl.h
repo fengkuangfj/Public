@@ -1,9 +1,5 @@
 #pragma once
 
-#ifndef MOD_PROCESS_CONTROL
-#define MOD_PROCESS_CONTROL _T("进程控制")
-#endif
-
 #include <Windows.h>
 #include <tchar.h>
 #include <Psapi.h>
@@ -15,6 +11,8 @@
 #pragma comment(lib, "Psapi.lib")
 #pragma comment(lib, "Shell32.lib")
 #pragma comment(lib, "Advapi32.lib")
+
+#define MOD_PROCESS_CONTROL _T("进程控制")
 
 typedef enum _PROC_TYPE
 {

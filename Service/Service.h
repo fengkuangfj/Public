@@ -2,10 +2,10 @@
 
 #include <Windows.h>
 
-#pragma comment(lib, "Advapi32.lib")
-
 #include "..\\PrintfEx\\PrintfEx.h"
 #include "..\\OperationSystemVersion\\OperationSystemVersion.h"
+
+#pragma comment(lib, "Advapi32.lib")
 
 #define MOD_SERVICE _T("·þÎñ")
 
