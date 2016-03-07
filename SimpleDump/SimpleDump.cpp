@@ -23,7 +23,7 @@ __in	ULONG	ulCharacters
 	{
 		if (!pCmdLine || !ulCharacters)
 		{
-			printfEx(MOD_VOLUME_DETECTOR, PRINTF_LEVEL_ERROR, "input argument error");
+			printfEx(MOD_SIMPLE_DUMP, PRINTF_LEVEL_ERROR, "input arguments error. pCmdLine(0x%p) ulCharacters(%d)", pCmdLine, ulCharacters);
 			__leave;
 		}
 
@@ -43,7 +43,10 @@ __in	ULONG	ulCharacters
 		_tcscat_s(pCmdLine, ulCharacters, tchTemp);
 
 		if (!GetProcessTimes(GetCurrentProcess(), &FileTime, &ExitTime, &KernelTime, &UserTime))
+		{
+			printfEx(MOD_SIMPLE_DUMP, PRINTF_LEVEL_ERROR, "GetProcessTimes failed. (%d)", GetLastError());
 			__leave;
+		}
 
 		_tcscat_s(pCmdLine, ulCharacters, _T("_"));
 		ZeroMemory(tchTemp, sizeof(tchTemp));
@@ -82,11 +85,17 @@ CSimpleDump::DefaultRestartFunc()
 	__try
 	{
 		if (!GetModuleFileName(NULL, tchProcPath, _countof(tchProcPath)))
+		{
+			printfEx(MOD_SIMPLE_DUMP, PRINTF_LEVEL_ERROR, "GetModuleFileName failed. (%d)", GetLastError());
 			__leave;
+		}
 
 		lpProcName = StrRChr(tchProcPath, tchProcPath + _tcslen(tchProcPath), _T('\\'));
 		if (!lpProcName)
+		{
+			printfEx(MOD_SIMPLE_DUMP, PRINTF_LEVEL_ERROR, "StrRChr failed");
 			__leave;
+		}
 
 		lpProcName++;
 		_tcscat_s(tchInfo, _countof(tchInfo), lpProcName);
@@ -104,20 +113,32 @@ CSimpleDump::DefaultRestartFunc()
 
 			lpCmdLine = (LPTSTR)calloc(1, CMD_LINE_MAX_CHARS * sizeof(TCHAR));
 			if (!lpCmdLine)
+			{
+				printfEx(MOD_SIMPLE_DUMP, PRINTF_LEVEL_ERROR, "calloc failed. (%d)", GetLastError());
 				__leave;
+			}
 
 			if (!GenRestartCmdLine(lpCmdLine, CMD_LINE_MAX_CHARS))
+			{
+				printfEx(MOD_SIMPLE_DUMP, PRINTF_LEVEL_ERROR, "GenRestartCmdLine failed");
 				__leave;
+			}
 
 			if (PROC_TYPE_CONSOLE == m_ProcType || PROC_TYPE_SERVICE == m_ProcType)
 			{
 				if (!CreateProcess(NULL, lpCmdLine, NULL, NULL, FALSE, CREATE_NEW_CONSOLE, NULL, NULL, &si, &pi))
+				{
+					printfEx(MOD_SIMPLE_DUMP, PRINTF_LEVEL_ERROR, "CreateProcess failed. (%d)", GetLastError());
 					__leave;
+				}
 			}
 			else
 			{
 				if (!CreateProcess(tchProcPath, lpCmdLine, NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi))
+				{
+					printfEx(MOD_SIMPLE_DUMP, PRINTF_LEVEL_ERROR, "CreateProcess failed. (%d)", GetLastError());
 					__leave;
+				}
 			}
 		}
 	}
@@ -166,10 +187,16 @@ CSimpleDump::BeenRunningMinimum60Seconds()
 			&KernelTime,
 			&UserTime
 			))
+		{
+			printfEx(MOD_SIMPLE_DUMP, PRINTF_LEVEL_ERROR, "GetProcessTimes failed. (%d)", GetLastError());
 			__leave;
+		}
 
 		if (!FileTimeToSystemTime(&CreationTime, &SystemTimeCreate))
+		{
+			printfEx(MOD_SIMPLE_DUMP, PRINTF_LEVEL_ERROR, "FileTimeToSystemTime failed. (%d)", GetLastError());
 			__leave;
+		}
 
 		GetSystemTime(&SystemTimeNow);
 
@@ -233,7 +260,10 @@ _In_ struct _EXCEPTION_POINTERS* pExceptionInfo
 	__try
 	{
 		if (!pExceptionInfo || !pExceptionInfo->ExceptionRecord)
+		{
+			printfEx(MOD_SIMPLE_DUMP, PRINTF_LEVEL_ERROR, "input arguments error. pExceptionInfo(0x%p) pExceptionInfo->ExceptionRecord(0x%p)", pExceptionInfo, pExceptionInfo->ExceptionRecord);
 			__leave;
+		}
 
 		pExceptionRecored = pExceptionInfo->ExceptionRecord;
 
@@ -319,7 +349,10 @@ CSimpleDump::RegisterRestart()
 
 		hResult = m_pfRegisterApplicationRestart(tchCmdLine, RESTART_NO_PATCH | RESTART_NO_REBOOT);
 		if (FAILED(hResult))
+		{
+			printfEx(MOD_SIMPLE_DUMP, PRINTF_LEVEL_ERROR, "m_pfRegisterApplicationRestart failed. (0x%x)", hResult);
 			__leave;
+		}
 
 		bRet = TRUE;
 	}
@@ -371,7 +404,10 @@ __in_opt LPTSTR	lpCmdLine
 		{
 			m_lpCmdLine = (LPTSTR)calloc(1, ulLen * sizeof(TCHAR));
 			if (!m_lpCmdLine)
+			{
+				printfEx(MOD_SIMPLE_DUMP, PRINTF_LEVEL_ERROR, "calloc failed. (%d)", GetLastError());
 				__leave;
+			}
 
 			if (PROC_TYPE_CONSOLE == m_ProcType || PROC_TYPE_SERVICE == m_ProcType)
 			{
@@ -442,7 +478,10 @@ __in PCRUSH_HANDLER_INFO pCrushHandlerInfo
 	__try
 	{
 		if (!GetFunc())
+		{
+			printfEx(MOD_SIMPLE_DUMP, PRINTF_LEVEL_ERROR, "GetFunc failed");
 			__leave;
+		}
 
 		m_ProcType = CProcessControl::GetProcType(TRUE, 0);
 
@@ -480,18 +519,27 @@ __in PCRUSH_HANDLER_INFO pCrushHandlerInfo
 				if (PROC_TYPE_CONSOLE == m_ProcType || PROC_TYPE_SERVICE == m_ProcType)
 				{
 					if (!InitCmdLine(pCrushHandlerInfo->Arg.nArgc, pCrushHandlerInfo->Arg.plpArgv, NULL))
+					{
+						printfEx(MOD_SIMPLE_DUMP, PRINTF_LEVEL_ERROR, "InitCmdLine failed");
 						__leave;
+					}
 				}
 				else
 				{
 					if (!InitCmdLine(NULL, NULL, pCrushHandlerInfo->lpCmdLine))
+					{
+						printfEx(MOD_SIMPLE_DUMP, PRINTF_LEVEL_ERROR, "InitCmdLine failed");
 						__leave;
+					}
 				}
 
 				if (m_bCanUseRegisterRestart)
 				{
 					if (!RegisterRestart())
+					{
+						printfEx(MOD_SIMPLE_DUMP, PRINTF_LEVEL_ERROR, "RegisterRestart failed");
 						__leave;
+					}
 				}
 			}
 		}
@@ -535,24 +583,42 @@ __in	ULONG	ulBufferLen
 	__try
 	{
 		if (!pExceptionAddress || !lpDumpFilePath || !ulBufferLen)
+		{
+			printfEx(MOD_SIMPLE_DUMP, PRINTF_LEVEL_ERROR, "input arguments error. pExceptionAddress(0x%p) lpDumpFilePath(0x%p) ulBufferLen(%d)", pExceptionAddress, lpDumpFilePath, ulBufferLen);
 			__leave;
+		}
 
 		if (!VirtualQuery(pExceptionAddress, &MemoryBasicInfo, sizeof(MemoryBasicInfo)))
+		{
+			printfEx(MOD_SIMPLE_DUMP, PRINTF_LEVEL_ERROR, "VirtualQuery failed. (%d)", GetLastError());
 			__leave;
+		}
 
 		if (!GetModuleFileName((HMODULE)MemoryBasicInfo.AllocationBase, tchModulePath, _countof(tchModulePath)))
+		{
+			printfEx(MOD_SIMPLE_DUMP, PRINTF_LEVEL_ERROR, "GetModuleFileName failed. (%d)", GetLastError());
 			__leave;
+		}
 
 		pModuleName = StrRChr(tchModulePath, tchModulePath + _tcsclen(tchModulePath), _T('\\'));
 		if (!pModuleName)
+		{
+			printfEx(MOD_SIMPLE_DUMP, PRINTF_LEVEL_ERROR, "StrRChr failed)");
 			__leave;
+		}
 
 		if (!GetModuleFileName(NULL, tchProcPath, _countof(tchProcPath)))
+		{
+			printfEx(MOD_SIMPLE_DUMP, PRINTF_LEVEL_ERROR, "GetModuleFileName failed. (%d)", GetLastError());
 			__leave;
+		}
 
 		pProcName = StrRChr(tchProcPath, tchProcPath + _tcsclen(tchProcPath), _T('\\'));
 		if (!pProcName)
+		{
+			printfEx(MOD_SIMPLE_DUMP, PRINTF_LEVEL_ERROR, "StrRChr failed)");
 			__leave;
+		}
 
 		MoveMemory(tchDumpFilePathWithoutCount, tchModulePath, (pModuleName - tchModulePath) * sizeof(TCHAR));
 		_tcscat_s(tchDumpFilePathWithoutCount, _countof(tchDumpFilePathWithoutCount), pProcName);
@@ -608,7 +674,10 @@ __in	ULONG	ulBufferLen
 			else
 			{
 				if (80 != GetLastError())
+				{
+					printfEx(MOD_SIMPLE_DUMP, PRINTF_LEVEL_ERROR, "CreateFileW failed. (%d)", GetLastError());
 					__leave;
+				}
 
 				// 文件存在
 				ZeroMemory(tchDumpFilePath, sizeof(tchDumpFilePath));
@@ -650,10 +719,16 @@ __in _EXCEPTION_POINTERS* pExceptionInfo
 	__try
 	{
 		if (!pExceptionInfo)
+		{
+			printfEx(MOD_SIMPLE_DUMP, PRINTF_LEVEL_ERROR, "input argument error. (0x%p)", pExceptionInfo);
 			__leave;
+		}
 
 		if (!CreateDumpFile(pExceptionInfo->ExceptionRecord->ExceptionAddress, tchDumpFilePath, sizeof(tchDumpFilePath)))
+		{
+			printfEx(MOD_SIMPLE_DUMP, PRINTF_LEVEL_ERROR, "CreateDumpFile failed");
 			__leave;
+		}
 
 		hFile = CreateFileW(
 			tchDumpFilePath,
@@ -665,7 +740,10 @@ __in _EXCEPTION_POINTERS* pExceptionInfo
 			NULL
 			);
 		if (INVALID_HANDLE_VALUE == hFile)
+		{
+			printfEx(MOD_SIMPLE_DUMP, PRINTF_LEVEL_ERROR, "CreateFileW failed. (%d)", GetLastError());
 			__leave;
+		}
 
 		MiniExceptionInfo.ThreadId = GetCurrentThreadId();
 		MiniExceptionInfo.ExceptionPointers = pExceptionInfo;
@@ -680,7 +758,10 @@ __in _EXCEPTION_POINTERS* pExceptionInfo
 			NULL,
 			NULL
 			))
+		{
+			printfEx(MOD_SIMPLE_DUMP, PRINTF_LEVEL_ERROR, "MiniDumpWriteDump failed. (%d)", GetLastError());
 			__leave;
+		}
 
 		bRet = TRUE;
 	}
@@ -715,14 +796,20 @@ __in	ULONG	ulApplicationVersionLen
 	__try
 	{
 		if (!lpApplicationPath || !lpApplicationVersion || !ulApplicationVersionLen)
+		{
+			printfEx(MOD_SIMPLE_DUMP, PRINTF_LEVEL_ERROR, "input arguments error. lpApplicationPath(0x%p) lpApplicationVersion(0x%p) ulApplicationVersionLen(%d)", lpApplicationPath, lpApplicationVersion, ulApplicationVersionLen);
 			__leave;
+		}
 
 		dwFileVerInfoLen = GetFileVersionInfoSize(lpApplicationPath, NULL);
 		if (dwFileVerInfoLen)
 		{
 			lpFileVerInfo = calloc(1, dwFileVerInfoLen);
 			if (!lpFileVerInfo)
+			{
+				printfEx(MOD_SIMPLE_DUMP, PRINTF_LEVEL_ERROR, "calloc failed. (%d)", GetLastError());
 				__leave;
+			}
 
 			if (!GetFileVersionInfo(
 				lpApplicationPath,
@@ -730,7 +817,10 @@ __in	ULONG	ulApplicationVersionLen
 				dwFileVerInfoLen,
 				lpFileVerInfo
 				))
+			{
+				printfEx(MOD_SIMPLE_DUMP, PRINTF_LEVEL_ERROR, "GetFileVersionInfo failed. (%d)", GetLastError());
 				__leave;
+			}
 
 			if (!VerQueryValue(
 				lpFileVerInfo,
@@ -738,7 +828,10 @@ __in	ULONG	ulApplicationVersionLen
 				&lpFileVersion,
 				&nFileVersionLen
 				))
+			{
+				printfEx(MOD_SIMPLE_DUMP, PRINTF_LEVEL_ERROR, "VerQueryValue failed. (%d)", GetLastError());
 				__leave;
+			}
 
 			MoveMemory(&VsFixedFileInfo, lpFileVersion, sizeof(VsFixedFileInfo));
 		}
@@ -780,14 +873,23 @@ __in	ULONG	ulModuleNameLen
 	__try
 	{
 		if (!pAddress || !lpModuleName || !ulModuleNameLen)
+		{
+			printfEx(MOD_SIMPLE_DUMP, PRINTF_LEVEL_ERROR, "input arguments error. pAddress(0x%p) lpModuleName(0x%p) ulModuleNameLen(%d)", pAddress, lpModuleName, ulModuleNameLen);
 			__leave;
+		}
 
 		phModule = (HMODULE*)calloc(1, sizeof(HMODULE));
 		if (!phModule)
+		{
+			printfEx(MOD_SIMPLE_DUMP, PRINTF_LEVEL_ERROR, "calloc failed. (%d)", GetLastError());
 			__leave;
+		}
 
 		if (!EnumProcessModules(GetCurrentProcess(), phModule, sizeof(HMODULE), &dwRet))
+		{
+			printfEx(MOD_SIMPLE_DUMP, PRINTF_LEVEL_ERROR, "EnumProcessModules failed. (%d)", GetLastError());
 			__leave;
+		}
 
 		if (!dwRet)
 			__leave;
@@ -799,17 +901,29 @@ __in	ULONG	ulModuleNameLen
 
 			phModule = (HMODULE*)calloc(1, dwRet);
 			if (!phModule)
+			{
+				printfEx(MOD_SIMPLE_DUMP, PRINTF_LEVEL_ERROR, "calloc failed. (%d)", GetLastError());
 				__leave;
+			}
 		}
 
 		if (!EnumProcessModules(GetCurrentProcess(), phModule, dwRet, &dwRet))
+		{
+			printfEx(MOD_SIMPLE_DUMP, PRINTF_LEVEL_ERROR, "EnumProcessModules failed. (%d)", GetLastError());
 			__leave;
+		}
 
 		if (!SortModule(phModule, dwRet / sizeof(HMODULE)))
+		{
+			printfEx(MOD_SIMPLE_DUMP, PRINTF_LEVEL_ERROR, "SortModule failed");
 			__leave;
+		}
 
 		if (!GetModuleNameIndex(pAddress, phModule, dwRet / sizeof(HMODULE), &ulIndex))
+		{
+			printfEx(MOD_SIMPLE_DUMP, PRINTF_LEVEL_ERROR, "GetModuleNameIndex failed");
 			__leave;
+		}
 
 		if (!GetModuleFileNameEx(
 			GetCurrentProcess(),
@@ -817,7 +931,10 @@ __in	ULONG	ulModuleNameLen
 			lpModuleName,
 			ulModuleNameLen
 			))
+		{
+			printfEx(MOD_SIMPLE_DUMP, PRINTF_LEVEL_ERROR, "GetModuleFileNameEx failed. (%d)", GetLastError());
 			__leave;
+		}
 
 		bRet = TRUE;
 	}
@@ -849,7 +966,10 @@ __inout ULONG*		pIndex
 	__try
 	{
 		if (!pAddress || !phMoudle || !ulCount || !pIndex)
+		{
+			printfEx(MOD_SIMPLE_DUMP, PRINTF_LEVEL_ERROR, "input arguments error. pAddress(0x%p) phMoudle(0x%p) ulCount(%d) pIndex(0x%p)", pAddress, phMoudle, ulCount, pIndex);
 			__leave;
+		}
 
 		for (; ulIndex < ulCount; ulIndex++)
 		{
@@ -885,7 +1005,10 @@ __in	ULONG		ulCount
 	__try
 	{
 		if (!phMoudle || !ulCount)
+		{
+			printfEx(MOD_SIMPLE_DUMP, PRINTF_LEVEL_ERROR, "input arguments error. phMoudle(0x%p) ulCount(%d)", phMoudle, ulCount);
 			__leave;
+		}
 
 		while (ulCount--)
 		{
@@ -919,7 +1042,10 @@ CSimpleDump::GetFunc()
 	__try
 	{
 		if (!GetKernel32DllFunc())
+		{
+			printfEx(MOD_SIMPLE_DUMP, PRINTF_LEVEL_ERROR, "GetKernel32DllFunc failed");
 			__leave;
+		}
 
 		bRet = TRUE;
 	}
@@ -941,7 +1067,10 @@ CSimpleDump::GetKernel32DllFunc()
 	{
 		m_hModuleKernel32Dll = LoadLibrary(_T("Kernel32.dll"));
 		if (!m_hModuleKernel32Dll)
+		{
+			printfEx(MOD_SIMPLE_DUMP, PRINTF_LEVEL_ERROR, "LoadLibrary failed. (%d)", GetLastError());
 			__leave;
+		}
 
 		m_pfRegisterApplicationRestart = (REGISTER_APPLICATION_RESTART)GetProcAddress(m_hModuleKernel32Dll, "RegisterApplicationRestart");
 		if (m_pfRegisterApplicationRestart)
@@ -1011,7 +1140,10 @@ __inout		ULONG*				pulBufLen
 				break;
 			}
 			default:
-				__leave;
+				{
+					printfEx(MOD_SIMPLE_DUMP, PRINTF_LEVEL_ERROR, "ProcType error. (%d)", ProcType);
+					__leave;
+				}
 		}
 
 		// 比较大小
@@ -1068,7 +1200,10 @@ __inout		ULONG*				pulBufLen
 				break;
 			}
 			default:
-				__leave;
+				{
+					printfEx(MOD_SIMPLE_DUMP, PRINTF_LEVEL_ERROR, "pArgCmdLineInfo->ProcType error. (%d)", pArgCmdLineInfo->ProcType);
+					__leave;
+				}
 		}
 
 		bRet = TRUE;
@@ -1101,7 +1236,10 @@ __inout		ULONG*				pulBufLen
 	__try
 	{
 		if (!pArgCmdlineInfo)
+		{
+			printfEx(MOD_SIMPLE_DUMP, PRINTF_LEVEL_ERROR, "input argument error");
 			__leave;
+		}
 
 		// 计算大小
 		switch (pArgCmdlineInfo->ProcType)
@@ -1128,7 +1266,10 @@ __inout		ULONG*				pulBufLen
 				break;
 			}
 			default:
-				__leave;
+				{
+					printfEx(MOD_SIMPLE_DUMP, PRINTF_LEVEL_ERROR, "pArgCmdlineInfo->ProcType error. (%d)", pArgCmdlineInfo->ProcType);
+					__leave;
+				}
 		}
 
 		// 比较大小
@@ -1185,7 +1326,10 @@ __inout		ULONG*				pulBufLen
 
 								lpTemp = (LPTSTR)calloc(1, ulCalloc);
 								if (!lpTemp)
+								{
+									printfEx(MOD_SIMPLE_DUMP, PRINTF_LEVEL_ERROR, "calloc failed. (%d)", GetLastError());
 									__leave;
+								}
 							}
 
 							MoveMemory(lpTemp, lpPrePosition, (lpCurrentPosition - lpPrePosition) * sizeof(TCHAR));
@@ -1209,7 +1353,10 @@ __inout		ULONG*				pulBufLen
 				break;
 			}
 			default:
-				__leave;
+				{
+					printfEx(MOD_SIMPLE_DUMP, PRINTF_LEVEL_ERROR, "pArgCmdlineInfo->ProcType error. (%d)", pArgCmdlineInfo->ProcType);
+					__leave;
+				}
 		}
 
 		bRet = TRUE;
@@ -1246,7 +1393,10 @@ void
 
 		lpPosition = StrRChr(m_tchRestartTag, NULL, _T('_'));
 		if (!lpPosition)
+		{
+			printfEx(MOD_SIMPLE_DUMP, PRINTF_LEVEL_ERROR, "StrRChr failed");
 			__leave;
+		}
 
 		FileTimePre.dwHighDateTime = _wtoi(lpPosition + 1);
 
@@ -1255,7 +1405,10 @@ void
 		lpPosition = NULL;
 		lpPosition = StrRChr(m_tchRestartTag, NULL, _T('_'));
 		if (!lpPosition)
+		{
+			printfEx(MOD_SIMPLE_DUMP, PRINTF_LEVEL_ERROR, "StrRChr failed");
 			__leave;
+		}
 
 		FileTimePre.dwLowDateTime = _wtoi(lpPosition + 1);
 
@@ -1264,7 +1417,10 @@ void
 		lpPosition = NULL;
 		lpPosition = StrRChr(m_tchRestartTag, NULL, _T('_'));
 		if (!lpPosition)
+		{
+			printfEx(MOD_SIMPLE_DUMP, PRINTF_LEVEL_ERROR, "StrRChr failed");
 			__leave;
+		}
 
 		dwPidPre = _wtoi(lpPosition + 1);
 
@@ -1274,10 +1430,16 @@ void
 		{
 			hProc = OpenProcess(PROCESS_ALL_ACCESS, FALSE, dwPidPre);
 			if (!hProc)
+			{
+				printfEx(MOD_SIMPLE_DUMP, PRINTF_LEVEL_ERROR, "OpenProcess failed. (%d)", GetLastError());
 				__leave;
+			}
 
 			if (!GetProcessTimes(hProc, &FileTime, &ExitTime, &KernelTime, &UserTime))
+			{
+				printfEx(MOD_SIMPLE_DUMP, PRINTF_LEVEL_ERROR, "GetProcessTimes failed. (%d)", GetLastError());
 				__leave;
+			}
 
 			CloseHandle(hProc);
 			hProc = NULL;
