@@ -323,7 +323,7 @@ BOOL
 	{
 		if (!dwBinary || !lpInBuf || !ulInBufSizeCh)
 		{
-			printfEx(MOD_VOLUME_DETECTOR, PRINTF_LEVEL_ERROR, "input arguments error. 0x%08x 0x%08p %d", dwBinary, lpInBuf, ulInBufSizeCh);
+			printfEx(MOD_VOLUME_DETECTOR, PRINTF_LEVEL_ERROR, "input arguments error. 0x%x 0x%p %d", dwBinary, lpInBuf, ulInBufSizeCh);
 			__leave;
 		}
 
@@ -375,7 +375,7 @@ unsigned int
 
 				if (!CVolumeDetector::GetInstance()->BinaryToVolume(dwVolume, tchName, _countof(tchName)))
 				{
-					printfEx(MOD_VOLUME_DETECTOR, PRINTF_LEVEL_ERROR, "BinaryToVolume failed. 0x%08x - 0x%08x", lpWmDevicechangeWorkthreadArguments->DevBroadcastVolume.dbcv_unitmask, dwVolume);
+					printfEx(MOD_VOLUME_DETECTOR, PRINTF_LEVEL_ERROR, "BinaryToVolume failed. 0x%x - 0x%x", lpWmDevicechangeWorkthreadArguments->DevBroadcastVolume.dbcv_unitmask, dwVolume);
 					__leave;
 				}
 
@@ -452,7 +452,7 @@ unsigned int
 					}
 				default:
 					{
-						printfEx(MOD_VOLUME_DETECTOR, PRINTF_LEVEL_ERROR, "wParam error. 0x%08x", lpWmDevicechangeWorkthreadArguments->wParam);
+						printfEx(MOD_VOLUME_DETECTOR, PRINTF_LEVEL_ERROR, "wParam error. 0x%x", lpWmDevicechangeWorkthreadArguments->wParam);
 						__leave;
 					}
 				}

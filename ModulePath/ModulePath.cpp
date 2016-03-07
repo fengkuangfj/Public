@@ -16,7 +16,7 @@ BOOL
 	{
 		if (!lpOutBuf || !ulOutBufSizeCh)
 		{
-			printfPublic("input arguments error. 0x%08p %d \n", lpOutBuf, ulOutBufSizeCh);
+			printfPublic("input arguments error. 0x%p %d \n", lpOutBuf, ulOutBufSizeCh);
 			__leave;
 		}
 

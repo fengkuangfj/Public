@@ -24,7 +24,7 @@ CStackBacktrace::WalkFrameChaim()
 
 		FrameCount = m_pfRtlWalkFrameChain(ReturnAddress, _countof(ReturnAddress), 0);
 		for (; FrameNumber < FrameCount; FrameNumber++)
-			printfEx(MOD_STACK_BACKTRACE, PRINTF_LEVEL_INFORMATION, "[FrameNumber]%02d [ReturnAddress]0x%08p", FrameNumber, ReturnAddress[FrameNumber]);
+			printfEx(MOD_STACK_BACKTRACE, PRINTF_LEVEL_INFORMATION, "[FrameNumber]%02d [ReturnAddress]0x%p", FrameNumber, ReturnAddress[FrameNumber]);
 
 		bRet = TRUE;
 	}

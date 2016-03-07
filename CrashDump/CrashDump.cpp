@@ -34,7 +34,7 @@ BOOL
 					);
 				if (ERROR_SUCCESS != lResult)
 				{
-					printfPublic("RegOpenKeyEx failed. (%d) \n", lResult);
+					printfPublic("RegOpenKeyEx failed. (0x%x) \n", lResult);
 					__leave;
 				}
 
@@ -50,7 +50,7 @@ BOOL
 					);
 				if (ERROR_SUCCESS != lResult)
 				{
-					printfPublic("RegSetValueEx failed. (%d) \n", lResult);
+					printfPublic("RegSetValueEx failed. (0x%x) \n", lResult);
 					__leave;
 				}
 
@@ -66,7 +66,7 @@ BOOL
 					);
 				if (ERROR_SUCCESS != lResult)
 				{
-					printfPublic("RegSetValueEx failed. (%d) \n", lResult);
+					printfPublic("RegSetValueEx failed. (0x%x) \n", lResult);
 					__leave;
 				}
 
@@ -74,7 +74,7 @@ BOOL
 				lResult = RegFlushKey(hKey);
 				if (ERROR_SUCCESS != lResult)
 				{
-					printfPublic("RegFlushKey failed. (%d) \n", lResult);
+					printfPublic("RegFlushKey failed. (0x%x) \n", lResult);
 					__leave;
 				}
 
@@ -116,7 +116,7 @@ FILE_MODIFY_TIME_CMP
 	{
 		if (!lpFrirst || !lpSecend)
 		{
-			printfPublic("input arguments error. lpFrirst(0x%08p) lpSecend(0x%08p) \n", lpFrirst, lpSecend);
+			printfPublic("input arguments error. lpFrirst(0x%p) lpSecend(0x%p) \n", lpFrirst, lpSecend);
 			__leave;
 		}
 
@@ -179,7 +179,7 @@ BOOL
 	{
 		if (!lpDumpDir || !lpOrgDumpPath || !lpNewDumpPath)
 		{
-			printfPublic("input arguments error. lpDumpDir(0x%08p) lpOrgDumpPath(0x%08p) lpNewDumpPath(0x%08p) \n", lpDumpDir, lpOrgDumpPath, lpNewDumpPath);
+			printfPublic("input arguments error. lpDumpDir(0x%p) lpOrgDumpPath(0x%p) lpNewDumpPath(0x%p) \n", lpDumpDir, lpOrgDumpPath, lpNewDumpPath);
 			__leave;
 		}
 
@@ -271,7 +271,7 @@ BOOL
 			);
 		if (ERROR_SUCCESS != lResult)
 		{
-			printfPublic("RegOpenKeyEx failed. (%d) \n", lResult);
+			printfPublic("RegOpenKeyEx failed. (0x%x) \n", lResult);
 			__leave;
 		}
 
@@ -297,7 +297,7 @@ BOOL
 			{
 				if (ERROR_MORE_DATA != lResult)
 				{
-					printfPublic("RegQueryValueEx failed. (%d) \n", lResult);
+					printfPublic("RegQueryValueEx failed. (0x%x) \n", lResult);
 					__leave;
 				}
 
@@ -316,7 +316,7 @@ BOOL
 		{
 			if (!GetSystemWindowsDirectory(tchDumpFile, _countof(tchDumpFile)))
 			{
-				printfPublic("GetSystemWindowsDirectory failed. (%d) \n", lResult);
+				printfPublic("GetSystemWindowsDirectory failed. (0x%x) \n", lResult);
 				__leave;
 			}
 
@@ -347,14 +347,14 @@ BOOL
 
 				if (!PathYetAnotherMakeUniqueName(tchNewDumpFile, tchNewDumpFile, NULL, lpPosition + 1))
 				{
-					printfPublic("PathYetAnotherMakeUniqueName failed. (%d) \n", lResult);
+					printfPublic("PathYetAnotherMakeUniqueName failed. (0x%x) \n", lResult);
 					__leave;
 				}
 			}
 
 			if (!MoveFile(tchDumpFile, tchNewDumpFile))
 			{
-				printfPublic("MoveFile failed. (%d) \n", lResult);
+				printfPublic("MoveFile failed. (0x%x) \n", lResult);
 				__leave;
 			}
 

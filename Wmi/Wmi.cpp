@@ -26,7 +26,7 @@ BOOL
 	{
 		if (!lpClass || !lpContent)
 		{
-			printfEx(MOD_WMI, PRINTF_LEVEL_ERROR, "input arguments error. 0x%08p 0x%08p", lpClass, lpContent);
+			printfEx(MOD_WMI, PRINTF_LEVEL_ERROR, "input arguments error. 0x%p 0x%p", lpClass, lpContent);
 			break;
 		}
 
@@ -229,7 +229,7 @@ BOOL
 	{
 		if (!lpOutBuf || !ulOutBufSizeCh)
 		{
-			printfEx(MOD_WMI, PRINTF_LEVEL_ERROR, "input arguments error. 0x%08p %d", lpOutBuf, ulOutBufSizeCh);
+			printfEx(MOD_WMI, PRINTF_LEVEL_ERROR, "input arguments error. 0x%p %d", lpOutBuf, ulOutBufSizeCh);
 			break;
 		}
 

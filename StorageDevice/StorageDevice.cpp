@@ -23,7 +23,7 @@ BOOL
 
 		if (!lpPath || !pStorageBusType)
 		{
-			printfEx(MOD_STORAGE_DEVICE, PRINTF_LEVEL_ERROR, "input arguments error. 0x%08p 0x%08p", lpPath, pStorageBusType);
+			printfEx(MOD_STORAGE_DEVICE, PRINTF_LEVEL_ERROR, "input arguments error. 0x%p 0x%p", lpPath, pStorageBusType);
 			__leave;
 		}
 
@@ -102,7 +102,7 @@ BOOL
 	{
 		if (!lpPath || !pDiskNumber)
 		{
-			printfEx(MOD_STORAGE_DEVICE, PRINTF_LEVEL_ERROR, "input arguments error. 0x%08p 0x%08p", lpPath, pDiskNumber);
+			printfEx(MOD_STORAGE_DEVICE, PRINTF_LEVEL_ERROR, "input arguments error. 0x%p 0x%p", lpPath, pDiskNumber);
 			__leave;
 		}
 
@@ -173,7 +173,7 @@ BOOL
 	{
 		if (!lpInBuf || !lpOutBuf || !ulOutBufSizeCh)
 		{
-			printfEx(MOD_STORAGE_DEVICE, PRINTF_LEVEL_ERROR, "input arguments error. 0x%08p 0x%08p %d", lpInBuf, lpOutBuf, ulOutBufSizeCh);
+			printfEx(MOD_STORAGE_DEVICE, PRINTF_LEVEL_ERROR, "input arguments error. 0x%p 0x%p %d", lpInBuf, lpOutBuf, ulOutBufSizeCh);
 			__leave;
 		}
 

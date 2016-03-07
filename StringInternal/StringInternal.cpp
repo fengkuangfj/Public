@@ -17,7 +17,7 @@ BOOL
 	{
 		if (!lpInBuf || !lpOutBuf || !ulOutBufSizeCh)
 		{
-			printfEx(MOD_STRING_INTERNAL, PRINTF_LEVEL_ERROR, "input arguments error. 0x%08p 0x%08p %d", lpInBuf, lpOutBuf, ulOutBufSizeCh);
+			printfEx(MOD_STRING_INTERNAL, PRINTF_LEVEL_ERROR, "input arguments error. 0x%p 0x%p %d", lpInBuf, lpOutBuf, ulOutBufSizeCh);
 			__leave;
 		}
 

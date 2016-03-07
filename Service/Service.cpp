@@ -36,7 +36,7 @@ BOOL
 	{
 		if (!lpServiceName || !lpPath || !dwServiceType)
 		{
-			printfEx(MOD_SERVICE, PRINTF_LEVEL_ERROR, "input arguments error. 0x%08p 0x%08p %d", lpServiceName, lpPath, dwServiceType);
+			printfEx(MOD_SERVICE, PRINTF_LEVEL_ERROR, "input arguments error. 0x%p 0x%p %d", lpServiceName, lpPath, dwServiceType);
 			__leave;
 		}
 
@@ -80,7 +80,7 @@ BOOL
 					SERVICE_KERNEL_DRIVER & dwServiceType ||
 					SERVICE_RECOGNIZER_DRIVER & dwServiceType))
 				{
-					printfEx(MOD_SERVICE, PRINTF_LEVEL_ERROR, "dwServiceType and dwStartType not match. 0x%08x 0x%08x", dwServiceType, dwStartType);
+					printfEx(MOD_SERVICE, PRINTF_LEVEL_ERROR, "dwServiceType and dwStartType not match. 0x%x 0x%x", dwServiceType, dwStartType);
 					__leave;
 				}
 
@@ -123,7 +123,7 @@ BOOL
 			}
 		default:
 			{
-				printfEx(MOD_SERVICE, PRINTF_LEVEL_ERROR, "dwStartType error. 0x%08x", dwStartType);
+				printfEx(MOD_SERVICE, PRINTF_LEVEL_ERROR, "dwStartType error. 0x%x", dwStartType);
 				__leave;
 			}
 		}
@@ -137,7 +137,7 @@ BOOL
 			break;
 		default:
 			{
-				printfEx(MOD_SERVICE, PRINTF_LEVEL_ERROR, "dwErrorControl error. 0x%08x", dwErrorControl);
+				printfEx(MOD_SERVICE, PRINTF_LEVEL_ERROR, "dwErrorControl error. 0x%x", dwErrorControl);
 				__leave;
 			}
 		}
@@ -187,7 +187,7 @@ BOOL
 					);
 				if (ERROR_SUCCESS != lResult)
 				{
-					printfEx(MOD_SERVICE, PRINTF_LEVEL_ERROR, "RegGetValue failed. (0x%08x)", lResult);
+					printfEx(MOD_SERVICE, PRINTF_LEVEL_ERROR, "RegGetValue failed. (0x%x)", lResult);
 					__leave;
 				}
 
@@ -200,7 +200,7 @@ BOOL
 					);
 				if (ERROR_SUCCESS != lResult)
 				{
-					printfEx(MOD_SERVICE, PRINTF_LEVEL_ERROR, "RegOpenKeyEx failed. (0x%08x)", lResult);
+					printfEx(MOD_SERVICE, PRINTF_LEVEL_ERROR, "RegOpenKeyEx failed. (0x%x)", lResult);
 					__leave;
 				}
 
@@ -223,14 +223,14 @@ BOOL
 					);
 				if (ERROR_SUCCESS != lResult)
 				{
-					printfEx(MOD_SERVICE, PRINTF_LEVEL_ERROR, "RegSetValueEx failed. (0x%08x)", lResult);
+					printfEx(MOD_SERVICE, PRINTF_LEVEL_ERROR, "RegSetValueEx failed. (0x%x)", lResult);
 					__leave;
 				}
 
 				lResult = RegFlushKey(hkResult);
 				if (ERROR_SUCCESS != lResult)
 				{
-					printfEx(MOD_SERVICE, PRINTF_LEVEL_ERROR, "RegFlushKey failed. (0x%08x)", lResult);
+					printfEx(MOD_SERVICE, PRINTF_LEVEL_ERROR, "RegFlushKey failed. (0x%x)", lResult);
 					__leave;
 				}
 				*/
@@ -256,7 +256,7 @@ BOOL
 					);
 				if (ERROR_SUCCESS != lResult)
 				{
-					printfEx(MOD_SERVICE, PRINTF_LEVEL_ERROR, "RegCreateKeyEx failed. (0x%08x)", lResult);
+					printfEx(MOD_SERVICE, PRINTF_LEVEL_ERROR, "RegCreateKeyEx failed. (0x%x)", lResult);
 					__leave;
 				}
 
@@ -269,7 +269,7 @@ BOOL
 				lResult = RegFlushKey(hkResult);
 				if (ERROR_SUCCESS != lResult)
 				{
-					printfEx(MOD_SERVICE, PRINTF_LEVEL_ERROR, "RegFlushKey failed. (0x%08x)", lResult);
+					printfEx(MOD_SERVICE, PRINTF_LEVEL_ERROR, "RegFlushKey failed. (0x%x)", lResult);
 					__leave;
 				}
 
@@ -287,21 +287,21 @@ BOOL
 					);
 				if (ERROR_SUCCESS != lResult)
 				{
-					printfEx(MOD_SERVICE, PRINTF_LEVEL_ERROR, "RegSetValueEx failed. (0x%08x)", lResult);
+					printfEx(MOD_SERVICE, PRINTF_LEVEL_ERROR, "RegSetValueEx failed. (0x%x)", lResult);
 					__leave;
 				}
 
 				lResult = RegFlushKey(hkResult);
 				if (ERROR_SUCCESS != lResult)
 				{
-					printfEx(MOD_SERVICE, PRINTF_LEVEL_ERROR, "RegFlushKey failed. (0x%08x)", lResult);
+					printfEx(MOD_SERVICE, PRINTF_LEVEL_ERROR, "RegFlushKey failed. (0x%x)", lResult);
 					__leave;
 				}
 
 				lResult = RegCloseKey(hkResult);
 				if (ERROR_SUCCESS != lResult)
 				{
-					printfEx(MOD_SERVICE, PRINTF_LEVEL_ERROR, "RegCloseKey failed. (0x%08x)", lResult);
+					printfEx(MOD_SERVICE, PRINTF_LEVEL_ERROR, "RegCloseKey failed. (0x%x)", lResult);
 					__leave;
 				}
 
@@ -327,7 +327,7 @@ BOOL
 					);
 				if (ERROR_SUCCESS != lResult)
 				{
-					printfEx(MOD_SERVICE, PRINTF_LEVEL_ERROR, "RegCreateKeyEx failed. (0x%08x)", lResult);
+					printfEx(MOD_SERVICE, PRINTF_LEVEL_ERROR, "RegCreateKeyEx failed. (0x%x)", lResult);
 					__leave;
 				}
 
@@ -340,7 +340,7 @@ BOOL
 				lResult = RegFlushKey(hkResult);
 				if (ERROR_SUCCESS != lResult)
 				{
-					printfEx(MOD_SERVICE, PRINTF_LEVEL_ERROR, "RegFlushKey failed. (0x%08x)", lResult);
+					printfEx(MOD_SERVICE, PRINTF_LEVEL_ERROR, "RegFlushKey failed. (0x%x)", lResult);
 					__leave;
 				}
 
@@ -357,14 +357,14 @@ BOOL
 					);
 				if (ERROR_SUCCESS != lResult)
 				{
-					printfEx(MOD_SERVICE, PRINTF_LEVEL_ERROR, "RegSetValueEx failed. (0x%08x)", lResult);
+					printfEx(MOD_SERVICE, PRINTF_LEVEL_ERROR, "RegSetValueEx failed. (0x%x)", lResult);
 					__leave;
 				}
 
 				lResult = RegFlushKey(hkResult);
 				if (ERROR_SUCCESS != lResult)
 				{
-					printfEx(MOD_SERVICE, PRINTF_LEVEL_ERROR, "RegFlushKey failed. (0x%08x)", lResult);
+					printfEx(MOD_SERVICE, PRINTF_LEVEL_ERROR, "RegFlushKey failed. (0x%x)", lResult);
 					__leave;
 				}
 
@@ -380,14 +380,14 @@ BOOL
 					);
 				if (ERROR_SUCCESS != lResult)
 				{
-					printfEx(MOD_SERVICE, PRINTF_LEVEL_ERROR, "RegSetValueEx failed. (0x%08x)", lResult);
+					printfEx(MOD_SERVICE, PRINTF_LEVEL_ERROR, "RegSetValueEx failed. (0x%x)", lResult);
 					__leave;
 				}
 
 				lResult = RegFlushKey(hkResult);
 				if (ERROR_SUCCESS != lResult)
 				{
-					printfEx(MOD_SERVICE, PRINTF_LEVEL_ERROR, "RegFlushKey failed. (0x%08x)", lResult);
+					printfEx(MOD_SERVICE, PRINTF_LEVEL_ERROR, "RegFlushKey failed. (0x%x)", lResult);
 					__leave;
 				}
 
@@ -408,7 +408,7 @@ BOOL
 					);
 				if (ERROR_SUCCESS != lResult)
 				{
-					printfEx(MOD_SERVICE, PRINTF_LEVEL_ERROR, "RegOpenKeyEx failed. (0x%08x)", lResult);
+					printfEx(MOD_SERVICE, PRINTF_LEVEL_ERROR, "RegOpenKeyEx failed. (0x%x)", lResult);
 					__leave;
 				}
 
@@ -428,14 +428,14 @@ BOOL
 					);
 				if (ERROR_SUCCESS != lResult)
 				{
-					printfEx(MOD_SERVICE, PRINTF_LEVEL_ERROR, "RegSetValueEx failed. (0x%08x)", lResult);
+					printfEx(MOD_SERVICE, PRINTF_LEVEL_ERROR, "RegSetValueEx failed. (0x%x)", lResult);
 					__leave;
 				}
 
 				lResult = RegFlushKey(hkResult);
 				if (ERROR_SUCCESS != lResult)
 				{
-					printfEx(MOD_SERVICE, PRINTF_LEVEL_ERROR, "RegFlushKey failed. (0x%08x)", lResult);
+					printfEx(MOD_SERVICE, PRINTF_LEVEL_ERROR, "RegFlushKey failed. (0x%x)", lResult);
 					__leave;
 				}
 
@@ -457,7 +457,7 @@ BOOL
 						);
 					if (ERROR_SUCCESS != lResult)
 					{
-						printfEx(MOD_SERVICE, PRINTF_LEVEL_ERROR, "RegOpenKeyEx failed. (0x%08x)", lResult);
+						printfEx(MOD_SERVICE, PRINTF_LEVEL_ERROR, "RegOpenKeyEx failed. (0x%x)", lResult);
 						__leave;
 					}
 
@@ -477,21 +477,21 @@ BOOL
 						);
 					if (ERROR_SUCCESS != lResult)
 					{
-						printfEx(MOD_SERVICE, PRINTF_LEVEL_ERROR, "RegSetValueEx failed. (0x%08x)", lResult);
+						printfEx(MOD_SERVICE, PRINTF_LEVEL_ERROR, "RegSetValueEx failed. (0x%x)", lResult);
 						__leave;
 					}
 
 					lResult = RegFlushKey(hkResult);
 					if (ERROR_SUCCESS != lResult)
 					{
-						printfEx(MOD_SERVICE, PRINTF_LEVEL_ERROR, "RegFlushKey failed. (0x%08x)", lResult);
+						printfEx(MOD_SERVICE, PRINTF_LEVEL_ERROR, "RegFlushKey failed. (0x%x)", lResult);
 						__leave;
 					}
 
 					break;
 				}
 
-				printfEx(MOD_SERVICE, PRINTF_LEVEL_ERROR, "dwServiceType error. 0x%08x", dwServiceType);
+				printfEx(MOD_SERVICE, PRINTF_LEVEL_ERROR, "dwServiceType error. 0x%x", dwServiceType);
 				__leave;
 			}
 		}
@@ -840,7 +840,7 @@ BOOL
 	{
 		if (!lpServiceName || !InitMod || !UnloadMod)
 		{
-			printfEx(MOD_SERVICE, PRINTF_LEVEL_ERROR, "input arguments error. 0x%08p 0x%08p 0x%08p",lpServiceName, InitMod, UnloadMod);
+			printfEx(MOD_SERVICE, PRINTF_LEVEL_ERROR, "input arguments error. 0x%p 0x%p 0x%p",lpServiceName, InitMod, UnloadMod);
 			__leave;
 		}
 
@@ -978,7 +978,7 @@ DWORD
 			break;
 		default:
 			{
-				printfEx(MOD_SERVICE, PRINTF_LEVEL_ERROR, "dwControl error. 0x%08x", dwControl);
+				printfEx(MOD_SERVICE, PRINTF_LEVEL_ERROR, "dwControl error. 0x%x", dwControl);
 				__leave;
 			}
 		}

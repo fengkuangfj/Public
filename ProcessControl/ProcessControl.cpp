@@ -23,7 +23,7 @@ BOOL
 	{
 		if (!lpOutBuf || !ulOutBufSizeCh || (!bCurrentProc && !ulPid))
 		{
-			printfPublic("input arguments error. %d %d 0x%08p %d \n", bCurrentProc, ulPid, lpOutBuf, ulOutBufSizeCh);
+			printfPublic("input arguments error. %d %d 0x%p %d \n", bCurrentProc, ulPid, lpOutBuf, ulOutBufSizeCh);
 			__leave;
 		}
 
