@@ -20,7 +20,7 @@ BOOL
 	{
 		if (!lpPath || !lpName)
 		{
-			printfEx(MOD_SHORTCUT, PRINTF_LEVEL_ERROR, "input parameter error. 0x%p 0x%p", lpPath, lpName);
+			printfPublic("input parameter error. 0x%p 0x%p \n", lpPath, lpName);
 			__leave;
 		}
 
@@ -33,13 +33,13 @@ BOOL
 			);
 		if (FAILED(hResult))
 		{
-			printfEx(MOD_SHORTCUT, PRINTF_LEVEL_ERROR, "SHGetFolderLocation failed. (0x%x)", hResult);
+			printfPublic("SHGetFolderLocation failed. (0x%x) \n", hResult);
 			__leave;
 		}
 
 		if (!SHGetPathFromIDList(lpItemIdList, tchLnkPath))
 		{
-			printfEx(MOD_SHORTCUT, PRINTF_LEVEL_ERROR, "SHGetPathFromIDList failed. (%d)", GetLastError());
+			printfPublic("SHGetPathFromIDList failed. (%d) \n", GetLastError());
 			__leave;
 		}
 
@@ -50,7 +50,7 @@ BOOL
 		hResult = CoInitialize(NULL);
 		if (FAILED(hResult))
 		{
-			printfEx(MOD_SHORTCUT, PRINTF_LEVEL_ERROR, "CoInitialize failed. (0x%x)", hResult);
+			printfPublic("CoInitialize failed. (0x%x) \n", hResult);
 			__leave;
 		}
 
@@ -65,7 +65,7 @@ BOOL
 			);
 		if (FAILED(hResult))
 		{
-			printfEx(MOD_SHORTCUT, PRINTF_LEVEL_ERROR, "CoCreateInstance failed. (0x%x)", hResult);
+			printfPublic("CoCreateInstance failed. (0x%x) \n", hResult);
 			__leave;
 		}
 
@@ -75,21 +75,21 @@ BOOL
 			);
 		if (FAILED(hResult))
 		{
-			printfEx(MOD_SHORTCUT, PRINTF_LEVEL_ERROR, "QueryInterface failed. (0x%x)", hResult);
+			printfPublic("QueryInterface failed. (0x%x) \n", hResult);
 			__leave;
 		}
 
 		hResult = pIShellLink->SetPath(lpPath);
 		if (FAILED(hResult))
 		{
-			printfEx(MOD_SHORTCUT, PRINTF_LEVEL_ERROR, "SetPath failed. %S (0x%x)", lpPath, hResult);
+			printfPublic("SetPath failed. %S (0x%x) \n", lpPath, hResult);
 			__leave;
 		}
 
 		hResult = pIShellLink->SetShowCmd(SW_SHOWNORMAL);
 		if (FAILED(hResult))
 		{
-			printfEx(MOD_SHORTCUT, PRINTF_LEVEL_ERROR, "SetShowCmd failed. (0x%x)", hResult);
+			printfPublic("SetShowCmd failed. (0x%x) \n", hResult);
 			__leave;
 		}
 
@@ -99,18 +99,18 @@ BOOL
 			);
 		if (FAILED(hResult))
 		{
-			printfEx(MOD_SHORTCUT, PRINTF_LEVEL_ERROR, "Resolve failed. (0x%x)", hResult);
+			printfPublic("Resolve failed. (0x%x) \n", hResult);
 			__leave;
 		}
 
 		hResult = pIPersistFile->Save(tchLnkPath, TRUE);
 		if (FAILED(hResult))
 		{
-			printfEx(MOD_SHORTCUT, PRINTF_LEVEL_ERROR, "Save failed. %S (0x%x)", tchLnkPath, hResult);
+			printfPublic("Save failed. %S (0x%x) \n", tchLnkPath, hResult);
 			__leave;
 		}
 
-		printfEx(MOD_SHORTCUT, PRINTF_LEVEL_INFORMATION, "%S -> %S", lpPath, tchLnkPath);
+		printfPublic("%S -> %S \n", lpPath, tchLnkPath);
 
 		bRet = TRUE;
 	}
