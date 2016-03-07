@@ -18,13 +18,19 @@ BOOL
 	__try
 	{
 		if (!lpLogPath)
+		{
+			printfEx(MOD_SIMPLE_LOG, PRINTF_LEVEL_ERROR, "input argument error");
 			__leave;
+		}
 
 		_tcscat_s(m_LogPath, _countof(m_LogPath), lpLogPath);
 
 		lpPosition = _tcsrchr(m_LogPath, _T('\\'));
 		if (!lpPosition)
+		{
+			printfEx(MOD_SIMPLE_LOG, PRINTF_LEVEL_ERROR, "_tcsrchr failed");
 			__leave;
+		}
 
 		CopyMemory(lpDir, m_LogPath, (lpPosition - m_LogPath) * sizeof(TCHAR));
 
@@ -33,7 +39,10 @@ BOOL
 		if (PathFileExists(m_LogPath))
 		{
 			if (!PathYetAnotherMakeUniqueName(m_LogPath, m_LogPath, NULL, NULL))
+			{
+				printfEx(MOD_SIMPLE_LOG, PRINTF_LEVEL_ERROR, "PathYetAnotherMakeUniqueName failed. (%d)", GetLastError());
 				__leave;
+			}
 		}
 
 		hFile = CreateFile(
@@ -46,7 +55,10 @@ BOOL
 			NULL
 			);
 		if (INVALID_HANDLE_VALUE == hFile)
+		{
+			printfEx(MOD_SIMPLE_LOG, PRINTF_LEVEL_ERROR, "CreateFile failed. (%d)", GetLastError());
 			__leave;
+		}
 
 		InitializeCriticalSection(&m_CriticalSection);
 
@@ -57,7 +69,10 @@ BOOL
 		CStackBacktrace::GetInstance(lpDir);
 
 		if (!CProcessControl::GetInstance()->Get(TRUE, 0, tchProcPath, _countof(tchProcPath)))
+		{
+			printfEx(MOD_SIMPLE_LOG, PRINTF_LEVEL_ERROR, "CProcessControl::GetInstance()->Get failed");
 			__leave;
+		}
 
 		if (_tcslen(tchProcPath) >= _tcslen(_T("DbgView.exe")) &&
 			(0 == _tcsnicmp(tchProcPath + (_tcslen(tchProcPath) - _tcslen(_T("DbgView.exe"))), _T("DbgView.exe"), _tcslen(_T("DbgView.exe")))))
@@ -97,6 +112,7 @@ CSimpleLog::Unload()
 	{
 		CProcessControl::ReleaseInstance();
 		CStackBacktrace::ReleaseInstance();
+		CPrintfEx::ReleaseInstance();
 	}
 	__finally
 	{
@@ -170,7 +186,7 @@ __in LPSTR		lpFmt,
 			break;
 		default:
 			{
-				printf("ms_ProcType error. (%d) \n", m_ProcType);
+				printfEx(MOD_SIMPLE_LOG, PRINTF_LEVEL_ERROR, "ms_ProcType error. (%d)", m_ProcType);
 				break;
 			}
 		}
@@ -195,7 +211,7 @@ __in LPSTR		lpFmt,
 				if (PROC_TYPE_SERVICE == m_ProcType)
 				{
 					if (!MessageBoxForService(_T("错误"), _T("发生严重错误"), MB_OK | MB_SERVICE_NOTIFICATION | MB_ICONERROR))
-						printf("MessageBoxForService failed. \n");
+						printfEx(MOD_SIMPLE_LOG, PRINTF_LEVEL_ERROR, "MessageBoxForService failed");
 				}
 				else
 				{
@@ -241,13 +257,19 @@ __in LPSTR lpLog
 		EnterCriticalSection(&m_CriticalSection);
 
 		if (!lpLog)
+		{
+			printfEx(MOD_SIMPLE_LOG, PRINTF_LEVEL_ERROR, "input argument error");
 			__leave;
+		}
 
 		StringCchPrintfA(chLog, _countof(chLog), "%hs\r\n", lpLog);
 
 		lpPositon = wcsrchr(m_LogPath, _T('\\'));
 		if (!lpPositon)
+		{
+			printfEx(MOD_SIMPLE_LOG, PRINTF_LEVEL_ERROR, "wcsrchr failed");
 			__leave;
+		}
 
 		CopyMemory(lpDir, m_LogPath, (lpPositon - m_LogPath) * sizeof(TCHAR));
 
@@ -263,14 +285,23 @@ __in LPSTR lpLog
 			NULL
 			);
 		if (INVALID_HANDLE_VALUE == hFile)
+		{
+			printfEx(MOD_SIMPLE_LOG, PRINTF_LEVEL_ERROR, "CreateFile failed. (%d)", GetLastError());
 			__leave;
+		}
 
 		FileSize.LowPart = GetFileSize(hFile, NULL);
 		if (INVALID_SET_FILE_POINTER == SetFilePointer(hFile, FileSize.LowPart, NULL, FILE_BEGIN))
+		{
+			printfEx(MOD_SIMPLE_LOG, PRINTF_LEVEL_ERROR, "SetFilePointer failed. (%d)", GetLastError());
 			__leave;
+		}
 
 		if (!WriteFile(hFile, chLog, strlen(chLog), &dwWrite, NULL))
+		{
+			printfEx(MOD_SIMPLE_LOG, PRINTF_LEVEL_ERROR, "WriteFile failed. (%d)", GetLastError());
 			__leave;
+		}
 
 		bRet = TRUE;
 	}
@@ -305,7 +336,7 @@ BOOL
 	{
 		if (!lpTitle || !lpMessage)
 		{
-			printf("input arguments error. \n");
+			printfEx(MOD_SIMPLE_LOG, PRINTF_LEVEL_ERROR, "input arguments error. lpTitle(0x%p) lpMessage(0x%p)", lpTitle, lpMessage);
 			__leave;
 		}
 
@@ -322,7 +353,7 @@ BOOL
 			TRUE
 			))
 		{
-			printf("WTSSendMessage failed. (%d) \n", GetLastError());
+			printfEx(MOD_SIMPLE_LOG, PRINTF_LEVEL_ERROR, "WTSSendMessage failed. (%d)", GetLastError());
 			__leave;
 		}
 

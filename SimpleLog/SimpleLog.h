@@ -1,9 +1,5 @@
 #pragma once
 
-#ifndef MOD_SIMPLE_LOG
-#define MOD_SIMPLE_LOG	_T("简单日志")
-#endif
-
 #include <Windows.h>
 #include <tchar.h>
 #include <Strsafe.h>
@@ -13,10 +9,15 @@
 #include <Shlobj.h>
 #include <Wtsapi32.h>
 
+#include "..\\PrintfEx\\PrintfEx.h"
 #include "..\\ProcessControl\\ProcessControl.h"
 #include "..\\StackBacktrace\\StackBacktrace.h"
 
 #pragma comment(lib, "Wtsapi32.lib")
+
+#ifndef MOD_SIMPLE_LOG
+#define MOD_SIMPLE_LOG	_T("简单日志")
+#endif
 
 typedef enum _LOG_LEVEL
 {

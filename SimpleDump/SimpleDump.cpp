@@ -1528,4 +1528,6 @@ CSimpleDump::~CSimpleDump()
 	m_pfRegisterApplicationRestart = NULL;
 
 	m_pfTopLevelExceptionFilter = NULL;
+
+	CPrintfEx::ReleaseInstance();
 }
