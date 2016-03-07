@@ -1,16 +1,15 @@
 #pragma once
 
-#ifndef MOD_PRINTF_EX
-#define MOD_PRINTF_EX _T("PrintfEx")
-#endif
-
 #include <Windows.h>
 #include <tchar.h>
 #include <strsafe.h>
 #include <locale.h>
 #include <time.h>
 
+#include "..\\Public.h"
 #include "..\\ProcessControl\\ProcessControl.h"
+
+#define MOD_PRINTF_EX _T("PrintfEx")
 
 typedef
 BOOL

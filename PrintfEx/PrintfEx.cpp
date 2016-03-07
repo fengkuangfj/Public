@@ -100,7 +100,7 @@ __in	ULONG	ulOutBufSizeCh
 			NULL
 			))
 		{
-			printf("FormatMessage failed. (%d) \n", GetLastError());
+			printfPublic("FormatMessage failed. (%d) \n", GetLastError());
 			__leave;
 		}
 
