@@ -75,7 +75,9 @@ private:
 
 	VOLUME_DETECTOR_INTERNAL	m_VolumeDetectorInternal;
 
-	CVolumeDetector();
+	CVolumeDetector(
+		__in LPVOLUME_DETECTOR_INIT_ARGUMENTS lpVolumeDetectorInitArguments
+		);
 
 	~CVolumeDetector();
 

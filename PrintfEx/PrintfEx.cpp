@@ -170,7 +170,7 @@ CPrintfEx *
 	{
 		do 
 		{
-			ms_pInstance = new CPrintfEx;
+			new CPrintfEx;
 			if (!ms_pInstance)
 				Sleep(1000);
 			else
@@ -193,15 +193,19 @@ VOID
 
 CPrintfEx::CPrintfEx()
 {
+	ms_pInstance = this;
+
 	m_bOutputDebugString = TRUE;
 	m_ProcType = PROC_TYPE_UNKNOWN;
 
-	Init();
+	if (!Init())
+		printfPublic("Init failed");
 }
 
 CPrintfEx::~CPrintfEx()
 {
-	Unload();
+	if (!Unload())
+		printfPublic("Unload failed");
 
 	m_bOutputDebugString = TRUE;
 	m_ProcType = PROC_TYPE_UNKNOWN;

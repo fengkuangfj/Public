@@ -489,7 +489,7 @@ CWmi *
 	{
 		do 
 		{
-			ms_pInstance = new CWmi;
+			new CWmi;
 			if (!ms_pInstance)
 				Sleep(1000);
 			else
@@ -512,6 +512,8 @@ VOID
 
 CWmi::CWmi()
 {
+	ms_pInstance = this;
+
 	m_pIWbemLocator	= NULL;
 	m_pIWbemServices = NULL;
 	m_bNeedCoUnInit	= FALSE;

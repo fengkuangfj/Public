@@ -1471,7 +1471,7 @@ CSimpleDump *
 	{
 		do 
 		{
-			ms_pInstance = new CSimpleDump;
+			new CSimpleDump;
 			if (!ms_pInstance)
 				Sleep(1000);
 			else
@@ -1494,6 +1494,8 @@ VOID
 
 CSimpleDump::CSimpleDump()
 {
+	ms_pInstance = this;
+
 	m_MinidumpType = MiniDumpNormal;
 	m_bRestart = FALSE;
 	m_ProcType = PROC_TYPE_UNKNOWN;

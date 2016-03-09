@@ -484,16 +484,11 @@ CVolumeDetector *
 	{
 		do 
 		{
-			ms_pInstance = new CVolumeDetector();
+			new CVolumeDetector(lpVolumeDetectorInitArguments);
 			if (!ms_pInstance)
 				Sleep(1000);
 			else
-			{
-				if (!ms_pInstance->Init(lpVolumeDetectorInitArguments))
-					printfEx(MOD_VOLUME_DETECTOR, PRINTF_LEVEL_ERROR, "Init failed");
-
 				break;
-			}
 		} while (TRUE);
 	}
 
@@ -510,9 +505,16 @@ VOID
 	}
 }
 
-CVolumeDetector::CVolumeDetector()
+CVolumeDetector::CVolumeDetector(
+	__in LPVOLUME_DETECTOR_INIT_ARGUMENTS lpVolumeDetectorInitArguments
+	)
 {
+	ms_pInstance = this;
+
 	ZeroMemory(&m_VolumeDetectorInternal, sizeof(m_VolumeDetectorInternal));
+
+	if (!Init(lpVolumeDetectorInitArguments))
+		printfEx(MOD_VOLUME_DETECTOR, PRINTF_LEVEL_ERROR, "Init failed");
 }
 
 CVolumeDetector::~CVolumeDetector()

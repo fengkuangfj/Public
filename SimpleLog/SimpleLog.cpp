@@ -376,7 +376,7 @@ CSimpleLog *
 	{
 		do 
 		{
-			ms_pInstance = new CSimpleLog(lpLogPath);
+			new CSimpleLog(lpLogPath);
 			if (!ms_pInstance)
 				Sleep(1000);
 			else
@@ -401,18 +401,22 @@ CSimpleLog::CSimpleLog(
 	__in LPTSTR lpLogPath
 	)
 {
+	ms_pInstance = this;
+
 	ZeroMemory(m_LogPath, sizeof(m_LogPath));
 	ZeroMemory(&m_CriticalSection, sizeof(m_CriticalSection));
 	m_WriteReady = FALSE;
 	m_bOutputDebugString = TRUE;
 	m_ProcType = PROC_TYPE_UNKNOWN;
 
-	Init(lpLogPath);
+	if (!Init(lpLogPath))
+		printfEx(MOD_SIMPLE_LOG, PRINTF_LEVEL_ERROR, "Init failed");
 }
 
 CSimpleLog::~CSimpleLog()
 {
-	Unload();
+	if (!Unload())
+		printfEx(MOD_SIMPLE_LOG, PRINTF_LEVEL_ERROR, "Unload failed");
 
 	ZeroMemory(m_LogPath, sizeof(m_LogPath));
 	ZeroMemory(&m_CriticalSection, sizeof(m_CriticalSection));

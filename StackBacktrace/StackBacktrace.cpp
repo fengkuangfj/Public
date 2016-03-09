@@ -447,7 +447,7 @@ CStackBacktrace *
 	{
 		do 
 		{
-			ms_pInstance = new CStackBacktrace(lpSymDir);
+			new CStackBacktrace(lpSymDir);
 			if (!ms_pInstance)
 				Sleep(1000);
 			else
@@ -472,6 +472,8 @@ CStackBacktrace::CStackBacktrace(
 	__in LPTSTR lpSymDir
 	)
 {
+	ms_pInstance = this;
+
 	ZeroMemory(m_tchSymDir, sizeof(m_tchSymDir));
 
 	m_pfRtlWalkFrameChain = NULL;

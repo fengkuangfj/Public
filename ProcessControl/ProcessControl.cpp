@@ -114,7 +114,7 @@ CProcessControl *
 	{
 		do 
 		{
-			ms_pInstance = new CProcessControl;
+			new CProcessControl;
 			if (!ms_pInstance)
 				Sleep(1000);
 			else
@@ -137,6 +137,8 @@ VOID
 
 CProcessControl::CProcessControl()
 {
+	ms_pInstance = this;
+
 	if (!Init())
 		printfPublic("Init failed");
 }

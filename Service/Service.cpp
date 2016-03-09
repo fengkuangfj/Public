@@ -1242,7 +1242,7 @@ CService *
 	{
 		do 
 		{
-			ms_pInstance = new CService;
+			new CService;
 			if (!ms_pInstance)
 				Sleep(1000);
 			else
@@ -1265,6 +1265,8 @@ VOID
 
 CService::CService()
 {
+	ms_pInstance = this;
+
 	ZeroMemory(m_tchServiceName, sizeof(m_tchServiceName));
 	m_SvcStatusHandle = NULL;
 	ZeroMemory(&m_SvcStatus, sizeof(m_SvcStatus));

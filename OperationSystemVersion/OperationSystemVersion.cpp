@@ -562,7 +562,7 @@ COperationSystemVersion *
 	{
 		do 
 		{
-			ms_pInstance = new COperationSystemVersion;
+			new COperationSystemVersion;
 			if (!ms_pInstance)
 				Sleep(1000);
 			else
@@ -585,15 +585,19 @@ VOID
 
 COperationSystemVersion::COperationSystemVersion()
 {
+	ms_pInstance = this;
+
 	m_OsVersionUserDefined = OS_VERSION_UNKNOWN;
 	m_ProcessorTypeUserDefined = OS_PROCESSOR_TYPE_UNKNOWN;
 
-	Init();
+	if (!Init())
+		printfEx(MOD_OPERATION_SYSTEM_VERSION, PRINTF_LEVEL_ERROR, "Init failed");
 }
 
 COperationSystemVersion::~COperationSystemVersion()
 {
-	Unload();
+	if (!Unload())
+		printfEx(MOD_OPERATION_SYSTEM_VERSION, PRINTF_LEVEL_ERROR, "Unload failed");
 
 	m_OsVersionUserDefined = OS_VERSION_UNKNOWN;
 	m_ProcessorTypeUserDefined = OS_PROCESSOR_TYPE_UNKNOWN;
