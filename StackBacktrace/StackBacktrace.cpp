@@ -447,16 +447,11 @@ CStackBacktrace *
 	{
 		do 
 		{
-			ms_pInstance = new CStackBacktrace();
+			ms_pInstance = new CStackBacktrace(lpSymDir);
 			if (!ms_pInstance)
 				Sleep(1000);
 			else
-			{
-				if (!ms_pInstance->Init(lpSymDir))
-					printfEx(MOD_STACK_BACKTRACE, PRINTF_LEVEL_ERROR, "Init failed");
-
 				break;
-			}
 		} while (TRUE);
 	}
 
@@ -473,7 +468,9 @@ VOID
 	}
 }
 
-CStackBacktrace::CStackBacktrace()
+CStackBacktrace::CStackBacktrace(
+	__in LPTSTR lpSymDir
+	)
 {
 	ZeroMemory(m_tchSymDir, sizeof(m_tchSymDir));
 
@@ -489,6 +486,9 @@ CStackBacktrace::CStackBacktrace()
 	m_pfSymFromAddr = NULL;
 	m_pfUnDecorateSymbolName = NULL;
 	m_pfSymGetLineFromAddr64 = NULL;
+
+	if (!Init(lpSymDir))
+		printfEx(MOD_STACK_BACKTRACE, PRINTF_LEVEL_ERROR, "Init failed");
 }
 
 CStackBacktrace::~CStackBacktrace()

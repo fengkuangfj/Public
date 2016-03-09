@@ -163,7 +163,9 @@ private:
 	UNDECORATESYMBOLNAME		m_pfUnDecorateSymbolName;
 	SYMGETLINEFROMADDR64		m_pfSymGetLineFromAddr64;
 
-	CStackBacktrace();
+	CStackBacktrace(
+		__in LPTSTR lpSymDir
+		);
 
 	~CStackBacktrace();
 
