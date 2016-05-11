@@ -77,6 +77,11 @@ public:
 		);
 
 	BOOL
+		DeleteFileInDrivers(
+		__in LPTSTR lpServiceName
+		);
+
+	BOOL
 		Delete(
 		__in LPWSTR lpServiceName
 		);

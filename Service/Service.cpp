@@ -636,6 +636,151 @@ BOOL
 }
 
 BOOL
+CService::DeleteFileInDrivers(
+__in LPTSTR lpServiceName
+)
+{
+	BOOL	bRet = FALSE;
+
+	LONG	lRet = ERROR_SUCCESS;
+	TCHAR	tchKey[MAX_PATH] = { 0 };
+	HKEY	hKey = NULL;
+	DWORD	dwcbData = 0;
+	DWORD	dwType = 0;
+	TCHAR	tchData[MAX_PATH] = {0};
+	DWORD	dwData = 0;
+	TCHAR	tchFilePath[MAX_PATH] = { 0 };
+	PVOID	pOldValue = NULL;
+	BOOL	bWow64DisableWow64FsRedirection = FALSE;
+
+
+	__try
+	{
+		if (!m_pfWow64DisableWow64FsRedirection(&pOldValue))
+		{
+			printfEx(MOD_SERVICE, PRINTF_LEVEL_ERROR, "Wow64DisableWow64FsRedirection failed. (%d)", GetLastError());
+			__leave;
+		}
+
+		bWow64DisableWow64FsRedirection = TRUE;
+
+		if (!lpServiceName)
+		{
+			printfEx(MOD_SERVICE, PRINTF_LEVEL_ERROR, "input argument error");
+			__leave;
+		}
+
+		_tcscat_s(tchKey, _countof(tchKey), _T("SYSTEM\\CurrentControlSet\\Services\\"));
+		_tcscat_s(tchKey, _countof(tchKey), lpServiceName);
+
+		lRet = RegOpenKeyEx(
+			HKEY_LOCAL_MACHINE,
+			tchKey,
+			0,
+			KEY_QUERY_VALUE,
+			&hKey
+			);
+		if (ERROR_SUCCESS != lRet)
+		{
+			printfEx(MOD_SERVICE, PRINTF_LEVEL_ERROR, "RegOpenKeyEx failed. (%d)", lRet);
+			__leave;
+		}
+
+		dwcbData = sizeof(DWORD);
+		lRet = RegQueryValueEx(
+			hKey,
+			_T("start"),
+			NULL,
+			&dwType,
+			(LPBYTE)dwData,
+			&dwcbData
+			);
+		if (ERROR_SUCCESS != lRet)
+		{
+			printfEx(MOD_SERVICE, PRINTF_LEVEL_ERROR, "RegQueryValueEx failed. (%d)", lRet);
+			__leave;
+		}
+
+		if (SERVICE_BOOT_START != dwData &&
+			SERVICE_SYSTEM_START != dwData)
+		{
+			bRet = TRUE;
+			__leave;
+		}
+
+		dwcbData = sizeof(tchData);
+		lRet = RegQueryValueEx(
+			hKey,
+			_T("ImagePath"),
+			NULL,
+			&dwType,
+			(LPBYTE)tchData,
+			&dwcbData
+			);
+		if (ERROR_SUCCESS != lRet)
+		{
+			printfEx(MOD_SERVICE, PRINTF_LEVEL_ERROR, "RegQueryValueEx failed. (%d)", lRet);
+			__leave;
+		}
+		
+		if (_T('%') == tchData[0])
+		{
+			// %systemroot%\system32\svchost.exe
+			_tcscat_s(tchFilePath, _countof(tchFilePath), tchData);
+		}
+		else if (_T('\\') == tchData[0])
+		{
+			if (_T('?') == tchData[1])
+			{
+				// \??\C:\Windows\system32\drivers\360reskit64.sys
+				_tcscat_s(tchFilePath, _countof(tchFilePath), tchData + 4);
+			}
+			else
+			{
+				// \SystemRoot\system32\drivers\aliide.sys					
+				_tcscat_s(tchFilePath, _countof(tchFilePath), _T("%systemroot%\\"));
+				_tcscat_s(tchFilePath, _countof(tchFilePath), tchData + 12);
+			}
+		}
+		else if (_T('s') == tchData[0] || _T('S') == tchData[0])
+		{
+			// system32\DRIVERS\360netmon.sys								
+			_tcscat_s(tchFilePath, _countof(tchFilePath), _T("%systemroot%\\"));
+			_tcscat_s(tchFilePath, _countof(tchFilePath), tchData);
+		}
+		else
+		{
+			// C:\Windows\SysWOW64\Macromed\Flash\FlashPlayerUpdateService.exe
+			_tcscat_s(tchFilePath, _countof(tchFilePath), tchData);
+		}
+
+		if (!DeleteFile(tchFilePath))
+		{ 
+			printfEx(MOD_SERVICE, PRINTF_LEVEL_ERROR, "DeleteFile failed. (%d)", GetLastError());
+			__leave;
+		}
+
+		bRet = TRUE;
+	}
+	__finally
+	{
+		if (hKey)
+		{
+			RegCloseKey(hKey);
+			hKey = NULL;
+		}
+
+		if (bWow64DisableWow64FsRedirection)
+		{
+			m_pfWow64RevertWow64FsRedirection(pOldValue);
+			pOldValue = NULL;
+		}
+	}
+
+	return bRet;
+}
+
+BOOL
 	CService::Delete(
 	__in LPWSTR lpServiceName
 	)
@@ -648,6 +793,12 @@ BOOL
 
 	__try
 	{
+		if (!DeleteFileInDrivers(lpServiceName))
+		{
+			printfEx(MOD_SERVICE, PRINTF_LEVEL_ERROR, "DeleteFileInDrivers failed.");
+			__leave;
+		}
+
 		hScManager = OpenSCManager(NULL, NULL, SC_MANAGER_ALL_ACCESS);
 		if (!hScManager)
 		{
