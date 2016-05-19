@@ -598,20 +598,20 @@ BOOL
 		hScManager = OpenSCManager(NULL, NULL, SC_MANAGER_ALL_ACCESS);
 		if (!hScManager)
 		{
-			printfEx(MOD_SERVICE, PRINTF_LEVEL_ERROR, "OpenSCManager failed. (%d)", GetLastError());
+			printfEx(MOD_SERVICE, PRINTF_LEVEL_ERROR, "OpenSCManager failed. %S (%d)", lpServiceName, GetLastError());
 			__leave;
 		}
 
 		hService = OpenService(hScManager, lpServiceName, SERVICE_ALL_ACCESS);
 		if (!hService)
 		{
-			printfEx(MOD_SERVICE, PRINTF_LEVEL_ERROR, "OpenService failed. (%d)", GetLastError());
+			printfEx(MOD_SERVICE, PRINTF_LEVEL_ERROR, "OpenService failed. %S (%d)", lpServiceName, GetLastError());
 			__leave;
 		}
 
 		if (!ControlService(hService, SERVICE_CONTROL_STOP, &ServiceStatus))
 		{
-			printfEx(MOD_SERVICE, PRINTF_LEVEL_ERROR, "ControlService failed. (%d)", GetLastError());
+			printfEx(MOD_SERVICE, PRINTF_LEVEL_ERROR, "ControlService failed. %S (%d)", lpServiceName, GetLastError());
 			__leave;
 		}
 
@@ -640,29 +640,46 @@ CService::DeleteFileInDrivers(
 __in LPTSTR lpServiceName
 )
 {
-	BOOL	bRet = FALSE;
+	BOOL							bRet = FALSE;
 
-	LONG	lRet = ERROR_SUCCESS;
-	TCHAR	tchKey[MAX_PATH] = { 0 };
-	HKEY	hKey = NULL;
-	DWORD	dwcbData = 0;
-	DWORD	dwType = 0;
-	TCHAR	tchData[MAX_PATH] = {0};
-	DWORD	dwData = 0;
-	TCHAR	tchFilePath[MAX_PATH] = { 0 };
-	PVOID	pOldValue = NULL;
-	BOOL	bWow64DisableWow64FsRedirection = FALSE;
+	LONG							lRet = ERROR_SUCCESS;
+	TCHAR							tchKey[MAX_PATH] = { 0 };
+	HKEY							hKey = NULL;
+	DWORD							dwcbData = 0;
+	DWORD							dwType = 0;
+	TCHAR							tchData[MAX_PATH] = {0};
+	DWORD							dwData = 0;
+	TCHAR							tchFilePath[MAX_PATH] = { 0 };
+	PVOID							pOldValue = NULL;
+	BOOL							bWow64DisableWow64FsRedirection = FALSE;
+	OS_PROCESSOR_TYPE_USER_DEFINED	OsProcType = OS_PROCESSOR_TYPE_UNKNOWN;
 
 
 	__try
 	{
-		if (!m_pfWow64DisableWow64FsRedirection(&pOldValue))
+		OsProcType = COperationSystemVersion::GetInstance()->GetOSProcessorType();
+		switch (OsProcType)
 		{
-			printfEx(MOD_SERVICE, PRINTF_LEVEL_ERROR, "Wow64DisableWow64FsRedirection failed. (%d)", GetLastError());
+		case OS_PROCESSOR_TYPE_X86:
+			break;
+		case OS_PROCESSOR_TYPE_X64:
+		{
+			if (!m_pfWow64DisableWow64FsRedirection(&pOldValue))
+			{
+				printfEx(MOD_SERVICE, PRINTF_LEVEL_ERROR, "Wow64DisableWow64FsRedirection failed. (%d)", GetLastError());
+				__leave;
+			}
+
+			bWow64DisableWow64FsRedirection = TRUE;
+
+			break;
+		}
+		default:
+		{
+			printfEx(MOD_SERVICE, PRINTF_LEVEL_ERROR, "OsProcType error. %d", OsProcType);
 			__leave;
 		}
-
-		bWow64DisableWow64FsRedirection = TRUE;
+		}
 
 		if (!lpServiceName)
 		{
@@ -756,8 +773,8 @@ __in LPTSTR lpServiceName
 
 		if (!DeleteFile(tchFilePath))
 		{ 
-			printfEx(MOD_SERVICE, PRINTF_LEVEL_ERROR, "DeleteFile failed. (%d)", GetLastError());
-			__leave;
+			printfEx(MOD_SERVICE, PRINTF_LEVEL_WARNING, "DeleteFile failed. %S (%d)", tchFilePath, GetLastError());
+			// __leave;
 		}
 
 		bRet = TRUE;
@@ -795,27 +812,27 @@ BOOL
 	{
 		if (!DeleteFileInDrivers(lpServiceName))
 		{
-			printfEx(MOD_SERVICE, PRINTF_LEVEL_ERROR, "DeleteFileInDrivers failed.");
+			printfEx(MOD_SERVICE, PRINTF_LEVEL_ERROR, "DeleteFileInDrivers failed. %S", lpServiceName);
 			__leave;
 		}
 
 		hScManager = OpenSCManager(NULL, NULL, SC_MANAGER_ALL_ACCESS);
 		if (!hScManager)
 		{
-			printfEx(MOD_SERVICE, PRINTF_LEVEL_ERROR, "OpenSCManager failed. (%d)", GetLastError());
+			printfEx(MOD_SERVICE, PRINTF_LEVEL_ERROR, "OpenSCManager failed. %S (%d)", lpServiceName, GetLastError());
 			__leave;
 		}
 
 		hService = OpenService(hScManager, lpServiceName, SERVICE_ALL_ACCESS);
 		if (!hService)
 		{
-			printfEx(MOD_SERVICE, PRINTF_LEVEL_ERROR, "OpenService failed. (%d)", GetLastError());
+			printfEx(MOD_SERVICE, PRINTF_LEVEL_ERROR, "OpenService failed. %S (%d)", lpServiceName, GetLastError());
 			__leave;
 		}
 
 		if (!DeleteService(hService))
 		{
-			printfEx(MOD_SERVICE, PRINTF_LEVEL_ERROR, "DeleteService failed. (%d)", GetLastError());
+			printfEx(MOD_SERVICE, PRINTF_LEVEL_ERROR, "DeleteService failed. %S (%d)", lpServiceName, GetLastError());
 			__leave;
 		}
 
