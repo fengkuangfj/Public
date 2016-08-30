@@ -95,16 +95,6 @@ BOOL
 			__leave;
 		}
 
-		hResult = pIShellLink->Resolve(
-			NULL,
-			SLR_UPDATE
-			);
-		if (FAILED(hResult))
-		{
-			printfPublic("Resolve failed. (0x%x)", hResult);
-			__leave;
-		}
-
 		hResult = pIPersistFile->Save(tchLnkPath, TRUE);
 		if (FAILED(hResult))
 		{
