@@ -120,6 +120,11 @@ public:
 		__in		UNLOADMOD				UnloadMod
 		);
 
+	BOOL
+		CanInteractWithTheDesktop(
+		__in LPTSTR lpServiceName
+		);
+
 private:
 	static CService						*	ms_pInstance;
 

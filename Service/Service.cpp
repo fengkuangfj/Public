@@ -1523,3 +1523,72 @@ BOOL
 
 	return bRet;
 }
+
+BOOL
+CService::CanInteractWithTheDesktop(
+									__in LPTSTR lpServiceName
+									)
+{
+	BOOL	bRet = FALSE;
+
+	TCHAR	tchServiceKey[MAX_PATH] = {0};
+	LONG	lResult = 0;
+	HKEY	hKey = NULL;
+	DWORD	dwType = 0;
+	DWORD	dwData = 0;
+	DWORD	dwDataLen = 0;
+	
+
+
+	_try
+	{
+		if (!lpServiceName)
+		{
+			printfEx(MOD_SERVICE, PRINTF_LEVEL_ERROR, "input argument error");
+			__leave;
+		}
+
+		swprintf_s(tchServiceKey, _countof(tchServiceKey), _T("SYSTEM\\CurrentControlSet\\services\\%s"), lpServiceName);
+
+		lResult = RegOpenKeyEx(
+			HKEY_LOCAL_MACHINE,
+			tchServiceKey,
+			0,
+			KEY_ALL_ACCESS,
+			&hKey
+			);
+		if (ERROR_SUCCESS != lResult)
+		{
+			printfEx(MOD_SERVICE, PRINTF_LEVEL_ERROR, "RegOpenKeyEx failed. (%d)", lResult);
+			__leave;
+		}
+
+		dwDataLen = sizeof(DWORD);
+		lResult = RegQueryValueEx(
+			hKey,
+			_T("Type"),
+			NULL,
+			&dwType,
+			(BYTE *)&dwData,
+			&dwDataLen
+			);
+		if (ERROR_SUCCESS != lResult)
+		{
+			printfEx(MOD_SERVICE, PRINTF_LEVEL_ERROR, "RegSetValueEx failed. (%d)", lResult);
+			__leave;
+		}
+
+		if (dwData & SERVICE_INTERACTIVE_PROCESS)
+			bRet = TRUE;
+	}
+	__finally
+	{
+		if (hKey)
+		{
+			RegCloseKey(hKey);
+			hKey = NULL;
+		}
+	}
+
+	return bRet;
+}

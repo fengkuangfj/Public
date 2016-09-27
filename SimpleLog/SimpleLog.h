@@ -12,6 +12,7 @@
 #include "..\\PrintfEx\\PrintfEx.h"
 #include "..\\ProcessControl\\ProcessControl.h"
 #include "..\\StackBacktrace\\StackBacktrace.h"
+#include "..\\Service\\Service.h"
 
 #pragma comment(lib, "Wtsapi32.lib")
 
@@ -60,6 +61,7 @@ private:
 	BOOL					m_WriteReady;
 	BOOL					m_bOutputDebugString;
 	PROC_TYPE				m_ProcType;
+	TCHAR					m_tchServiceName[MAX_PATH];
 
 	CSimpleLog(
 		__in LPTSTR lpLogPath
@@ -69,7 +71,8 @@ private:
 
 	BOOL
 		Init(
-		__in LPTSTR lpLogPath
+		__in		LPTSTR	lpLogPath,
+		__in_opt	LPTSTR	lpServiceName = NULL
 		);
 
 	BOOL
@@ -84,6 +87,7 @@ private:
 		MessageBoxForService(
 		__in LPTSTR lpTitle,
 		__in LPTSTR lpMessage,
-		__in DWORD	dwStyle
+		__in DWORD	dwStyle,
+		__in LPTSTR	lpServiceName
 		);
 };

@@ -4,7 +4,8 @@ CSimpleLog * CSimpleLog::ms_pInstance = NULL;
 
 BOOL
 	CSimpleLog::Init(
-	__in LPTSTR lpLogPath
+	__in		LPTSTR	lpLogPath,
+	__in_opt	LPTSTR	lpServiceName
 	)
 {
 	BOOL			bRet = FALSE;
@@ -79,6 +80,9 @@ BOOL
 			m_bOutputDebugString = FALSE;
 
 		m_ProcType = CProcessControl::GetInstance()->GetProcType(TRUE, 0);
+
+		if (lpServiceName)
+			_tcscat_s(m_tchServiceName, _countof(m_tchServiceName), lpServiceName);
 
 		bRet = TRUE;
 	}
@@ -212,7 +216,7 @@ __in LPSTR		lpFmt,
 			{
 				if (PROC_TYPE_SERVICE == m_ProcType)
 				{
-					if (!MessageBoxForService(_T("错误"), _T("发生严重错误"), MB_OK | MB_SERVICE_NOTIFICATION | MB_ICONERROR))
+					if (!MessageBoxForService(_T("错误"), _T("发生严重错误"), MB_OK | MB_ICONERROR, m_tchServiceName))
 						printfEx(MOD_SIMPLE_LOG, PRINTF_LEVEL_ERROR, "MessageBoxForService failed");
 				}
 				else
@@ -326,7 +330,8 @@ BOOL
 	CSimpleLog::MessageBoxForService(
 	__in LPTSTR lpTitle,
 	__in LPTSTR lpMessage,
-	__in DWORD	dwStyle
+	__in DWORD	dwStyle,
+	__in LPTSTR	lpServiceName
 	)
 {
 	BOOL	bRet		= FALSE;
@@ -336,9 +341,17 @@ BOOL
 
 	__try
 	{
-		if (!lpTitle || !lpMessage)
+		if (!lpTitle || !lpMessage || !lpServiceName)
 		{
-			printfEx(MOD_SIMPLE_LOG, PRINTF_LEVEL_ERROR, "input arguments error. lpTitle(0x%p) lpMessage(0x%p)", lpTitle, lpMessage);
+			printfEx(MOD_SIMPLE_LOG, PRINTF_LEVEL_ERROR, "input arguments error. lpTitle(0x%p) lpMessage(0x%p) lpServiceName(0x%p)",
+				lpTitle, lpMessage, lpServiceName);
+
+			__leave;
+		}
+
+		if (!CService::GetInstance()->CanInteractWithTheDesktop(lpServiceName))
+		{
+			printfEx(MOD_SIMPLE_LOG, PRINTF_LEVEL_ERROR, "Can not interact with the desktop. %s", lpServiceName);
 			__leave;
 		}
 
@@ -349,7 +362,7 @@ BOOL
 			_tcslen(lpTitle) * sizeof(TCHAR),
 			lpMessage,
 			_tcslen(lpMessage) * sizeof(TCHAR),
-			dwStyle,
+			dwStyle | MB_SERVICE_NOTIFICATION,
 			0,
 			&dwResponse,
 			TRUE
