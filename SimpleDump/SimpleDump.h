@@ -9,6 +9,12 @@
 #include <Winver.h>
 #include <Psapi.h>
 
+#pragma comment(lib, "User32.lib")
+
+#ifndef DBG_PRINTEXCEPTION_C
+#define DBG_PRINTEXCEPTION_C	((NTSTATUS)0x40010006L)
+#endif
+
 #include "..\\PrintfEx\\PrintfEx.h"
 #include "..\\OperationSystemVersion\\OperationSystemVersion.h"
 #include "..\\ProcessControl\\ProcessControl.h"

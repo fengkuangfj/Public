@@ -110,6 +110,8 @@ CSimpleLog::Unload()
 
 	__try
 	{
+		CSimpleLogSR(MOD_SIMPLE_LOG, LOG_LEVEL_INFORMATION, "–∂‘ÿ≥…π¶");
+
 		CProcessControl::ReleaseInstance();
 		CStackBacktrace::ReleaseInstance();
 		CPrintfEx::ReleaseInstance();

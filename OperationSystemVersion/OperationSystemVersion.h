@@ -6,7 +6,11 @@
 #include "..\\PrintfEx\\PrintfEx.h"
 
 #ifndef MOD_OPERATION_SYSTEM_VERSION
-#define MOD_OPERATION_SYSTEM_VERSION _T("操作系统版本")
+#define MOD_OPERATION_SYSTEM_VERSION	_T("操作系统版本")
+#endif
+
+#ifndef VER_SUITE_WH_SERVER
+#define VER_SUITE_WH_SERVER				0x00008000
 #endif
 
 // https://msdn.microsoft.com/zh-cn/office/ms724832

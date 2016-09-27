@@ -4,8 +4,10 @@
 #include <Shlobj.h>
 #include <tchar.h>
 #include <Shlwapi.h>
+#include <Objbase.h>
 
 #pragma comment(lib, "Shlwapi.lib")
+#pragma comment(lib, "Ole32.lib")
 
 #include "..\\Public.h"
 
@@ -19,10 +21,8 @@ public:
 	static
 		BOOL
 		Create(
-		__in	LPTSTR	lpPath,
-		__in	LPTSTR	lpName,
-		__out	LPTSTR	lpLnkPath,
-		__in	ULONG	ulLenlpLnkPathCh
+		__in LPTSTR	lpPath,
+		__in LPTSTR	lpLnkPath
 		);
 
 	static
