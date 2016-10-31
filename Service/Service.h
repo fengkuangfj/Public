@@ -1,6 +1,7 @@
 #pragma once
 
 #include <Windows.h>
+#include <WinSvc.h>
 
 #include "..\\PrintfEx\\PrintfEx.h"
 #include "..\\OperationSystemVersion\\OperationSystemVersion.h"

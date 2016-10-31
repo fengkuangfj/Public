@@ -496,7 +496,7 @@ __in PCRUSH_HANDLER_INFO pCrushHandlerInfo
 				}
 				case EH_TYPE_V:
 				{
-					AddVectoredExceptionHandler(pCrushHandlerInfo->bFirstHandler ? 1 : 0, (PVECTORED_EXCEPTION_HANDLER)ExceptionHandler);
+					AddVectoredExceptionHandler(pCrushHandlerInfo->bFirstHandlerForEhTypeV ? 1 : 0, (PVECTORED_EXCEPTION_HANDLER)ExceptionHandler);
 					break;
 				}
 				default:

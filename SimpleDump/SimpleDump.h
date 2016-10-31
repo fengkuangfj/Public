@@ -51,7 +51,7 @@ typedef VOID(*RESTART) (VOID);
 typedef struct _CRUSH_HANDLER_INFO
 {
 	EH_TYPE					EhType;
-	BOOL					bFirstHandler;
+	BOOL					bFirstHandlerForEhTypeV;
 
 	MINIDUMP_TYPE			MiniDumpType;
 
