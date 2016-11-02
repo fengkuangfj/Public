@@ -4,6 +4,7 @@
 #include <tchar.h>
 #include <Psapi.h>
 #include <Shlobj.h>
+#include <Shlwapi.h>
 
 #include "..\\Public.h"
 #include "..\\ModulePath\\ModulePath.h"
@@ -11,6 +12,7 @@
 #pragma comment(lib, "Psapi.lib")
 #pragma comment(lib, "Shell32.lib")
 #pragma comment(lib, "Advapi32.lib")
+#pragma comment(lib, "Shlwapi.lib")
 
 #ifndef MOD_PROCESS_CONTROL
 #define MOD_PROCESS_CONTROL _T("½ø³Ì¿ØÖÆ")
@@ -158,7 +160,15 @@ public:
 	BOOL
 		GetParentPid(
 		__in	ULONG	ulPid,
-		__out	PULONG	pulParentPid 
+		__out	PULONG	pulParentPid
+		);
+
+	BOOL
+		GetName(
+		__in	BOOL	bCurrentProc,
+		__in	ULONG	ulPid,
+		__inout LPTSTR	lpBuf,
+		__in	ULONG	ulBufSizeCh
 		);
 
 private:

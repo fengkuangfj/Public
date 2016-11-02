@@ -734,3 +734,85 @@ BOOL
 	
 	return bRet;
 }
+
+BOOL
+CProcessControl::GetName(
+__in	BOOL	bCurrentProc,
+__in	ULONG	ulPid,
+__inout LPTSTR	lpBuf,
+__in	ULONG	ulBufSizeCh
+)
+{
+	BOOL	bRet = FALSE;
+
+	HANDLE	hProcess = NULL;
+	LPTSTR	lpName = NULL;
+
+
+	__try
+	{
+		if (!lpBuf || !ulBufSizeCh)
+		{
+			printfPublic("input arguments error. lpBuf(0x%p) ulBufSizeCh(%d)",
+				lpBuf, ulBufSizeCh);
+
+			__leave;
+		}
+
+		if (bCurrentProc)
+		{
+			if (!Get(
+				TRUE,
+				0,
+				lpBuf,
+				ulBufSizeCh
+				))
+			{
+				printfPublic("Get failed");
+				__leave;
+			}
+		}
+		else
+		{
+			hProcess = OpenProcess(PROCESS_QUERY_INFORMATION, FALSE, ulPid);
+			if (!hProcess)
+			{ 
+				printfPublic("OpenProcess failed. (%d) (%d)",
+					ulPid, GetLastError());
+
+				__leave;
+			}
+
+			if (!GetModuleFileNameEx(hProcess, NULL, lpBuf, ulBufSizeCh))
+			{
+				printfPublic("GetModuleFileName failed. (%d)",
+					GetLastError());
+
+				__leave;
+			}
+		}
+
+		lpName = PathFindFileName(lpBuf);
+		if (!lpName)
+		{
+			printfPublic("PathFindFileName failed. (%d)",
+				GetLastError());
+
+			__leave;
+		}
+
+		_tcscpy_s(lpBuf, ulBufSizeCh, lpName);
+
+		bRet = TRUE;
+	}
+	__finally
+	{
+		if (hProcess)
+		{
+			CloseHandle(hProcess);
+			hProcess = NULL;
+		}
+	}
+
+	return bRet;
+}
