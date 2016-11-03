@@ -745,7 +745,6 @@ __in	ULONG	ulBufSizeCh
 {
 	BOOL	bRet = FALSE;
 
-	HANDLE	hProcess = NULL;
 	LPTSTR	lpName = NULL;
 
 
@@ -759,44 +758,22 @@ __in	ULONG	ulBufSizeCh
 			__leave;
 		}
 
-		if (bCurrentProc)
+		if (!Get(
+			bCurrentProc,
+			ulPid,
+			lpBuf,
+			ulBufSizeCh
+			))
 		{
-			if (!Get(
-				TRUE,
-				0,
-				lpBuf,
-				ulBufSizeCh
-				))
-			{
-				printfPublic("Get failed");
-				__leave;
-			}
+			printfPublic("Get failed");
+			__leave;
 		}
-		else
-		{
-			hProcess = OpenProcess(PROCESS_QUERY_INFORMATION, FALSE, ulPid);
-			if (!hProcess)
-			{ 
-				printfPublic("OpenProcess failed. (%d) (%d)",
-					ulPid, GetLastError());
-
-				__leave;
-			}
-
-			if (!GetModuleFileNameEx(hProcess, NULL, lpBuf, ulBufSizeCh))
-			{
-				printfPublic("GetModuleFileName failed. (%d)",
-					GetLastError());
-
-				__leave;
-			}
-		}
-
+		
 		lpName = PathFindFileName(lpBuf);
 		if (!lpName)
 		{
-			printfPublic("PathFindFileName failed. (%d)",
-				GetLastError());
+			printfPublic("PathFindFileName failed. (%S) (%d)",
+				lpBuf, GetLastError());
 
 			__leave;
 		}
@@ -807,11 +784,7 @@ __in	ULONG	ulBufSizeCh
 	}
 	__finally
 	{
-		if (hProcess)
-		{
-			CloseHandle(hProcess);
-			hProcess = NULL;
-		}
+		;
 	}
 
 	return bRet;
