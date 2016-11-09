@@ -424,7 +424,9 @@ _Out_ LPDWORD lpNumberOfBytesRead
 			);
 		if (!bRet)
 		{
-			printfEx(MOD_STACK_BACKTRACE, PRINTF_LEVEL_ERROR, "ReadProcessMemory failed. (%d)", GetLastError());
+			if (299 != GetLastError())
+				printfEx(MOD_STACK_BACKTRACE, PRINTF_LEVEL_ERROR, "ReadProcessMemory failed. (%d)", GetLastError());
+
 			__leave;
 		}
 
