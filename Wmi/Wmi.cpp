@@ -5,6 +5,7 @@ CWmi * CWmi::ms_pInstance = NULL;
 BOOL
 	CWmi::Query(
 	__in LPSTR	lpClass,
+	__in LPTSTR lpNamespace,
 	__in LPTSTR lpContent
 	)
 {
@@ -24,9 +25,11 @@ BOOL
 
 	do 
 	{
-		if (!lpClass || !lpContent)
+		if (!lpClass || !lpContent || !lpNamespace)
 		{
-			printfEx(MOD_WMI, PRINTF_LEVEL_ERROR, "input arguments error. 0x%p 0x%p", lpClass, lpContent);
+			printfEx(MOD_WMI, PRINTF_LEVEL_ERROR, "input arguments error. 0x%p 0x%p 0x%p",
+				lpClass, lpContent, lpNamespace);
+
 			break;
 		}
 
@@ -78,7 +81,7 @@ BOOL
 		// Step 4: -----------------------------------------------------
 		// Connect to WMI through the IWbemLocator::ConnectServer method
 		hResult = pIWbemLocator->ConnectServer(
-			_bstr_t(L"ROOT\\CIMV2"),
+			_bstr_t(lpNamespace),
 			NULL,
 			NULL,
 			NULL,

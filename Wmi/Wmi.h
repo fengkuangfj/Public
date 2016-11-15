@@ -27,6 +27,7 @@ public:
 		BOOL
 		Query(
 		__in LPSTR	lpClass,
+		__in LPTSTR lpNamespace,
 		__in LPTSTR lpContent
 		);
 
