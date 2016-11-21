@@ -35,7 +35,7 @@ CDirectoryControl::Delete(
 		hFind = FindFirstFile(tchDirExpression, &ffd);
 		if (INVALID_HANDLE_VALUE == hFind)
 		{
-			printfEx(MOD_DIRECTORY_CONTROL, PRINTF_LEVEL_ERROR, "FindFirstFile failed. 1 (%S) (%d)",
+			printfEx(MOD_DIRECTORY_CONTROL, PRINTF_LEVEL_ERROR, "FindFirstFile failed. (%S) (%d)",
 				tchDirExpression, GetLastError());
 
 			__leave;
@@ -87,7 +87,8 @@ CDirectoryControl::Delete(
 			printfEx(MOD_DIRECTORY_CONTROL, PRINTF_LEVEL_ERROR, "RemoveDirectory failed. (%S) (%d)",
 				lptchDirPath, GetLastError());
 
-			__leave;
+			if (145 != GetLastError())
+				__leave;
 		}
 
 		bRet = TRUE;
