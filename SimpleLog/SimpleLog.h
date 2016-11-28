@@ -62,6 +62,7 @@ private:
 	BOOL					m_bOutputDebugString;
 	PROC_TYPE				m_ProcType;
 	TCHAR					m_tchServiceName[MAX_PATH];
+	HANDLE					m_hFile;
 
 	CSimpleLog(
 		__in LPTSTR lpLogPath
