@@ -95,12 +95,21 @@ typedef struct _PROCESS_BASIC_INFORMATION
 
 typedef
 	BOOL
-	(* QUERY_FULL_PROCESS_IMAGE_NAME)(
+	(* QUERY_FULL_PROCESS_IMAGE_NAMEA)(
 	__in									HANDLE	hProcess,
 	__in									DWORD	dwFlags,
-	__out_ecount_part(*lpdwSize, *lpdwSize) LPWSTR	lpExeName,
+	__out_ecount_part(*lpdwSize, *lpdwSize) LPSTR	lpExeName,
 	__inout									PDWORD	lpdwSize
 	);
+
+typedef
+BOOL
+(* QUERY_FULL_PROCESS_IMAGE_NAMEW)(
+								   __in									HANDLE	hProcess,
+								   __in									DWORD	dwFlags,
+								   __out_ecount_part(*lpdwSize, *lpdwSize) LPWSTR	lpExeName,
+								   __inout									PDWORD	lpdwSize
+								   );
 
 typedef LONG  NTSTATUS;
 #define NT_SUCCESS(Status) (((NTSTATUS)(Status)) >= 0)
@@ -131,6 +140,14 @@ public:
 		__in	BOOL	bCurrentProc,
 		__in	ULONG	ulPid,
 		__out	LPTSTR	lpOutBuf,
+		__in	ULONG	ulOutBufSizeCh
+		);
+
+	BOOL
+		Get(
+		__in	BOOL	bCurrentProc,
+		__in	ULONG	ulPid,
+		__out	LPSTR	lpOutBuf,
 		__in	ULONG	ulOutBufSizeCh
 		);
 
@@ -176,7 +193,8 @@ private:
 
 	HMODULE								m_hModuleKernel32;
 	HMODULE								m_hModuleNtdll;
-	QUERY_FULL_PROCESS_IMAGE_NAME		m_QueryFullProcessImageName;
+	QUERY_FULL_PROCESS_IMAGE_NAMEA		m_QueryFullProcessImageNameA;
+	QUERY_FULL_PROCESS_IMAGE_NAMEW		m_QueryFullProcessImageNameW;
 	NT_QUERY_INFORMATION_PROCESS		m_NtQueryInformationProcess;
 
 	CProcessControl();

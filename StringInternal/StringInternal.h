@@ -14,16 +14,26 @@ public:
 		BOOL
 		ASCIIToUNICODE(
 		__out	LPTSTR	lpOutBuf,
-		__in	ULONG	ulOutBufSizeCh,
-		__in	LPSTR	lpInBuf
+		__inout	PULONG	pulOutBufSizeCh,
+		__in	LPSTR	lpInBuf,
+		__in	UINT	CodePage
 		);
 
 	static
 		BOOL
 		UNICODEToASCII(
 		__out	LPSTR	lpOutBuf,
-		__in	ULONG	ulOutBufSizeCh,
-		__in	LPTSTR	lpInBuf
+		__inout	PULONG	pulOutBufSizeCh,
+		__in	LPTSTR	lpInBuf,
+		__in	UINT	CodePage
+		);
+
+	static
+	BOOL
+		UTF8ToMB(
+		__out	LPSTR	lpOutBuf,
+		__inout	PULONG	pulOutBufSizeCh,
+		__in	LPSTR	lpInBuf
 		);
 
 private:

@@ -20,6 +20,14 @@ public:
 		__in		ULONG	ulOutBufSizeCh
 		);
 
+	static
+		BOOL
+		Get(
+		__in_opt	HMODULE	hModule,
+		__out		LPSTR	lpOutBuf,
+		__in		ULONG	ulOutBufSizeCh
+		);
+
 private:
 	CModulePath();
 
