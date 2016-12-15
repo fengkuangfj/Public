@@ -240,21 +240,24 @@ CStackBacktrace::StackBacktrace()
 BOOL
 CStackBacktrace::StackBacktraceSym()
 {
-	BOOL					bRet = FALSE;
+	BOOL						bRet = FALSE;
 
-	STACKFRAME64			StackFrame64 = { 0 };
+	STACKFRAME64				StackFrame64 = { 0 };
 
-	DWORD64					dw64Displacement = 0;
-	PSYMBOL_INFO			pSymbol = NULL;
-	DWORD					dwDisplacement = 0;
-	IMAGEHLP_LINE64			Line = { 0 };
-	CHAR					chDecoratedName[MAX_PATH] = { 0 };
-	LPEXCEPTION_POINTERS	lpExceptionPointers = NULL;
-	HANDLE					hThread = NULL;
-	CONTEXT					Context = { 0 };
-	CHAR					chHomeDir[MAX_PATH] = { 0 };
-	CHAR					chLog[MAX_PATH] = { 0 };
-	DWORD					dwMachineType = 0;
+	DWORD64						dw64Displacement = 0;
+	PSYMBOL_INFO				pSymbol = NULL;
+	DWORD						dwDisplacement = 0;
+	IMAGEHLP_LINE64				Line = { 0 };
+	CHAR						chDecoratedName[MAX_PATH] = { 0 };
+	LPEXCEPTION_POINTERS		lpExceptionPointers = NULL;
+	HANDLE						hThread = NULL;
+	CONTEXT						Context = { 0 };
+	CHAR						chHomeDir[MAX_PATH] = { 0 };
+	CHAR						chLog[MAX_PATH] = { 0 };
+	DWORD						dwMachineType = 0;
+	MEMORY_BASIC_INFORMATION	MemoryBasicInfo = { 0 };
+	TCHAR						tchModulePath[MAX_PATH] = { 0 };
+	LPTSTR						lpModuleFileName = NULL;
 
 	printfEx(MOD_STACK_BACKTRACE, PRINTF_LEVEL_INFORMATION, "last");
 
@@ -316,6 +319,8 @@ CStackBacktrace::StackBacktraceSym()
 		do
 		{
 			ZeroMemory(pSymbol, sizeof(SYMBOL_INFO) - sizeof(CHAR) + MAX_PATH);
+			ZeroMemory(&MemoryBasicInfo, sizeof(MemoryBasicInfo));
+			ZeroMemory(tchModulePath, sizeof(tchModulePath));
 
 			pSymbol->SizeOfStruct = sizeof(SYMBOL_INFO);
 			pSymbol->MaxNameLen = MAX_PATH;
@@ -339,6 +344,20 @@ CStackBacktrace::StackBacktraceSym()
 				__leave;
 			}
 
+			if (!VirtualQuery((LPCVOID)StackFrame64.AddrPC.Offset, &MemoryBasicInfo, sizeof(MemoryBasicInfo)))
+			{
+				printfEx(MOD_STACK_BACKTRACE, PRINTF_LEVEL_ERROR, "VirtualQuery failed. (%d)", GetLastError());
+				__leave;
+			}
+
+			if (!GetModuleFileName((HMODULE)MemoryBasicInfo.AllocationBase, tchModulePath, _countof(tchModulePath)))
+			{
+				printfEx(MOD_STACK_BACKTRACE, PRINTF_LEVEL_ERROR, "GetModuleFileName failed. (%d)", GetLastError());
+				__leave;
+			}
+
+			lpModuleFileName = PathFindFileName(tchModulePath);
+
 			if (!m_pfSymFromAddr(
 				m_hProcess,
 				StackFrame64.AddrPC.Offset,
@@ -346,6 +365,14 @@ CStackBacktrace::StackBacktraceSym()
 				pSymbol
 				))
 			{
+				if (6 == GetLastError())
+				{
+					if (lpModuleFileName)
+						printfEx(MOD_STACK_BACKTRACE, PRINTF_LEVEL_INFORMATION, "[%S]", lpModuleFileName);
+
+					continue;
+				}
+
 				printfEx(MOD_STACK_BACKTRACE, PRINTF_LEVEL_ERROR, "SymFromAddr failed. (%d)", GetLastError());
 				__leave;
 			}
@@ -379,7 +406,12 @@ CStackBacktrace::StackBacktraceSym()
 				}
 			}
 			else
-				printfEx(MOD_STACK_BACKTRACE, PRINTF_LEVEL_INFORMATION, "[%s][%s][%d]", chDecoratedName, Line.FileName, Line.LineNumber);
+			{
+				if (lpModuleFileName)
+					printfEx(MOD_STACK_BACKTRACE, PRINTF_LEVEL_INFORMATION, "[%S][%s][%s][%d]", lpModuleFileName, chDecoratedName, Line.FileName, Line.LineNumber);
+				else
+					printfEx(MOD_STACK_BACKTRACE, PRINTF_LEVEL_INFORMATION, "[%s][%s][%d]", chDecoratedName, Line.FileName, Line.LineNumber);				
+			}
 		} while (TRUE);
 
 		bRet = TRUE;

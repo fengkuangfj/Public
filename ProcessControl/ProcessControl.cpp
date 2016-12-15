@@ -48,10 +48,10 @@ BOOL
 			__leave;
 		}
 
-		if (m_QueryFullProcessImageNameW)
+		if (m_QueryFullProcessImageName)
 		{
 			dwProcPathLenCh = ulOutBufSizeCh;
-			if (!m_QueryFullProcessImageNameW(hProc, 0, lpOutBuf, &dwProcPathLenCh))
+			if (!m_QueryFullProcessImageName(hProc, 0, lpOutBuf, &dwProcPathLenCh))
 			{
 				printfPublic("QueryFullProcessImageName failed. (%d)", GetLastError());
 				__leave;
@@ -165,7 +165,7 @@ BOOL
 		}
 
 		m_QueryFullProcessImageNameA = (QUERY_FULL_PROCESS_IMAGE_NAMEA)GetProcAddress(m_hModuleKernel32, "QueryFullProcessImageNameA");
-		m_QueryFullProcessImageNameW = (QUERY_FULL_PROCESS_IMAGE_NAMEW)GetProcAddress(m_hModuleKernel32, "QueryFullProcessImageNameW");
+		m_QueryFullProcessImageName = (QUERY_FULL_PROCESS_IMAGE_NAME)GetProcAddress(m_hModuleKernel32, "QueryFullProcessImageName");
 
 		m_hModuleNtdll = LoadLibrary(_T("Ntdll.dll"));
 		if (!m_hModuleNtdll)
@@ -204,7 +204,7 @@ BOOL
 	__try
 	{
 		m_QueryFullProcessImageNameA = NULL;
-		m_QueryFullProcessImageNameW = NULL;
+		m_QueryFullProcessImageName = NULL;
 
 		if (m_hModuleKernel32)
 		{
@@ -872,7 +872,7 @@ CProcessControl::Get(
 				}
 			}
 
-			if (0 == strnicmp(chProcPathDev, chVolNameDev, strlen(chVolNameDev)))
+			if (0 == _strnicmp(chProcPathDev, chVolNameDev, strlen(chVolNameDev)))
 			{
 				bRet = TRUE;
 				break;
