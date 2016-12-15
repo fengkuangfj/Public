@@ -19,6 +19,7 @@ BOOL
 	PROCESS_INFORMATION	ProcessInfo						= {0};
 	CHAR				chStdOutputRead[4096]			= {0};
 	TCHAR				tchStdOutputRead[4096]			= {0};
+	ULONG				ulStdOutputReadSizeCh			= 0;
 	DWORD				dwStdOutputNumberOfBytesRead	= 0;
 	ULONG				ulLoopReadStdOutput				= 0;
 	DWORD				dwResultWaitForSingleObject		= 0;
@@ -148,7 +149,8 @@ BOOL
 						break;
 					}
 
-					if (!CStringInternal::ASCIIToUNICODE(tchStdOutputRead, _countof(tchStdOutputRead), chStdOutputRead))
+					ulStdOutputReadSizeCh = _countof(tchStdOutputRead);
+					if (!CStringInternal::ASCIIToUNICODE(tchStdOutputRead, &ulStdOutputReadSizeCh, chStdOutputRead, CP_ACP))
 					{
 						printfPublic("CStringInternal::ASCIIToUNICODE failed");
 						__leave;
@@ -191,7 +193,8 @@ BOOL
 						if (!ReadFile(hReadStdError, chStdOutputRead, 4096, &dwStdOutputNumberOfBytesRead, NULL))
 							break;
 
-						if (!CStringInternal::ASCIIToUNICODE(tchStdOutputRead, _countof(tchStdOutputRead), chStdOutputRead))
+						ulStdOutputReadSizeCh = _countof(tchStdOutputRead);
+						if (!CStringInternal::ASCIIToUNICODE(tchStdOutputRead, &ulStdOutputReadSizeCh, chStdOutputRead, CP_ACP))
 						{
 							printfPublic("CStringInternal::ASCIIToUNICODE failed");
 							__leave;
