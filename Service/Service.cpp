@@ -283,7 +283,7 @@ BOOL
 					0,
 					REG_SZ,
 					(const BYTE*)wchTemp,
-					wcslen(wchTemp) * sizeof(WCHAR)
+					(DWORD)wcslen(wchTemp) * sizeof(WCHAR)
 					);
 				if (ERROR_SUCCESS != lResult)
 				{
@@ -353,7 +353,7 @@ BOOL
 					0,
 					REG_SZ,
 					(const BYTE*)wchTemp,
-					wcslen(wchTemp) * sizeof(WCHAR)
+					(DWORD)wcslen(wchTemp) * sizeof(WCHAR)
 					);
 				if (ERROR_SUCCESS != lResult)
 				{
@@ -424,7 +424,7 @@ BOOL
 					0,
 					REG_SZ,
 					(const BYTE *)(lpDescription ? lpDescription : (lpDisplayName ? lpDisplayName : lpServiceName)),
-					wcslen(lpDescription ? lpDescription : (lpDisplayName ? lpDisplayName : lpServiceName)) * sizeof(WCHAR)
+					(DWORD)wcslen(lpDescription ? lpDescription : (lpDisplayName ? lpDisplayName : lpServiceName)) * sizeof(WCHAR)
 					);
 				if (ERROR_SUCCESS != lResult)
 				{
@@ -473,7 +473,7 @@ BOOL
 						0,
 						REG_SZ,
 						(const BYTE *)(lpDescription ? lpDescription : (lpDisplayName ? lpDisplayName : lpServiceName)),
-						wcslen(lpDescription ? lpDescription : (lpDisplayName ? lpDisplayName : lpServiceName)) * sizeof(WCHAR)
+						(DWORD)wcslen(lpDescription ? lpDescription : (lpDisplayName ? lpDisplayName : lpServiceName)) * sizeof(WCHAR)
 						);
 					if (ERROR_SUCCESS != lResult)
 					{

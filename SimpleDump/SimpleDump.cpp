@@ -386,7 +386,7 @@ __in_opt LPTSTR	lpCmdLine
 			{
 				while (i < nArgc)
 				{
-					ulLen += _tcslen(pArgv[i++]);
+					ulLen += (ULONG)_tcslen(pArgv[i++]);
 					ulLen++;
 				}
 			}
@@ -395,7 +395,7 @@ __in_opt LPTSTR	lpCmdLine
 		{
 			if (lpCmdLine)
 			{
-				ulLen = _tcslen(lpCmdLine);
+				ulLen = (ULONG)_tcslen(lpCmdLine);
 				ulLen++;
 			}
 		}
@@ -1113,7 +1113,7 @@ __inout		ULONG*				pulBufLen
 				if (nArgc && lpArgv)
 				{
 					while (i < nArgc)
-						ulBufLen += (_tcslen(lpArgv[i++]) * sizeof(TCHAR));
+						ulBufLen += ((ULONG)_tcslen(lpArgv[i++]) * sizeof(TCHAR));
 
 					if (ulBufLen)
 					{
@@ -1129,7 +1129,7 @@ __inout		ULONG*				pulBufLen
 			{
 				if (lpCmdLine)
 				{
-					ulBufLen = _tcslen(lpCmdLine) * sizeof(TCHAR);
+					ulBufLen = (ULONG)_tcslen(lpCmdLine) * sizeof(TCHAR);
 					if (ulBufLen)
 					{
 						ulBufLen += sizeof(TCHAR);
@@ -1251,7 +1251,7 @@ __inout		ULONG*				pulBufLen
 				{
 					while (i < pArgCmdlineInfo->Console.nArgc)
 					{
-						ulBufLen += _tcslen(pArgCmdlineInfo->Console.lpArgv[i++]) * sizeof(TCHAR);
+						ulBufLen += (ULONG)_tcslen(pArgCmdlineInfo->Console.lpArgv[i++]) * sizeof(TCHAR);
 						ulBufLen += sizeof(TCHAR);
 					}
 				}
@@ -1260,7 +1260,7 @@ __inout		ULONG*				pulBufLen
 			}
 			case PROC_TYPE_NORMAL:
 			{
-				ulBufLen = _tcslen(pArgCmdlineInfo->NotConsole.tchCmdLine) * sizeof(TCHAR);
+				ulBufLen = (ULONG)_tcslen(pArgCmdlineInfo->NotConsole.tchCmdLine) * sizeof(TCHAR);
 				ulBufLen += sizeof(TCHAR);
 
 				break;
@@ -1316,7 +1316,7 @@ __inout		ULONG*				pulBufLen
 						{
 							if (ulCalloc < (lpCurrentPosition - lpPrePosition) * sizeof(TCHAR) + sizeof(TCHAR))
 							{
-								ulCalloc = (lpCurrentPosition - lpPrePosition) * sizeof(TCHAR) + sizeof(TCHAR);
+								ulCalloc = (ULONG)(lpCurrentPosition - lpPrePosition) * sizeof(TCHAR) + sizeof(TCHAR);
 
 								if (lpTemp)
 								{

@@ -273,7 +273,7 @@ __in LPSTR lpLog
 			__leave;
 		}
 
-		if (!WriteFile(m_hFile, chLog, strlen(chLog), &dwWrite, NULL))
+		if (!WriteFile(m_hFile, chLog, (DWORD)strlen(chLog), &dwWrite, NULL))
 		{
 			printfEx(MOD_SIMPLE_LOG, PRINTF_LEVEL_ERROR, "WriteFile failed. (%d)", GetLastError());
 			__leave;
@@ -325,9 +325,9 @@ BOOL
 			WTS_CURRENT_SERVER_HANDLE,
 			WTSGetActiveConsoleSessionId(),
 			lpTitle,
-			_tcslen(lpTitle) * sizeof(TCHAR),
+			(DWORD)_tcslen(lpTitle) * sizeof(TCHAR),
 			lpMessage,
-			_tcslen(lpMessage) * sizeof(TCHAR),
+			(DWORD)_tcslen(lpMessage) * sizeof(TCHAR),
 			dwStyle | MB_SERVICE_NOTIFICATION,
 			0,
 			&dwResponse,

@@ -462,7 +462,7 @@ _Out_ LPDWORD lpNumberOfBytesRead
 			__leave;
 		}
 
-		*lpNumberOfBytesRead = NumberOfBytesRead;
+		*lpNumberOfBytesRead = (DWORD)NumberOfBytesRead;
 	}
 	__finally
 	{
