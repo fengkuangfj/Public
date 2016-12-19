@@ -332,7 +332,7 @@ BOOL
 		ZeroMemory(lpInBuf, ulInBufSizeCh * sizeof(TCHAR));
 		_tcscat_s(lpInBuf, ulInBufSizeCh, _T("A:"));
 
-		*lpInBuf += ulIndex;
+		*lpInBuf += (WCHAR)ulIndex;
 
 		bRet = TRUE;
 	}

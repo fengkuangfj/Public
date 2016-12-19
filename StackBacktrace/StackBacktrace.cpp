@@ -167,8 +167,11 @@ BOOL
 
 				if (!m_pfSymInitialize(m_hProcess, m_tchSymDir, TRUE))
 				{
-					printfEx(MOD_STACK_BACKTRACE, PRINTF_LEVEL_ERROR, "SymInitialize failed. (%d)", GetLastError());
-					__leave;
+					if (87 != GetLastError())
+					{
+						printfEx(MOD_STACK_BACKTRACE, PRINTF_LEVEL_ERROR, "SymInitialize failed. (%d)", GetLastError());
+						__leave;
+					}
 				}
 
 				dwOptions = m_pfSymGetOptions();
@@ -269,6 +272,12 @@ CStackBacktrace::StackBacktraceSym()
 			__leave;
 		}
 
+		if (!SymRefreshModuleList(m_hProcess))
+		{
+			printfEx(MOD_STACK_BACKTRACE, PRINTF_LEVEL_ERROR, "SymRefreshModuleList failed. (%d)", GetLastError());
+			__leave;
+		}
+
 		hThread = GetCurrentThread();
 
 		RtlCaptureContext(&Context);
@@ -365,10 +374,12 @@ CStackBacktrace::StackBacktraceSym()
 				pSymbol
 				))
 			{
-				if (6 == GetLastError())
+				if (6 == GetLastError() || 487 == GetLastError())
 				{
 					if (lpModuleFileName)
-						printfEx(MOD_STACK_BACKTRACE, PRINTF_LEVEL_INFORMATION, "[%S]", lpModuleFileName);
+						printfEx(MOD_STACK_BACKTRACE, PRINTF_LEVEL_INFORMATION, "[%S][0x%x]", lpModuleFileName, StackFrame64.AddrPC.Offset);
+					else
+						printfEx(MOD_STACK_BACKTRACE, PRINTF_LEVEL_INFORMATION, "[0x%x]", StackFrame64.AddrPC.Offset);
 
 					continue;
 				}

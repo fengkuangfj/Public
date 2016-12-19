@@ -160,7 +160,7 @@ BOOL
 					{
 						if (ulLoopReadStdOutput)
 						{
-							lpCmdResultInfo->ulReturnSizeCh += _tcslen(_T("\n"));
+							lpCmdResultInfo->ulReturnSizeCh += (ULONG)_tcslen(_T("\n"));
 							if (lpCmdResultInfo->ulReturnSizeCh > lpCmdResultInfo->ulResultBufferSizeCh)
 							{
 								lpCmdResultInfo->bResult = TRUE;
@@ -170,7 +170,7 @@ BOOL
 							CopyMemory(lpCmdResultInfo->lpResult + lpCmdResultInfo->ulReturnSizeCh - _tcslen(_T("\n")), _T("\n"), _tcslen(_T("\n")) * sizeof(TCHAR));
 						}
 
-						lpCmdResultInfo->ulReturnSizeCh += _tcslen(tchStdOutputRead);
+						lpCmdResultInfo->ulReturnSizeCh += (ULONG)_tcslen(tchStdOutputRead);
 						if (lpCmdResultInfo->ulReturnSizeCh > lpCmdResultInfo->ulResultBufferSizeCh)
 						{
 							lpCmdResultInfo->bResult = TRUE;
@@ -204,14 +204,14 @@ BOOL
 						{
 							if (ulLoopReadStdOutput)
 							{
-								lpCmdResultInfo->ulReturnSizeCh += _tcslen(_T("\n"));
+								lpCmdResultInfo->ulReturnSizeCh += (ULONG)_tcslen(_T("\n"));
 								if (lpCmdResultInfo->ulReturnSizeCh > lpCmdResultInfo->ulResultBufferSizeCh)
 									__leave;
 
 								CopyMemory(lpCmdResultInfo->lpResult + lpCmdResultInfo->ulReturnSizeCh - _tcslen(_T("\n")), _T("\n"), _tcslen(_T("\n")) * sizeof(TCHAR));
 							}
 
-							lpCmdResultInfo->ulReturnSizeCh += _tcslen(tchStdOutputRead);
+							lpCmdResultInfo->ulReturnSizeCh += (ULONG)_tcslen(tchStdOutputRead);
 							if (lpCmdResultInfo->ulReturnSizeCh > lpCmdResultInfo->ulResultBufferSizeCh)
 								__leave;
 
