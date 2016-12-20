@@ -377,9 +377,9 @@ CStackBacktrace::StackBacktraceSym()
 				if (6 == GetLastError() || 487 == GetLastError())
 				{
 					if (lpModuleFileName)
-						printfEx(MOD_STACK_BACKTRACE, PRINTF_LEVEL_INFORMATION, "[%S][0x%x]", lpModuleFileName, StackFrame64.AddrPC.Offset);
+						printfEx(MOD_STACK_BACKTRACE, PRINTF_LEVEL_INFORMATION, "[0x%x][%S]", (DWORD_PTR)StackFrame64.AddrPC.Offset, lpModuleFileName);
 					else
-						printfEx(MOD_STACK_BACKTRACE, PRINTF_LEVEL_INFORMATION, "[0x%x]", StackFrame64.AddrPC.Offset);
+						printfEx(MOD_STACK_BACKTRACE, PRINTF_LEVEL_INFORMATION, "[0x%x]", (DWORD_PTR)StackFrame64.AddrPC.Offset);
 
 					continue;
 				}
@@ -419,9 +419,9 @@ CStackBacktrace::StackBacktraceSym()
 			else
 			{
 				if (lpModuleFileName)
-					printfEx(MOD_STACK_BACKTRACE, PRINTF_LEVEL_INFORMATION, "[%S][%s][%s][%d]", lpModuleFileName, chDecoratedName, Line.FileName, Line.LineNumber);
+					printfEx(MOD_STACK_BACKTRACE, PRINTF_LEVEL_INFORMATION, "[0x%x][%S][%s][%s][%d]", (DWORD_PTR)StackFrame64.AddrPC.Offset, lpModuleFileName, chDecoratedName, Line.FileName, Line.LineNumber);
 				else
-					printfEx(MOD_STACK_BACKTRACE, PRINTF_LEVEL_INFORMATION, "[%s][%s][%d]", chDecoratedName, Line.FileName, Line.LineNumber);				
+					printfEx(MOD_STACK_BACKTRACE, PRINTF_LEVEL_INFORMATION, "[0x%x][%s][%s][%d]", (DWORD_PTR)StackFrame64.AddrPC.Offset, chDecoratedName, Line.FileName, Line.LineNumber);
 			}
 		} while (TRUE);
 
