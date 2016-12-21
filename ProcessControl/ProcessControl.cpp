@@ -3,12 +3,12 @@
 CProcessControl * CProcessControl::ms_pInstance = NULL;
 
 BOOL
-	CProcessControl::Get(
-	__in	BOOL	bCurrentProc,
-	__in	ULONG	ulPid,
-	__out	LPTSTR	lpOutBuf,
-	__in	ULONG	ulOutBufSizeCh
-	)
+CProcessControl::Get(
+					 __in	BOOL	bCurrentProc,
+					 __in	ULONG	ulPid,
+					 __out	LPTSTR	lpOutBuf,
+					 __in	ULONG	ulOutBufSizeCh
+					 )
 {
 	BOOL	bRet						= FALSE;
 
@@ -108,7 +108,7 @@ BOOL
 }
 
 CProcessControl *
-	CProcessControl::GetInstance()
+CProcessControl::GetInstance()
 {
 	if (!ms_pInstance)
 	{
@@ -126,7 +126,7 @@ CProcessControl *
 }
 
 VOID
-	CProcessControl::ReleaseInstance()
+CProcessControl::ReleaseInstance()
 {
 	if (ms_pInstance)
 	{
@@ -150,7 +150,7 @@ CProcessControl::~CProcessControl()
 }
 
 BOOL
-	CProcessControl::Init()
+CProcessControl::Init()
 {
 	BOOL bRet = FALSE;
 
@@ -196,7 +196,7 @@ BOOL
 }
 
 BOOL
-	CProcessControl::Unload()
+CProcessControl::Unload()
 {
 	BOOL bRet = TRUE;
 
@@ -229,11 +229,11 @@ BOOL
 }
 
 BOOL
-	CProcessControl::GetSessionId(
-	__in	BOOL		bCurrentProc,
-	__in	ULONG		ulPid,
-	__out	int		* 	pnSid
-	)
+CProcessControl::GetSessionId(
+							  __in	BOOL		bCurrentProc,
+							  __in	ULONG		ulPid,
+							  __out	int		* 	pnSid
+							  )
 {
 	BOOL	bRet			= FALSE;
 
@@ -295,10 +295,10 @@ BOOL
 }
 
 PROC_TYPE
-	CProcessControl::GetProcType(
-	__in BOOL	bCurrentProc,
-	__in ULONG	ulPid
-	)
+CProcessControl::GetProcType(
+							 __in BOOL	bCurrentProc,
+							 __in ULONG	ulPid
+							 )
 {
 	PROC_TYPE	ProcType	= PROC_TYPE_UNKNOWN;
 
@@ -340,11 +340,11 @@ PROC_TYPE
 }
 
 BOOL
-	CProcessControl::Adjust(
-	__in BOOL	bCurrentProcess,
-	__in ULONG	ulPid,
-	__in LPTSTR lpName
-	)
+CProcessControl::Adjust(
+						__in BOOL	bCurrentProcess,
+						__in ULONG	ulPid,
+						__in LPTSTR lpName
+						)
 {
 	BOOL				bRet			= FALSE;
 
@@ -409,9 +409,9 @@ BOOL
 }
 
 BOOL
-	CProcessControl::RunAs(
-	__in LPTSTR lpPath
-	)
+CProcessControl::RunAs(
+					   __in LPTSTR lpPath
+					   )
 {
 	BOOL				bRet				= FALSE;
 
@@ -448,10 +448,10 @@ BOOL
 }
 
 BOOL
-	CProcessControl::Raise(
-	__in BOOL	bCurrentProcess,
-	__in ULONG	ulPid
-	)
+CProcessControl::Raise(
+					   __in BOOL	bCurrentProcess,
+					   __in ULONG	ulPid
+					   )
 {
 	BOOL bRet = FALSE;
 
@@ -511,7 +511,7 @@ BOOL
 }
 
 VOID
-	CProcessControl::DeleteMyselfBySHChangeNotify()
+CProcessControl::DeleteMyselfBySHChangeNotify()
 {
 	TCHAR tchProcPath[MAX_PATH]	= {0};
 
@@ -538,7 +538,7 @@ VOID
 }
 
 VOID
-	CProcessControl::DeleteMyselfByCreateProcess()
+CProcessControl::DeleteMyselfByCreateProcess()
 {
 	TCHAR				tchCmd[MAX_PATH]		= {0};
 	TCHAR				tchProcPath[MAX_PATH]	= {0};
@@ -628,10 +628,10 @@ VOID
 }
 
 BOOL
-	CProcessControl::GetParentPid(
-	__in	ULONG	ulPid,
-	__out	PULONG	pulParentPid 
-	)
+CProcessControl::GetParentPid(
+							  __in	ULONG	ulPid,
+							  __out	PULONG	pulParentPid 
+							  )
 {
 	BOOL						bRet = FALSE;
 
@@ -666,12 +666,12 @@ BOOL
 		}
 
 		ntStatus = m_NtQueryInformationProcess(
-			 hProcess,
-			 ProcessBasicInformation,
-			 &ProcessBasicInfo,
-			 sizeof(ProcessBasicInfo),
-			 &ulRet			 
-			 );
+			hProcess,
+			ProcessBasicInformation,
+			&ProcessBasicInfo,
+			sizeof(ProcessBasicInfo),
+			&ulRet			 
+			);
 		if (!NT_SUCCESS(ntStatus))
 		{
 			printfPublic("m_NtQueryInformationProcess failed. (0x%x)", ntStatus);
@@ -687,7 +687,7 @@ BOOL
 			bRet = TRUE;
 			__leave;
 		}
-	
+
 		if (!GetProcessTimes(
 			hProcessParent,
 			&ParentCreateTime,
@@ -733,17 +733,17 @@ BOOL
 			hProcessParent = NULL;
 		}
 	}
-	
+
 	return bRet;
 }
 
 BOOL
 CProcessControl::GetName(
-__in	BOOL	bCurrentProc,
-__in	ULONG	ulPid,
-__inout LPTSTR	lpBuf,
-__in	ULONG	ulBufSizeCh
-)
+						 __in	BOOL	bCurrentProc,
+						 __in	ULONG	ulPid,
+						 __inout LPTSTR	lpBuf,
+						 __in	ULONG	ulBufSizeCh
+						 )
 {
 	BOOL	bRet = FALSE;
 
@@ -770,7 +770,7 @@ __in	ULONG	ulBufSizeCh
 			printfPublic("Get failed");
 			__leave;
 		}
-		
+
 		lpName = PathFindFileName(lpBuf);
 		if (!lpName)
 		{

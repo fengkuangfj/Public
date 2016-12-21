@@ -2,6 +2,8 @@
 
 #include <Windows.h>
 #include <stdio.h>
+#include <Psapi.h>
+#include <Shlwapi.h>
 
 #include "..\\Public.h"
 
@@ -26,6 +28,18 @@ public:
 		__in_opt	HMODULE	hModule,
 		__out		LPSTR	lpOutBuf,
 		__in		ULONG	ulOutBufSizeCh
+		);
+
+	static
+		BOOL
+		Enum();
+
+	static
+		BOOL
+		GetName(
+			__in	DWORD_PTR	dwAddr,
+			__out	LPTSTR		lpModuleName,
+			__in	ULONG		ulModuleNameBufSizeCh
 		);
 
 private:
