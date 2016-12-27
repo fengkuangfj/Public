@@ -165,6 +165,8 @@ BOOL
 					__leave;
 				}
 
+				m_pfSymRefreshModuleList = (SYMREFRESHMODULELIST)GetProcAddress(hModuleDbghelp, "SymRefreshModuleList");
+
 				if (!m_pfSymInitialize(m_hProcess, m_tchSymDir, TRUE))
 				{
 					if (87 != GetLastError())
@@ -221,6 +223,7 @@ CStackBacktrace::Unload()
 		m_pfSymFromAddr = NULL;
 		m_pfUnDecorateSymbolName = NULL;
 		m_pfSymGetLineFromAddr64 = NULL;
+		m_pfSymRefreshModuleList = NULL;
 
 		CPrintfEx::ReleaseInstance();
 
@@ -272,10 +275,13 @@ CStackBacktrace::StackBacktraceSym()
 			__leave;
 		}
 
-		if (!SymRefreshModuleList(m_hProcess))
+		if (m_pfSymRefreshModuleList)
 		{
-			printfEx(MOD_STACK_BACKTRACE, PRINTF_LEVEL_ERROR, "SymRefreshModuleList failed. (%d)", GetLastError());
-			__leave;
+			if (!m_pfSymRefreshModuleList(m_hProcess))
+			{
+				printfEx(MOD_STACK_BACKTRACE, PRINTF_LEVEL_ERROR, "SymRefreshModuleList failed. (%d)", GetLastError());
+				__leave;
+			}
 		}
 
 		hThread = GetCurrentThread();

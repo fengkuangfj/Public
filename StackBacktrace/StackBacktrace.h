@@ -120,6 +120,12 @@ __out	PDWORD				pdwDisplacement,
 __out	PIMAGEHLP_LINE64	Line64
 );
 
+typedef
+BOOL
+(WINAPI * SYMREFRESHMODULELIST)(
+ __in HANDLE hProcess
+ );
+
 BOOL
 CALLBACK
 ReadProcessMemoryProc64(
@@ -162,6 +168,7 @@ private:
 	SYMFROMADDR					m_pfSymFromAddr;
 	UNDECORATESYMBOLNAME		m_pfUnDecorateSymbolName;
 	SYMGETLINEFROMADDR64		m_pfSymGetLineFromAddr64;
+	SYMREFRESHMODULELIST		m_pfSymRefreshModuleList;
 
 	CStackBacktrace(
 		__in LPTSTR lpSymDir
