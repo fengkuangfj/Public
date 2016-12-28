@@ -257,7 +257,6 @@ BOOL
 	TCHAR					tchDumpFile[MAX_PATH]		= {0};
 	TCHAR					tchNewDumpFile[MAX_PATH]	= {0};
 	FILE_MODIFY_TIME_CMP	FileModifyTimeCmp			= FILE_MODIFY_TIME_CMP_NULL;
-	LPTSTR					lpPosition					= NULL;
 
 
 	__try
@@ -341,11 +340,7 @@ BOOL
 			_tcscat_s(tchNewDumpFile, _countof(tchNewDumpFile), tchDumpFile);
 			if (PathFileExists(tchNewDumpFile))
 			{
-				lpPosition = _tcsrchr(tchNewDumpFile, _T('\\'));
-				if (!lpPosition)
-					__leave;
-
-				if (!PathYetAnotherMakeUniqueName(tchNewDumpFile, tchNewDumpFile, NULL, lpPosition + 1))
+				if (!PathYetAnotherMakeUniqueName(tchNewDumpFile, tchNewDumpFile, NULL, NULL))
 				{
 					printfPublic("PathYetAnotherMakeUniqueName failed. (0x%x)", lResult);
 					__leave;
@@ -377,14 +372,7 @@ BOOL
 		_tcscpy_s(tchNewDumpFile, _countof(tchNewDumpFile), tchDumpFile);
 		if (PathFileExists(tchNewDumpFile))
 		{
-			lpPosition = _tcsrchr(tchNewDumpFile, _T('\\'));
-			if (!lpPosition)
-			{
-				printfPublic("_tcsrchr failed");
-				__leave;
-			}
-
-			if (!PathYetAnotherMakeUniqueName(tchNewDumpFile, tchNewDumpFile, NULL, lpPosition + 1))
+			if (!PathYetAnotherMakeUniqueName(tchNewDumpFile, tchNewDumpFile, NULL, NULL))
 			{
 				printfPublic("PathYetAnotherMakeUniqueName failed. (%d)", GetLastError());
 				__leave;
