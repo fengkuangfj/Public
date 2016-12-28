@@ -110,12 +110,28 @@ CProcessControl::Get(
 CProcessControl *
 CProcessControl::GetInstance()
 {
-	if (!ms_pInstance)
+	static LONG ms_lControl = 0;
+
+
+	if (0 == InterlockedCompareExchange(&ms_lControl, 1, 0))
 	{
 		do 
 		{
 			new CProcessControl;
 			if (!ms_pInstance)
+				Sleep(1000);
+			else
+			{
+				InterlockedCompareExchange(&ms_lControl, 2, 1);
+				break;
+			}
+		} while (TRUE);
+	}
+	else
+	{
+		do
+		{
+			if (2 != ms_lControl)
 				Sleep(1000);
 			else
 				break;
