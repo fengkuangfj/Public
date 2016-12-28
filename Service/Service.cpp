@@ -1406,19 +1406,27 @@ BOOL
 CService *
 	CService::GetInstance()
 {
-	static LONG ms_lControl = 0;
+	typedef enum _INSTANCE_STATUS
+	{
+		INSTANCE_STATUS_UNINITED	= 0,
+		INSTANCE_STATUS_INITING		= 1,
+		INSTANCE_STATUS_INITED		= 2
+	} INSTANCE_STATUS, *PINSTANCE_STATUS, *LPINSTANCE_STATUS;
+
+	static LONG ms_lInstanceStatus = INSTANCE_STATUS_UNINITED;
 
 
-	if (0 == InterlockedCompareExchange(&ms_lControl, 1, 0))
+
+	if (INSTANCE_STATUS_UNINITED == InterlockedCompareExchange(&ms_lInstanceStatus, INSTANCE_STATUS_INITING, INSTANCE_STATUS_UNINITED))
 	{
 		do 
 		{
-			new CService;
+			new CService();
 			if (!ms_pInstance)
 				Sleep(1000);
 			else
 			{
-				InterlockedCompareExchange(&ms_lControl, 2, 1);
+				InterlockedCompareExchange(&ms_lInstanceStatus, INSTANCE_STATUS_INITED, INSTANCE_STATUS_INITING);
 				break;
 			}
 		} while (TRUE);
@@ -1427,7 +1435,7 @@ CService *
 	{
 		do
 		{
-			if (2 != ms_lControl)
+			if (INSTANCE_STATUS_INITED != ms_lInstanceStatus)
 				Sleep(1000);
 			else
 				break;

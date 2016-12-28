@@ -89,8 +89,8 @@ BOOL
 	{
 		if (bRet)
 		{
-			CSimpleLogSR(MOD_SIMPLE_LOG, LOG_LEVEL_INFORMATION, "%lS", tchProcPath);
-			CSimpleLogSR(MOD_SIMPLE_LOG, LOG_LEVEL_INFORMATION, "初始化成功");
+			ms_pInstance->Log(MOD_SIMPLE_LOG, LOG_LEVEL_INFORMATION, __FILE__, __FUNCSIG__, __LINE__, "%lS", tchProcPath);
+			ms_pInstance->Log(MOD_SIMPLE_LOG, LOG_LEVEL_INFORMATION, __FILE__, __FUNCSIG__, __LINE__, "初始化成功");
 		}
 		else
 			Unload();
@@ -107,7 +107,8 @@ CSimpleLog::Unload()
 
 	__try
 	{
-		CSimpleLogSR(MOD_SIMPLE_LOG, LOG_LEVEL_INFORMATION, "卸载成功");
+		if (ms_pInstance)
+			ms_pInstance->Log(MOD_SIMPLE_LOG, LOG_LEVEL_INFORMATION, __FILE__, __FUNCSIG__, __LINE__, "卸载成功");
 
 		if (INVALID_HANDLE_VALUE != m_hFile)
 		{
@@ -353,10 +354,18 @@ CSimpleLog *
 	__in LPTSTR lpLogPath
 	)
 {
-	static LONG ms_lControl = 0;
+	typedef enum _INSTANCE_STATUS
+	{
+		INSTANCE_STATUS_UNINITED	= 0,
+		INSTANCE_STATUS_INITING		= 1,
+		INSTANCE_STATUS_INITED		= 2
+	} INSTANCE_STATUS, *PINSTANCE_STATUS, *LPINSTANCE_STATUS;
+
+	static LONG ms_lInstanceStatus = INSTANCE_STATUS_UNINITED;
 
 
-	if (0 == InterlockedCompareExchange(&ms_lControl, 1, 0))
+
+	if (INSTANCE_STATUS_UNINITED == InterlockedCompareExchange(&ms_lInstanceStatus, INSTANCE_STATUS_INITING, INSTANCE_STATUS_UNINITED))
 	{
 		do 
 		{
@@ -365,7 +374,7 @@ CSimpleLog *
 				Sleep(1000);
 			else
 			{
-				InterlockedCompareExchange(&ms_lControl, 2, 1);
+				InterlockedCompareExchange(&ms_lInstanceStatus, INSTANCE_STATUS_INITED, INSTANCE_STATUS_INITING);
 				break;
 			}
 		} while (TRUE);
@@ -374,7 +383,7 @@ CSimpleLog *
 	{
 		do
 		{
-			if (2 != ms_lControl)
+			if (INSTANCE_STATUS_INITED != ms_lInstanceStatus)
 				Sleep(1000);
 			else
 				break;
