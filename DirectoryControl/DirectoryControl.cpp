@@ -6,6 +6,23 @@ CDirectoryControl::Delete(
 						  __in LPTSTR lptchDirPath
 						  )
 {
+	return Delete(lptchDirPath, TRUE);
+}
+
+BOOL
+CDirectoryControl::Empty(
+						  __in LPTSTR lptchDirPath
+						  )
+{
+	return Delete(lptchDirPath, FALSE);
+}
+
+BOOL
+CDirectoryControl::Delete(
+						  __in LPTSTR	lptchDirPath,
+						  __in BOOL		bDelete
+						  )
+{
 	BOOL			bRet = FALSE;
 
 	TCHAR			tchDirExpression[MAX_PATH] = {0};
@@ -24,7 +41,7 @@ CDirectoryControl::Delete(
 
 		if (!PathFileExists(lptchDirPath))
 		{
-			printfEx(MOD_DIRECTORY_CONTROL, PRINTF_LEVEL_ERROR, "not exist. (%S)",
+			printfEx(MOD_DIRECTORY_CONTROL, PRINTF_LEVEL_WARNING, "not exist. (%S)",
 				lptchDirPath);
 
 			__leave;
@@ -51,12 +68,8 @@ CDirectoryControl::Delete(
 					0 != _tcsnicmp(ffd.cFileName, _T(".."), wcslen(_T(".."))))
 				{
 					if (!Delete(tchPath))
-					{
-						printfEx(MOD_DIRECTORY_CONTROL, PRINTF_LEVEL_ERROR, "Delete failed. (%S)",
-							tchPath);
-
-						__leave;
-					}
+						printfEx(MOD_DIRECTORY_CONTROL, PRINTF_LEVEL_WARNING, "Delete failed. (%S)",
+						tchPath);
 				}
 			}
 			else
@@ -64,12 +77,8 @@ CDirectoryControl::Delete(
 				if (!DeleteFile(tchPath))
 				{
 					if (!MoveFileEx(tchPath, NULL, MOVEFILE_DELAY_UNTIL_REBOOT))
-					{
-						printfEx(MOD_DIRECTORY_CONTROL, PRINTF_LEVEL_ERROR, "MoveFileEx failed. (%S) (%d)",
-							tchPath, GetLastError());
-
-						__leave;
-					}
+						printfEx(MOD_DIRECTORY_CONTROL, PRINTF_LEVEL_WARNING, "MoveFileEx failed. (%S) (%d)",
+						tchPath, GetLastError());
 				}
 			}
 		} while (0 != FindNextFile(hFind, &ffd));
@@ -82,13 +91,21 @@ CDirectoryControl::Delete(
 			__leave;
 		}
 
-		if (!RemoveDirectory(lptchDirPath))
+		if (bDelete)
 		{
-			printfEx(MOD_DIRECTORY_CONTROL, PRINTF_LEVEL_ERROR, "RemoveDirectory failed. (%S) (%d)",
-				lptchDirPath, GetLastError());
+			if (!RemoveDirectory(lptchDirPath))
+			{
+				if (145 != GetLastError())
+				{
+					printfEx(MOD_DIRECTORY_CONTROL, PRINTF_LEVEL_ERROR, "RemoveDirectory failed. (%S) (%d)",
+						lptchDirPath, GetLastError());
 
-			if (145 != GetLastError())
-				__leave;
+					__leave;
+				}
+				else
+					printfEx(MOD_DIRECTORY_CONTROL, PRINTF_LEVEL_WARNING, "RemoveDirectory failed. (%S) (%d)",
+					lptchDirPath, GetLastError());
+			}
 		}
 
 		bRet = TRUE;

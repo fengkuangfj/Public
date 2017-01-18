@@ -18,4 +18,18 @@ public:
 		Delete(
 		__in LPTSTR lptchDirPath
 		);
+
+	static
+		BOOL
+		Empty(
+		__in LPTSTR lptchDirPath
+		);
+
+private:
+	static
+		BOOL
+		Delete(
+		__in LPTSTR lptchDirPath,
+		__in BOOL	bDelete
+		);
 };
