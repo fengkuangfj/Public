@@ -33,6 +33,14 @@ public:
 		__in BOOL	bWildcard
 		);
 
+	static
+		BOOL
+		DeleteInternalDir(
+		__in LPTSTR	lptchDirPath,
+		__in LPTSTR	lpDirName,
+		__in BOOL		bWildcard
+		);
+
 private:
 	static
 		BOOL
