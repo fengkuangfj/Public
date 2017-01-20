@@ -25,10 +25,18 @@ public:
 		__in LPTSTR lptchDirPath
 		);
 
+	static
+		BOOL
+		DeleteInternalFile(
+		__in LPTSTR	lptchDirPath,
+		__in LPTSTR	lpFileName,
+		__in BOOL	bWildcard
+		);
+
 private:
 	static
 		BOOL
-		Delete(
+		Control(
 		__in LPTSTR lptchDirPath,
 		__in BOOL	bDelete
 		);
