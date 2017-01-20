@@ -170,7 +170,17 @@ CDirectoryControl::DeleteInternalFile(
 		{
 			StringCchPrintf(tchPath, _countof(tchPath), _T("%s\\%s"), lptchDirPath, ffd.cFileName);
 
-			if (!(ffd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY))
+			if (ffd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
+			{
+				if (0 != _tcsnicmp(ffd.cFileName, _T("."), wcslen(_T("."))) &&
+					0 != _tcsnicmp(ffd.cFileName, _T(".."), wcslen(_T(".."))))
+				{
+					if (!DeleteInternalFile(tchPath, lpFileName, bWildcard))
+						printfEx(MOD_DIRECTORY_CONTROL, PRINTF_LEVEL_WARNING, "Delete failed. (%S)",
+						tchPath);
+				}
+			}
+			else
 			{
 				if (bWildcard)
 				{
