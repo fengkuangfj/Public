@@ -41,6 +41,22 @@ public:
 		__in BOOL		bWildcard
 		);
 
+	static
+		BOOL
+		EmptyExceptFile(
+		__in LPTSTR	lptchDirPath,
+		__in LPTSTR	lptchFileName,
+		__in BOOL	bWildcard
+		);
+
+	static
+		BOOL
+		DeleteExceptFile(
+		__in LPTSTR	lptchDirPath,
+		__in LPTSTR	lptchFileName,
+		__in BOOL	bWildcard
+		);
+
 private:
 	static
 		BOOL
