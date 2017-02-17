@@ -15,6 +15,8 @@ CRpcClient::CRpcClient(
 	__in		RPC_BINDING_HANDLE	*	pRpcBindingHandle
 )
 {
+	ms_pInstance = this;
+
 	Init(lpObjUuid, lpProtSeq, lpNetworkAddr, lpEndPoint, lpOptions, pRpcBindingHandle);
 }
 

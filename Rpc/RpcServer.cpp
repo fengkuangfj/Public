@@ -24,6 +24,8 @@ CRpcServer::CRpcServer(
 	__in_opt	RPC_MGMT_AUTHORIZATION_FN		RpcMgmtAuthorizationFn
 )
 {
+	ms_pInstance = this;
+
 	Init(RpcIfHandle, pMgrTypeUuid, pMgrEpv, uFlags, uMaxCalls, uMaxRpcSize, pIfCallbackFn, lpProtseq, lpEndpoint, pSecurityDescriptor, uMinimumCallThreads, uDontWait, RpcMgmtAuthorizationFn);
 }
 
