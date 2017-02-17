@@ -1,4 +1,4 @@
-#include "RpcPublicServer.h"
+#include "RpcServer.h"
 
 
 unsigned int		CPublicServer::ms_bDontWait					= 0;

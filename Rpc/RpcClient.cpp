@@ -1,4 +1,4 @@
-#include "RpcPublicClient.h"
+#include "RpcClient.h"
 
 
 LPTSTR CPublicClient::ms_lpStringBinding = NULL;
