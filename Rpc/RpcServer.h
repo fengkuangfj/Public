@@ -3,7 +3,7 @@
 #include <stdio.h>
 #include <Rpc.h>
 
-#include "../../Public/OperationSystemVersion/OperationSystemVersion.h"
+#include "../OperationSystemVersion/OperationSystemVersion.h"
 
 
 #pragma comment(lib, "Rpcrt4.lib")
