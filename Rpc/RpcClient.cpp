@@ -151,6 +151,8 @@ midl_user_free(
 	free(ptr);
 }
 
+#pragma warning(push)
+#pragma warning(disable : 4127)
 CRpcClient *
 CRpcClient::GetInstance(
 	__in_opt	LPTSTR					lpObjUuid,
@@ -199,6 +201,7 @@ CRpcClient::GetInstance(
 
 	return ms_pInstance;
 }
+#pragma warning(pop)
 
 VOID
 CRpcClient::ReleaseInstance()

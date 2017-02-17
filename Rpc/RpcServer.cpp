@@ -366,6 +366,8 @@ midl_user_free(
 	free(ptr);
 }
 
+#pragma warning(push)
+#pragma warning(disable : 4127)
 CRpcServer *
 CRpcServer::GetInstance(
 	__in		RPC_IF_HANDLE					RpcIfHandle,
@@ -421,6 +423,7 @@ CRpcServer::GetInstance(
 
 	return ms_pInstance;
 }
+#pragma warning(pop)
 
 VOID
 CRpcServer::ReleaseInstance()
