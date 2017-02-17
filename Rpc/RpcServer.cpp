@@ -1,24 +1,14 @@
 #include "RpcServer.h"
 
 
-unsigned int		CPublicServer::ms_bDontWait					= 0;
-UUID			*	CPublicServer::ms_pMgrTypeUuid				= NULL;
-BOOL				CPublicServer::ms_bRegistedAuthorizationFn	= FALSE;
-BOOL				CPublicServer::ms_bUnloaded					= FALSE;
+CRpcServer		*	CRpcServer::ms_pInstance = NULL;
+unsigned int		CRpcServer::ms_bDontWait = 0;
+UUID			*	CRpcServer::ms_pMgrTypeUuid = NULL;
+BOOL				CRpcServer::ms_bRegistedAuthorizationFn = FALSE;
+BOOL				CRpcServer::ms_bUnloaded = FALSE;
 
 
-CPublicServer::CPublicServer()
-{
-	;
-}
-
-CPublicServer::~CPublicServer()
-{
-	;
-}
-
-BOOL
-	CPublicServer::Init(
+CRpcServer::CRpcServer(
 	__in		RPC_IF_HANDLE					RpcIfHandle,
 	__in_opt	UUID						*	pMgrTypeUuid,
 	__in_opt	RPC_MGR_EPV					*	pMgrEpv,
@@ -32,14 +22,39 @@ BOOL
 	__in		unsigned int					uMinimumCallThreads,
 	__in		unsigned int					uDontWait,
 	__in_opt	RPC_MGMT_AUTHORIZATION_FN		RpcMgmtAuthorizationFn
-	)
+)
 {
-	BOOL						bRet					= FALSE;
+	Init(RpcIfHandle, pMgrTypeUuid, pMgrEpv, uFlags, uMaxCalls, uMaxRpcSize, pIfCallbackFn, lpProtseq, lpEndpoint, pSecurityDescriptor, uMinimumCallThreads, uDontWait, RpcMgmtAuthorizationFn);
+}
 
-	RPC_STATUS					RpcStatus				= RPC_S_OK;
-	OS_VERSION_USER_DEFINED		OsVer					= OS_VERSION_UNKNOWN;
-	LPRPC_SERVER_LISTEN_INFO	lpRpcServerListenInfo	= {0};
-	HANDLE						hThread					= NULL;
+CRpcServer::~CRpcServer()
+{
+	Unload(FALSE);
+}
+
+BOOL
+CRpcServer::Init(
+	__in		RPC_IF_HANDLE					RpcIfHandle,
+	__in_opt	UUID						*	pMgrTypeUuid,
+	__in_opt	RPC_MGR_EPV					*	pMgrEpv,
+	__in		unsigned int					uFlags,
+	__in_opt	unsigned int					uMaxCalls,
+	__in_opt	unsigned int					uMaxRpcSize,
+	__in_opt	RPC_IF_CALLBACK_FN			*	pIfCallbackFn,
+	__in		LPTSTR							lpProtseq,
+	__in		LPTSTR							lpEndpoint,
+	__in_opt	void						*	pSecurityDescriptor,
+	__in		unsigned int					uMinimumCallThreads,
+	__in		unsigned int					uDontWait,
+	__in_opt	RPC_MGMT_AUTHORIZATION_FN		RpcMgmtAuthorizationFn
+)
+{
+	BOOL						bRet = FALSE;
+
+	RPC_STATUS					RpcStatus = RPC_S_OK;
+	OS_VERSION_USER_DEFINED		OsVer = OS_VERSION_UNKNOWN;
+	LPRPC_SERVER_LISTEN_INFO	lpRpcServerListenInfo = { 0 };
+	HANDLE						hThread = NULL;
 
 
 	__try
@@ -68,7 +83,7 @@ BOOL
 			uMaxCalls,
 			uMaxRpcSize,
 			pIfCallbackFn
-			);
+		);
 		if (RPC_S_OK != RpcStatus)
 			__leave;
 
@@ -79,7 +94,7 @@ BOOL
 			uMaxCalls,
 			(RPC_WSTR)lpEndpoint,
 			pSecurityDescriptor
-			);
+		);
 		if (RPC_S_OK != RpcStatus)
 			__leave;
 
@@ -108,7 +123,7 @@ BOOL
 		ms_bDontWait = uDontWait;
 		if (ms_bDontWait)
 		{
-			RpcStatus = RpcServerListen(uMinimumCallThreads, uMaxCalls, ms_bDontWait); 
+			RpcStatus = RpcServerListen(uMinimumCallThreads, uMaxCalls, ms_bDontWait);
 			if (RPC_S_OK != RpcStatus)
 				__leave;
 		}
@@ -128,7 +143,7 @@ BOOL
 				lpRpcServerListenInfo,
 				0,
 				NULL
-				);
+			);
 			if (!hThread)
 				__leave;
 		}
@@ -148,13 +163,13 @@ BOOL
 }
 
 DWORD
-	WINAPI
-	CPublicServer::RpcServerListenThread(
+WINAPI
+CRpcServer::RpcServerListenThread(
 	LPVOID lpThreadParameter
-	)
+)
 {
-	LPRPC_SERVER_LISTEN_INFO	lpRpcServerListenInfo	= NULL;
-	RPC_STATUS					RpcStatus				= RPC_S_OK;
+	LPRPC_SERVER_LISTEN_INFO	lpRpcServerListenInfo = NULL;
+	RPC_STATUS					RpcStatus = RPC_S_OK;
 
 
 	__try
@@ -164,7 +179,7 @@ DWORD
 
 		lpRpcServerListenInfo = (LPRPC_SERVER_LISTEN_INFO)lpThreadParameter;
 
-		RpcStatus = RpcServerListen(lpRpcServerListenInfo->uMinimumCallThreads, lpRpcServerListenInfo->uMaxCalls, 0); 
+		RpcStatus = RpcServerListen(lpRpcServerListenInfo->uMinimumCallThreads, lpRpcServerListenInfo->uMaxCalls, 0);
 		if (RPC_S_OK != RpcStatus)
 			__leave;
 	}
@@ -178,13 +193,13 @@ DWORD
 }
 
 BOOL
-	CPublicServer::Unload(
+CRpcServer::Unload(
 	__in BOOL bFromRpcInterface
-	)
+)
 {
-	BOOL		bRet		= FALSE;
+	BOOL		bRet = FALSE;
 
-	RPC_STATUS	RpcStatus	= RPC_S_OK;
+	RPC_STATUS	RpcStatus = RPC_S_OK;
 
 
 	__try
@@ -227,11 +242,11 @@ BOOL
 }
 
 int
-	CPublicServer::RpcMgmtAuthorizationFn(
+CRpcServer::RpcMgmtAuthorizationFn(
 	__in	RPC_BINDING_HANDLE		ClientBinding,
 	__in	unsigned long			RequestedMgmtOperation,
 	__out	RPC_STATUS __RPC_FAR *	Status
-	)
+)
 {
 	int nRet = FALSE;
 
@@ -254,15 +269,15 @@ int
 		case RPC_C_MGMT_INQ_STATS:
 		case RPC_C_MGMT_IS_SERVER_LISTEN:
 		case RPC_C_MGMT_STOP_SERVER_LISTEN:
-			{
-				nRet = TRUE;
-				break;
-			}
+		{
+			nRet = TRUE;
+			break;
+		}
 		default:
-			{
-				*Status = RPC_S_OK;
-				__leave;
-			}
+		{
+			*Status = RPC_S_OK;
+			__leave;
+		}
 		}
 	}
 	__finally
@@ -274,20 +289,20 @@ int
 }
 
 RPC_STATUS
-	CPublicServer::RpcIfCallbackFn(
+CRpcServer::RpcIfCallbackFn(
 	__in RPC_IF_HANDLE		InterfaceUuid,
 	__in void			*	Context
-	)
+)
 {
-	RPC_STATUS					RpcStatus						= RPC_S_OK;
+	RPC_STATUS					RpcStatus = RPC_S_OK;
 
-	RPC_IF_HANDLE				ClientBindingHandle				= NULL;
-	unsigned long				uClientPid						= 0;
-	RPC_CALL_ATTRIBUTES_V2		RpcCallAttributes				= {0};
-	CHAR						chServerPrincipalName[MAX_PATH]	= {0};
-	CHAR						chClientPrincipalName[MAX_PATH]	= {0};
-	RPC_CALL_LOCAL_ADDRESS_V1	CallLocalAddress				= {0};
-	CHAR						chBuffer[MAX_PATH]				= {0};
+	RPC_IF_HANDLE				ClientBindingHandle = NULL;
+	unsigned long				uClientPid = 0;
+	RPC_CALL_ATTRIBUTES_V2		RpcCallAttributes = { 0 };
+	CHAR						chServerPrincipalName[MAX_PATH] = { 0 };
+	CHAR						chClientPrincipalName[MAX_PATH] = { 0 };
+	RPC_CALL_LOCAL_ADDRESS_V1	CallLocalAddress = { 0 };
+	CHAR						chBuffer[MAX_PATH] = { 0 };
 
 
 	__try
@@ -332,19 +347,85 @@ RPC_STATUS
 }
 
 void
-	__RPC_FAR* __RPC_USER
-	midl_user_allocate(
+__RPC_FAR* __RPC_USER
+midl_user_allocate(
 	size_t len
-	)
+)
 {
 	return(malloc(len));
 }
 
 void
-	__RPC_USER
-	midl_user_free(
+__RPC_USER
+midl_user_free(
 	void __RPC_FAR *ptr
-	)
+)
 {
 	free(ptr);
+}
+
+CRpcServer *
+CRpcServer::GetInstance(
+	__in		RPC_IF_HANDLE					RpcIfHandle,
+	__in_opt	UUID						*	pMgrTypeUuid,
+	__in_opt	RPC_MGR_EPV					*	pMgrEpv,
+	__in		unsigned int					uFlags,
+	__in_opt	unsigned int					uMaxCalls,
+	__in_opt	unsigned int					uMaxRpcSize,
+	__in_opt	RPC_IF_CALLBACK_FN			*	pIfCallbackFn,
+	__in		LPTSTR							lpProtseq,
+	__in		LPTSTR							lpEndpoint,
+	__in_opt	void						*	pSecurityDescriptor,
+	__in		unsigned int					uMinimumCallThreads,
+	__in		unsigned int					uDontWait,
+	__in_opt	RPC_MGMT_AUTHORIZATION_FN		RpcMgmtAuthorizationFn
+)
+{
+	typedef enum _INSTANCE_STATUS
+	{
+		INSTANCE_STATUS_UNINITED = 0,
+		INSTANCE_STATUS_INITING = 1,
+		INSTANCE_STATUS_INITED = 2
+	} INSTANCE_STATUS, *PINSTANCE_STATUS, *LPINSTANCE_STATUS;
+
+	static LONG ms_lInstanceStatus = INSTANCE_STATUS_UNINITED;
+
+
+
+	if (INSTANCE_STATUS_UNINITED == InterlockedCompareExchange(&ms_lInstanceStatus, INSTANCE_STATUS_INITING, INSTANCE_STATUS_UNINITED))
+	{
+		do
+		{
+			new CRpcServer(RpcIfHandle, pMgrTypeUuid, pMgrEpv, uFlags, uMaxCalls, uMaxRpcSize, pIfCallbackFn, lpProtseq, lpEndpoint, pSecurityDescriptor, uMinimumCallThreads, uDontWait, RpcMgmtAuthorizationFn);
+			if (!ms_pInstance)
+				Sleep(1000);
+			else
+			{
+				InterlockedCompareExchange(&ms_lInstanceStatus, INSTANCE_STATUS_INITED, INSTANCE_STATUS_INITING);
+				break;
+			}
+		} while (TRUE);
+	}
+	else
+	{
+		do
+		{
+			if (INSTANCE_STATUS_INITED != ms_lInstanceStatus)
+				Sleep(1000);
+			else
+				break;
+		} while (TRUE);
+	}
+
+	return ms_pInstance;
+}
+
+VOID
+CRpcServer::ReleaseInstance()
+{
+	if (ms_pInstance)
+	{
+		delete ms_pInstance;
+		ms_pInstance = NULL;
+	}
 }
