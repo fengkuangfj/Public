@@ -37,24 +37,24 @@ typedef struct _INIT_MOD_ARGUMENTS
 } INIT_MOD_ARGUMENTS, *PINIT_MOD_ARGUMENTS, *LPINIT_MOD_ARGUMENTS;
 
 typedef
-	BOOL
-	(* INITMOD)(
-	__in_opt LPINIT_MOD_ARGUMENTS lpInitModArguments
-	);
+BOOL
+(* INITMOD)(
+			__in_opt LPINIT_MOD_ARGUMENTS lpInitModArguments
+			);
 
 typedef
-	BOOL
-	(* UNLOADMOD)();
+BOOL
+(* UNLOADMOD)();
 
 typedef
-	BOOL
-	(WINAPI * WOW64_DISABLE_WOW64_FS_REDIRECTION)(
+BOOL
+(WINAPI * WOW64_DISABLE_WOW64_FS_REDIRECTION)(
 	__out PVOID * OldValue
 	);
 
 typedef
-	BOOL
-	(WINAPI * WOW64_REVERT_WOW64_FS_REDIRECTION)(
+BOOL
+(WINAPI * WOW64_REVERT_WOW64_FS_REDIRECTION)(
 	__in PVOID OlValue
 	);
 
@@ -114,6 +114,23 @@ public:
 		);
 
 	BOOL
+		Exist(
+		__in LPTSTR lpServiceName
+		);
+
+	BOOL
+		Restart(
+		__in	LPTSTR	lpServiceName,
+		__inout PBOOL	pbReboot
+		);
+
+	BOOL
+		ChangeLoadOrderGroup(
+		__in LPTSTR lpServiceName,
+		__in LPTSTR lpLoadOrderGroup
+		);
+
+	BOOL
 		Register(
 		__in		LPTSTR					lpServiceName,
 		__in		INITMOD					InitMod,
@@ -153,7 +170,7 @@ private:
 		Unload();
 
 	static
-	VOID
+		VOID
 		WINAPI
 		Main(
 		DWORD		dwArgc,
@@ -174,7 +191,7 @@ private:
 		);
 
 	static
-	DWORD
+		DWORD
 		WINAPI
 		CtrlHandler(
 		_In_ DWORD	dwControl,

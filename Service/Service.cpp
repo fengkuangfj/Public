@@ -3,18 +3,18 @@
 CService * CService::ms_pInstance = NULL;
 
 BOOL
-	CService::Install(
-	__in		LPWSTR	lpServiceName,
-	__in_opt	LPWSTR	lpDisplayName,
-	__in_opt	LPWSTR	lpDescription,
-	__in		DWORD	dwServiceType,
-	__in		DWORD	dwStartType,
-	__in_opt	DWORD	dwErrorControl,
-	__in		LPWSTR	lpPath,
-	__in_opt	LPWSTR	lpLoadOrderGroup,
-	__in_opt	LPWSTR	lpDependencies,
-	__in_opt	BOOL	bInteractWithTheDesktop
-	)
+CService::Install(
+				  __in		LPWSTR	lpServiceName,
+				  __in_opt	LPWSTR	lpDisplayName,
+				  __in_opt	LPWSTR	lpDescription,
+				  __in		DWORD	dwServiceType,
+				  __in		DWORD	dwStartType,
+				  __in_opt	DWORD	dwErrorControl,
+				  __in		LPWSTR	lpPath,
+				  __in_opt	LPWSTR	lpLoadOrderGroup,
+				  __in_opt	LPWSTR	lpDependencies,
+				  __in_opt	BOOL	bInteractWithTheDesktop
+				  )
 {
 	BOOL							bRet							= FALSE;
 
@@ -177,61 +177,61 @@ BOOL
 				/*
 				dwData = sizeof(wchTemp);
 				lResult = RegGetValue(
-					HKEY_LOCAL_MACHINE,
-					L"SYSTEM\\CurrentControlSet\\Control\\Class\\{4d36e967-e325-11ce-bfc1-08002be10318}",
-					L"UpperFilters",
-					RRF_RT_REG_MULTI_SZ,
-					NULL,
-					wchTemp,
-					&dwData
-					);
+				HKEY_LOCAL_MACHINE,
+				L"SYSTEM\\CurrentControlSet\\Control\\Class\\{4d36e967-e325-11ce-bfc1-08002be10318}",
+				L"UpperFilters",
+				RRF_RT_REG_MULTI_SZ,
+				NULL,
+				wchTemp,
+				&dwData
+				);
 				if (ERROR_SUCCESS != lResult)
 				{
-					printfEx(MOD_SERVICE, PRINTF_LEVEL_ERROR, "RegGetValue failed. (0x%x)", lResult);
-					__leave;
+				printfEx(MOD_SERVICE, PRINTF_LEVEL_ERROR, "RegGetValue failed. (0x%x)", lResult);
+				__leave;
 				}
 
 				lResult = RegOpenKeyEx(
-					HKEY_LOCAL_MACHINE,
-					L"SYSTEM\\CurrentControlSet\\Control\\Class\\{4d36e967-e325-11ce-bfc1-08002be10318}",
-					0,
-					KEY_ALL_ACCESS,
-					&hkResult
-					);
+				HKEY_LOCAL_MACHINE,
+				L"SYSTEM\\CurrentControlSet\\Control\\Class\\{4d36e967-e325-11ce-bfc1-08002be10318}",
+				0,
+				KEY_ALL_ACCESS,
+				&hkResult
+				);
 				if (ERROR_SUCCESS != lResult)
 				{
-					printfEx(MOD_SERVICE, PRINTF_LEVEL_ERROR, "RegOpenKeyEx failed. (0x%x)", lResult);
-					__leave;
+				printfEx(MOD_SERVICE, PRINTF_LEVEL_ERROR, "RegOpenKeyEx failed. (0x%x)", lResult);
+				__leave;
 				}
 
 				if (!hkResult)
 				{
-					printfEx(MOD_SERVICE, PRINTF_LEVEL_ERROR, "hkResult error");
-					__leave;
+				printfEx(MOD_SERVICE, PRINTF_LEVEL_ERROR, "hkResult error");
+				__leave;
 				}
 
 				wcscpy_s(wchTemp + dwData / sizeof(WCHAR) - 1, _countof(wchTemp) - dwData / sizeof(WCHAR) + 1, lpServiceName);
 				*(wchTemp + dwData / sizeof(WCHAR) + wcslen(lpServiceName)) = L'\0';
 
 				lResult = RegSetValueEx(
-					hkResult,
-					L"UpperFilters",
-					0,
-					REG_MULTI_SZ,
-					(const BYTE*)wchTemp,
-					dwData + (wcslen(lpServiceName) + 1) * sizeof(WCHAR)
-					);
+				hkResult,
+				L"UpperFilters",
+				0,
+				REG_MULTI_SZ,
+				(const BYTE*)wchTemp,
+				dwData + (wcslen(lpServiceName) + 1) * sizeof(WCHAR)
+				);
 				if (ERROR_SUCCESS != lResult)
 				{
-					printfEx(MOD_SERVICE, PRINTF_LEVEL_ERROR, "RegSetValueEx failed. (0x%x)", lResult);
-					__leave;
+				printfEx(MOD_SERVICE, PRINTF_LEVEL_ERROR, "RegSetValueEx failed. (0x%x)", lResult);
+				__leave;
 				}
 
 				lResult = RegFlushKey(hkResult);
 				if (ERROR_SUCCESS != lResult)
 				{
-					printfEx(MOD_SERVICE, PRINTF_LEVEL_ERROR, "RegFlushKey failed. (0x%x)", lResult);
-					__leave;
+				printfEx(MOD_SERVICE, PRINTF_LEVEL_ERROR, "RegFlushKey failed. (0x%x)", lResult);
+				__leave;
 				}
 				*/
 
@@ -529,9 +529,9 @@ BOOL
 }
 
 BOOL
-	CService::Start(
-	__in LPWSTR lpServiceName
-	)
+CService::Start(
+				__in LPWSTR lpServiceName
+				)
 {
 	BOOL		bRet		= FALSE;
 
@@ -557,8 +557,11 @@ BOOL
 
 		if (!StartService(hService, 0, NULL))
 		{
-			printfEx(MOD_SERVICE, PRINTF_LEVEL_ERROR, "StartService failed. (%d)", GetLastError());
-			__leave;
+			if (ERROR_SERVICE_ALREADY_RUNNING != GetLastError())
+			{
+				printfPublic("StartService failed. (%d)", GetLastError());
+				__leave;
+			}
 		}
 
 		bRet = TRUE;
@@ -582,9 +585,9 @@ BOOL
 }
 
 BOOL
-	CService::Stop(
-	__in LPWSTR lpServiceName
-	)
+CService::Stop(
+			   __in LPWSTR lpServiceName
+			   )
 {
 	BOOL			bRet			= FALSE;
 
@@ -637,8 +640,8 @@ BOOL
 
 BOOL
 CService::DeleteFileInDrivers(
-__in LPTSTR lpServiceName
-)
+							  __in LPTSTR lpServiceName
+							  )
 {
 	BOOL							bRet = FALSE;
 
@@ -663,22 +666,22 @@ __in LPTSTR lpServiceName
 		case OS_PROCESSOR_TYPE_X86:
 			break;
 		case OS_PROCESSOR_TYPE_X64:
-		{
-			if (!m_pfWow64DisableWow64FsRedirection(&pOldValue))
 			{
-				printfEx(MOD_SERVICE, PRINTF_LEVEL_ERROR, "Wow64DisableWow64FsRedirection failed. (%d)", GetLastError());
+				if (!m_pfWow64DisableWow64FsRedirection(&pOldValue))
+				{
+					printfEx(MOD_SERVICE, PRINTF_LEVEL_ERROR, "Wow64DisableWow64FsRedirection failed. (%d)", GetLastError());
+					__leave;
+				}
+
+				bWow64DisableWow64FsRedirection = TRUE;
+
+				break;
+			}
+		default:
+			{
+				printfEx(MOD_SERVICE, PRINTF_LEVEL_ERROR, "OsProcType error. %d", OsProcType);
 				__leave;
 			}
-
-			bWow64DisableWow64FsRedirection = TRUE;
-
-			break;
-		}
-		default:
-		{
-			printfEx(MOD_SERVICE, PRINTF_LEVEL_ERROR, "OsProcType error. %d", OsProcType);
-			__leave;
-		}
 		}
 
 		if (!lpServiceName)
@@ -739,7 +742,7 @@ __in LPTSTR lpServiceName
 			printfEx(MOD_SERVICE, PRINTF_LEVEL_ERROR, "RegQueryValueEx failed. (%d)", lRet);
 			__leave;
 		}
-		
+
 		if (_T('%') == tchData[0])
 		{
 			// %systemroot%\system32\svchost.exe
@@ -798,9 +801,9 @@ __in LPTSTR lpServiceName
 }
 
 BOOL
-	CService::Delete(
-	__in LPWSTR lpServiceName
-	)
+CService::Delete(
+				 __in LPWSTR lpServiceName
+				 )
 {
 	BOOL		bRet		= FALSE;
 
@@ -857,9 +860,9 @@ BOOL
 }
 
 BOOL
-	CService::Disable(
-	__in LPWSTR lpServiceName
-	)
+CService::Disable(
+				  __in LPWSTR lpServiceName
+				  )
 {
 	BOOL		bRet		= FALSE;
 
@@ -922,9 +925,9 @@ BOOL
 }
 
 BOOL
-	CService::Enable(
-	__in LPWSTR lpServiceName
-	)
+CService::Enable(
+				 __in LPWSTR lpServiceName
+				 )
 {
 	BOOL		bRet		= FALSE;
 
@@ -987,12 +990,12 @@ BOOL
 }
 
 BOOL
-	CService::Register(
-	__in		LPTSTR					lpServiceName,
-	__in		INITMOD					InitMod,
-	__in_opt	LPINIT_MOD_ARGUMENTS	lpInitModArguments,
-	__in		UNLOADMOD				UnloadMod
-	)
+CService::Register(
+				   __in		LPTSTR					lpServiceName,
+				   __in		INITMOD					InitMod,
+				   __in_opt	LPINIT_MOD_ARGUMENTS	lpInitModArguments,
+				   __in		UNLOADMOD				UnloadMod
+				   )
 {
 	BOOL					bRet				= FALSE;
 
@@ -1059,13 +1062,13 @@ BOOL
 //   None
 //
 DWORD
-	WINAPI
-	CService::CtrlHandler(
-	_In_ DWORD	dwControl,
-	_In_ DWORD	dwEventType,
-	_In_ LPVOID	lpEventData,
-	_In_ LPVOID	lpContext
-	)
+WINAPI
+CService::CtrlHandler(
+					  _In_ DWORD	dwControl,
+					  _In_ DWORD	dwEventType,
+					  _In_ LPVOID	lpEventData,
+					  _In_ LPVOID	lpContext
+					  )
 {
 	DWORD dwRet = NO_ERROR;
 
@@ -1173,11 +1176,11 @@ DWORD
 //   None
 //
 VOID
-	CService::ReportSvcStatus(
-	DWORD dwCurrentState,
-	DWORD dwWin32ExitCode,
-	DWORD dwWaitHint
-	)
+CService::ReportSvcStatus(
+						  DWORD dwCurrentState,
+						  DWORD dwWin32ExitCode,
+						  DWORD dwWaitHint
+						  )
 {
 	OS_VERSION_USER_DEFINED	OsVerAndProcType = OS_VERSION_UNKNOWN;
 
@@ -1284,11 +1287,11 @@ VOID
 //   None.
 //
 VOID
-	WINAPI
-	CService::Main(
-	DWORD		dwArgc,
-	LPTSTR *	lpszArgv
-	)
+WINAPI
+CService::Main(
+			   DWORD		dwArgc,
+			   LPTSTR *	lpszArgv
+			   )
 {
 	HANDLE			hDataMgr			=	NULL;
 	HANDLE			hRpcServer			=	NULL;
@@ -1344,10 +1347,10 @@ VOID
 //   None
 //
 BOOL
-	CService::Init(
-	DWORD		dwArgc,
-	LPTSTR *	lpszArgv
-	)
+CService::Init(
+			   DWORD		dwArgc,
+			   LPTSTR *	lpszArgv
+			   )
 {
 	BOOL bRet = FALSE;
 
@@ -1404,7 +1407,7 @@ BOOL
 }
 
 CService *
-	CService::GetInstance()
+CService::GetInstance()
 {
 	typedef enum _INSTANCE_STATUS
 	{
@@ -1446,7 +1449,7 @@ CService *
 }
 
 VOID
-	CService::ReleaseInstance()
+CService::ReleaseInstance()
 {
 	if (ms_pInstance)
 	{
@@ -1488,7 +1491,7 @@ CService::~CService()
 }
 
 BOOL
-	CService::Init()
+CService::Init()
 {
 
 	BOOL bRet = FALSE;
@@ -1521,7 +1524,7 @@ BOOL
 }
 
 BOOL
-	CService::Unload()
+CService::Unload()
 {
 	BOOL bRet = TRUE;
 
@@ -1561,7 +1564,7 @@ CService::CanInteractWithTheDesktop(
 	DWORD	dwType = 0;
 	DWORD	dwData = 0;
 	DWORD	dwDataLen = 0;
-	
+
 
 
 	_try
@@ -1603,6 +1606,194 @@ CService::CanInteractWithTheDesktop(
 		}
 
 		if (dwData & SERVICE_INTERACTIVE_PROCESS)
+			bRet = TRUE;
+	}
+	__finally
+	{
+		if (hKey)
+		{
+			RegCloseKey(hKey);
+			hKey = NULL;
+		}
+	}
+
+	return bRet;
+}
+
+BOOL
+CService::ChangeLoadOrderGroup(
+							   __in LPTSTR lpServiceName,
+							   __in LPTSTR lpLoadOrderGroup
+							   )
+{
+	BOOL		bRet		= FALSE;
+
+	SC_HANDLE	hScManager	= NULL;
+	SC_HANDLE	hService	= NULL;
+
+
+	__try
+	{
+		if (!lpServiceName || !lpLoadOrderGroup)
+		{
+			printfPublic("input arguments error. (0x%p) (0x%p)", lpServiceName, lpLoadOrderGroup);
+			__leave;
+		}
+
+		hScManager = OpenSCManager(NULL, NULL, SC_MANAGER_ALL_ACCESS);
+		if (!hScManager)
+		{
+			printfPublic("OpenSCManager failed. (%d)", GetLastError());
+			__leave;
+		}
+
+		hService = OpenService(hScManager, lpServiceName, SERVICE_ALL_ACCESS);
+		if (!hService)
+		{
+			printfPublic("OpenService failed. (%d)", GetLastError());
+			__leave;
+		}
+
+		if (!ChangeServiceConfig(
+			hService,
+			SERVICE_NO_CHANGE,
+			SERVICE_NO_CHANGE,
+			SERVICE_NO_CHANGE,
+			NULL,
+			lpLoadOrderGroup,
+			NULL,
+			NULL,
+			NULL,
+			NULL,
+			NULL
+			))
+		{
+			printfPublic("ChangeServiceConfig failed. (%d)", GetLastError());
+			__leave;
+		}
+
+		bRet = TRUE;
+	}
+	__finally
+	{
+		if (hService)
+		{
+			CloseServiceHandle(hService);
+			hService = NULL;
+		}
+
+		if (hScManager)
+		{
+			CloseServiceHandle(hScManager);
+			hScManager = NULL;
+		}
+	}
+
+	return bRet;
+}
+
+BOOL
+CService::Restart(
+				  __in	LPTSTR	lpServiceName,
+				  __inout PBOOL	pbReboot
+						)
+{
+	BOOL			bRet			= FALSE;
+
+	SC_HANDLE		hScManager		= NULL;
+	SC_HANDLE		hService		= NULL;
+	SERVICE_STATUS	ServiceStatus	= {0};
+	int				nCount = 10;
+
+
+	__try
+	{
+		if (!lpServiceName || !pbReboot)
+		{
+			printfPublic("input arguments error. (0x%p) (0x%p)", lpServiceName, pbReboot);
+			__leave;
+		}
+
+		hScManager = OpenSCManager(NULL, NULL, SC_MANAGER_ALL_ACCESS);
+		if (!hScManager)
+		{
+			printfPublic("OpenSCManager failed. (%d)", GetLastError());
+			__leave;
+		}
+
+		hService = OpenService(hScManager, lpServiceName, SERVICE_ALL_ACCESS);
+		if (!hService)
+		{
+			printfPublic("OpenService failed. (%d)", GetLastError());
+			__leave;
+		}
+
+		if (!ControlService(hService, SERVICE_CONTROL_STOP, &ServiceStatus))
+		{
+			*pbReboot = TRUE;
+			__leave;
+		}
+
+		if (!StartService(hService, 0, NULL))
+		{
+			if (ERROR_SERVICE_ALREADY_RUNNING != GetLastError())
+			{
+				printfPublic("StartService failed. (%d)", GetLastError());
+				__leave;
+			}
+		}
+
+		bRet = TRUE;
+	}
+	__finally
+	{
+		if (hService)
+		{
+			CloseServiceHandle(hService);
+			hService = NULL;
+		}
+
+		if (hScManager)
+		{
+			CloseServiceHandle(hScManager);
+			hScManager = NULL;
+		}
+	}
+
+	return bRet;
+}
+
+BOOL
+CService::Exist(
+				__in LPTSTR lpServiceName
+				)
+{
+	BOOL	bRet = FALSE;
+
+	TCHAR	tchSubKey[MAX_PATH] = {0};
+	LONG	lResult = ERROR_SUCCESS;
+	HKEY	hKey = NULL;
+
+
+	__try
+	{
+		if (!lpServiceName)
+		{
+			printfPublic("input argument error");
+			__leave;
+		}
+
+		StringCchPrintf(tchSubKey, _countof(tchSubKey), _T("SYSTEM\\CurrentControlSet\\services\\%s"), lpServiceName);
+		lResult = RegOpenKeyEx(
+			HKEY_LOCAL_MACHINE,
+			tchSubKey,
+			0,
+			KEY_ALL_ACCESS ,
+			&hKey
+			);
+		if (ERROR_SUCCESS != lResult)
+			bRet = FALSE;
+		else
 			bRet = TRUE;
 	}
 	__finally

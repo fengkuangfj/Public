@@ -26,106 +26,106 @@ typedef enum _PROC_TYPE
 	PROC_TYPE_SERVICE
 } PROC_TYPE, *PPROC_TYPE, *LPPROC_TYPE;
 
-typedef enum _PROCESSINFOCLASS
-{
-	ProcessBasicInformation,
-	ProcessQuotaLimits,
-	ProcessIoCounters,
-	ProcessVmCounters,
-	ProcessTimes,
-	ProcessBasePriority,
-	ProcessRaisePriority,
-	ProcessDebugPort,
-	ProcessExceptionPort,
-	ProcessAccessToken,
-	ProcessLdtInformation,
-	ProcessLdtSize,
-	ProcessDefaultHardErrorMode,
-	ProcessIoPortHandlers,          // Note: this is kernel mode only
-	ProcessPooledUsageAndLimits,
-	ProcessWorkingSetWatch,
-	ProcessUserModeIOPL,
-	ProcessEnableAlignmentFaultFixup,
-	ProcessPriorityClass,
-	ProcessWx86Information,
-	ProcessHandleCount,
-	ProcessAffinityMask,
-	ProcessPriorityBoost,
-	ProcessDeviceMap,
-	ProcessSessionInformation,
-	ProcessForegroundInformation,
-	ProcessWow64Information,
-	ProcessImageFileName,
-	ProcessLUIDDeviceMapsEnabled,
-	ProcessBreakOnTermination,
-	ProcessDebugObjectHandle,
-	ProcessDebugFlags,
-	ProcessHandleTracing,
-	ProcessIoPriority,
-	ProcessExecuteFlags,
-	ProcessTlsInformation,
-	ProcessCookie,
-	ProcessImageInformation,
-	ProcessCycleTime,
-	ProcessPagePriority,
-	ProcessInstrumentationCallback,
-	ProcessThreadStackAllocation,
-	ProcessWorkingSetWatchEx,
-	ProcessImageFileNameWin32,
-	ProcessImageFileMapping,
-	ProcessAffinityUpdateMode,
-	ProcessMemoryAllocationMode,
-	ProcessGroupInformation,
-	ProcessTokenVirtualizationEnabled,
-	ProcessConsoleHostProcess,
-	ProcessWindowInformation,
-	MaxProcessInfoClass             // MaxProcessInfoClass should always be the last enum
-} PROCESSINFOCLASS;
-
-typedef struct _PEB *PPEB;
-
-typedef struct _PROCESS_BASIC_INFORMATION
-{
-	PVOID		Reserved1;
-	PPEB		PebBaseAddress;
-	PVOID		Reserved2[2];
-	ULONG_PTR	UniqueProcessId;
-	PVOID		Reserved3;
-} PROCESS_BASIC_INFORMATION, *PPROCESS_BASIC_INFORMATION, *LPPROCESS_BASIC_INFORMATION;
-
 typedef
 BOOL
 (*QUERY_FULL_PROCESS_IMAGE_NAMEA)(
-	__in									HANDLE	hProcess,
-	__in									DWORD	dwFlags,
-	__out_ecount_part(*lpdwSize, *lpdwSize) LPSTR	lpExeName,
-	__inout									PDWORD	lpdwSize
-	);
+								  __in									HANDLE	hProcess,
+								  __in									DWORD	dwFlags,
+								  __out_ecount_part(*lpdwSize, *lpdwSize) LPSTR	lpExeName,
+								  __inout									PDWORD	lpdwSize
+								  );
 
 typedef
 BOOL
 (*QUERY_FULL_PROCESS_IMAGE_NAME)(
-	__in									HANDLE	hProcess,
-	__in									DWORD	dwFlags,
-	__out_ecount_part(*lpdwSize, *lpdwSize) LPWSTR	lpExeName,
-	__inout									PDWORD	lpdwSize
-	);
+								 __in									HANDLE	hProcess,
+								 __in									DWORD	dwFlags,
+								 __out_ecount_part(*lpdwSize, *lpdwSize) LPWSTR	lpExeName,
+								 __inout									PDWORD	lpdwSize
+								 );
 
 typedef LONG  NTSTATUS;
 #define NT_SUCCESS(Status) (((NTSTATUS)(Status)) >= 0)
 
-typedef
-	NTSTATUS
-	(WINAPI * NT_QUERY_INFORMATION_PROCESS)(
-	_In_      HANDLE           ProcessHandle,
-	_In_      PROCESSINFOCLASS ProcessInformationClass,
-	_Out_     PVOID            ProcessInformation,
-	_In_      ULONG            ProcessInformationLength,
-	_Out_opt_ PULONG           ReturnLength
-	);
-
 class CProcessControl
 {
+	typedef enum _PROCESSINFOCLASS
+	{
+		ProcessBasicInformation,
+		ProcessQuotaLimits,
+		ProcessIoCounters,
+		ProcessVmCounters,
+		ProcessTimes,
+		ProcessBasePriority,
+		ProcessRaisePriority,
+		ProcessDebugPort,
+		ProcessExceptionPort,
+		ProcessAccessToken,
+		ProcessLdtInformation,
+		ProcessLdtSize,
+		ProcessDefaultHardErrorMode,
+		ProcessIoPortHandlers,          // Note: this is kernel mode only
+		ProcessPooledUsageAndLimits,
+		ProcessWorkingSetWatch,
+		ProcessUserModeIOPL,
+		ProcessEnableAlignmentFaultFixup,
+		ProcessPriorityClass,
+		ProcessWx86Information,
+		ProcessHandleCount,
+		ProcessAffinityMask,
+		ProcessPriorityBoost,
+		ProcessDeviceMap,
+		ProcessSessionInformation,
+		ProcessForegroundInformation,
+		ProcessWow64Information,
+		ProcessImageFileName,
+		ProcessLUIDDeviceMapsEnabled,
+		ProcessBreakOnTermination,
+		ProcessDebugObjectHandle,
+		ProcessDebugFlags,
+		ProcessHandleTracing,
+		ProcessIoPriority,
+		ProcessExecuteFlags,
+		ProcessTlsInformation,
+		ProcessCookie,
+		ProcessImageInformation,
+		ProcessCycleTime,
+		ProcessPagePriority,
+		ProcessInstrumentationCallback,
+		ProcessThreadStackAllocation,
+		ProcessWorkingSetWatchEx,
+		ProcessImageFileNameWin32,
+		ProcessImageFileMapping,
+		ProcessAffinityUpdateMode,
+		ProcessMemoryAllocationMode,
+		ProcessGroupInformation,
+		ProcessTokenVirtualizationEnabled,
+		ProcessConsoleHostProcess,
+		ProcessWindowInformation,
+		MaxProcessInfoClass             // MaxProcessInfoClass should always be the last enum
+	} PROCESSINFOCLASS;
+
+	typedef struct _PEB *PPEB;
+
+	typedef struct _PROCESS_BASIC_INFORMATION
+	{
+		PVOID		Reserved1;
+		PPEB		PebBaseAddress;
+		PVOID		Reserved2[2];
+		ULONG_PTR	UniqueProcessId;
+		PVOID		Reserved3;
+	} PROCESS_BASIC_INFORMATION, *PPROCESS_BASIC_INFORMATION, *LPPROCESS_BASIC_INFORMATION;
+
+	typedef
+		NTSTATUS
+		(WINAPI * NT_QUERY_INFORMATION_PROCESS)(
+		_In_      HANDLE			ProcessHandle,
+		_In_      PROCESSINFOCLASS	ProcessInformationClass,
+		_Out_     PVOID				ProcessInformation,
+		_In_      ULONG				ProcessInformationLength,
+		_Out_opt_ PULONG			ReturnLength
+		);
+
 public:
 	static
 		CProcessControl *
@@ -208,7 +208,7 @@ private:
 		Unload();
 
 	static
-	BOOL
+		BOOL
 		GetSessionId(
 		__in	BOOL		bCurrentProc,
 		__in	ULONG		ulPid,
@@ -216,7 +216,7 @@ private:
 		);
 
 	static
-	BOOL
+		BOOL
 		Adjust(
 		__in BOOL	bCurrentProcess,
 		__in ULONG	ulPid,

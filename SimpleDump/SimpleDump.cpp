@@ -4,9 +4,9 @@ CSimpleDump * CSimpleDump::ms_pInstance = NULL;
 
 BOOL
 CSimpleDump::GenRestartCmdLine(
-__inout LPTSTR	pCmdLine,
-__in	ULONG	ulCharacters
-)
+							   __inout LPTSTR	pCmdLine,
+							   __in	ULONG	ulCharacters
+							   )
 {
 	BOOL		bRet = FALSE;
 
@@ -251,8 +251,8 @@ CSimpleDump::BeenRunningMinimum60Seconds()
 LONG
 WINAPI
 CSimpleDump::ExceptionHandler(
-_In_ struct _EXCEPTION_POINTERS* pExceptionInfo
-)
+							  _In_ struct _EXCEPTION_POINTERS* pExceptionInfo
+							  )
 {
 	PEXCEPTION_RECORD pExceptionRecored = NULL;
 
@@ -366,10 +366,10 @@ CSimpleDump::RegisterRestart()
 
 BOOL
 CSimpleDump::InitCmdLine(
-__in_opt int	nArgc,
-__in_opt TCHAR*	pArgv[],
-__in_opt LPTSTR	lpCmdLine
-)
+						 __in_opt int	nArgc,
+						 __in_opt TCHAR*	pArgv[],
+						 __in_opt LPTSTR	lpCmdLine
+						 )
 {
 	BOOL	bRet = FALSE;
 
@@ -469,8 +469,8 @@ __in_opt LPTSTR	lpCmdLine
 */
 VOID
 CSimpleDump::RegisterCrushHandler(
-__in PCRUSH_HANDLER_INFO pCrushHandlerInfo
-)
+								  __in PCRUSH_HANDLER_INFO pCrushHandlerInfo
+								  )
 {
 	HANDLE hOutPut = INVALID_HANDLE_VALUE;
 
@@ -489,17 +489,17 @@ __in PCRUSH_HANDLER_INFO pCrushHandlerInfo
 		{
 			switch (pCrushHandlerInfo->EhType)
 			{
-				case EH_TYPE_S:
+			case EH_TYPE_S:
 				{
 					m_pfTopLevelExceptionFilter = SetUnhandledExceptionFilter((PTOP_LEVEL_EXCEPTION_FILTER)ExceptionHandler);
 					break;
 				}
-				case EH_TYPE_V:
+			case EH_TYPE_V:
 				{
 					AddVectoredExceptionHandler(pCrushHandlerInfo->bFirstHandlerForEhTypeV ? 1 : 0, (PVECTORED_EXCEPTION_HANDLER)ExceptionHandler);
 					break;
 				}
-				default:
+			default:
 				{
 					AddVectoredExceptionHandler(1, (PVECTORED_EXCEPTION_HANDLER)ExceptionHandler);
 					// AddVectoredExceptionHandler(0, (PVECTORED_EXCEPTION_HANDLER)ExceptionHandler);
@@ -560,10 +560,10 @@ __in PCRUSH_HANDLER_INFO pCrushHandlerInfo
 
 BOOL
 CSimpleDump::CreateDumpFile(
-__in	PVOID	pExceptionAddress,
-__inout LPTSTR	lpDumpFilePath,
-__in	ULONG	ulBufferLen
-)
+							__in	PVOID	pExceptionAddress,
+							__inout LPTSTR	lpDumpFilePath,
+							__in	ULONG	ulBufferLen
+							)
 {
 	BOOL						bRet = FALSE;
 
@@ -578,6 +578,7 @@ __in	ULONG	ulBufferLen
 	HANDLE						hFile = INVALID_HANDLE_VALUE;
 	ULONG						ulCount = 0;
 	MEMORY_BASIC_INFORMATION	MemoryBasicInfo = { 0 };
+	TCHAR						tchDirParent[MAX_PATH] = { 0 };
 
 
 	__try
@@ -620,7 +621,15 @@ __in	ULONG	ulBufferLen
 			__leave;
 		}
 
-		MoveMemory(tchDumpFilePathWithoutCount, tchModulePath, (pModuleName - tchModulePath) * sizeof(TCHAR));
+		if (_tcslen(m_tchDir))
+		{
+			_tcscat_s(tchDumpFilePathWithoutCount, _countof(tchDumpFilePathWithoutCount), m_tchDir);
+			if (_T('\\') != *(tchDumpFilePathWithoutCount + _tcslen(tchDumpFilePathWithoutCount) - 1))
+				_tcscat_s(tchDumpFilePathWithoutCount, _countof(tchDumpFilePathWithoutCount), _T("\\"));
+		}
+		else
+			MoveMemory(tchDumpFilePathWithoutCount, tchModulePath, (pModuleName - tchModulePath) * sizeof(TCHAR));
+
 		_tcscat_s(tchDumpFilePathWithoutCount, _countof(tchDumpFilePathWithoutCount), pProcName);
 		_tcscat_s(tchDumpFilePathWithoutCount, _countof(tchDumpFilePathWithoutCount), _T("__"));
 		_tcscat_s(tchDumpFilePathWithoutCount, _countof(tchDumpFilePathWithoutCount), pModuleName + 1);
@@ -659,6 +668,11 @@ __in	ULONG	ulBufferLen
 			}
 
 			_tcscat_s(tchDumpFilePath, _countof(tchDumpFilePath), _T(".dmp"));
+
+			_tcscpy_s(tchDirParent, _countof(tchDirParent), tchDumpFilePath);
+			if (PathRemoveFileSpec(tchDirParent) &&
+				!PathFileExists(tchDirParent))
+				SHCreateDirectory(NULL, tchDirParent);
 
 			hFile = CreateFileW(
 				tchDumpFilePath,
@@ -706,8 +720,8 @@ __in	ULONG	ulBufferLen
 
 BOOL
 CSimpleDump::GenDump(
-__in _EXCEPTION_POINTERS* pExceptionInfo
-)
+					 __in _EXCEPTION_POINTERS* pExceptionInfo
+					 )
 {
 	BOOL							bRet = FALSE;
 
@@ -779,10 +793,10 @@ __in _EXCEPTION_POINTERS* pExceptionInfo
 
 BOOL
 CSimpleDump::GetApplicationVersion(
-__in	LPTSTR	lpApplicationPath,
-__inout LPTSTR	lpApplicationVersion,
-__in	ULONG	ulApplicationVersionLen
-)
+								   __in	LPTSTR	lpApplicationPath,
+								   __inout LPTSTR	lpApplicationVersion,
+								   __in	ULONG	ulApplicationVersionLen
+								   )
 {
 	BOOL				bRet = FALSE;
 
@@ -858,10 +872,10 @@ __in	ULONG	ulApplicationVersionLen
 
 BOOL
 CSimpleDump::GetModuleName(
-__in	PVOID	pAddress,
-__inout LPTSTR	lpModuleName,
-__in	ULONG	ulModuleNameLen
-)
+						   __in	PVOID	pAddress,
+						   __inout LPTSTR	lpModuleName,
+						   __in	ULONG	ulModuleNameLen
+						   )
 {
 	BOOL		bRet = FALSE;
 
@@ -952,11 +966,11 @@ __in	ULONG	ulModuleNameLen
 
 BOOL
 CSimpleDump::GetModuleNameIndex(
-__in	PVOID		pAddress,
-__in	HMODULE*	phMoudle,
-__in	ULONG		ulCount,
-__inout ULONG*		pIndex
-)
+								__in	PVOID		pAddress,
+								__in	HMODULE*	phMoudle,
+								__in	ULONG		ulCount,
+								__inout ULONG*		pIndex
+								)
 {
 	BOOL	bRet = FALSE;
 
@@ -991,9 +1005,9 @@ __inout ULONG*		pIndex
 
 BOOL
 CSimpleDump::SortModule(
-__inout	HMODULE*	phMoudle,
-__in	ULONG		ulCount
-)
+						__inout	HMODULE*	phMoudle,
+						__in	ULONG		ulCount
+						)
 {
 	BOOL	bRet = FALSE;
 
@@ -1088,13 +1102,13 @@ CSimpleDump::GetKernel32DllFunc()
 
 BOOL
 CSimpleDump::InitArgCmdlineInfo(
-__in		PROC_TYPE			ProcType,
-__in_opt	int					nArgc,
-__in_opt	LPTSTR				lpArgv[],
-__in_opt	LPTSTR				lpCmdLine,
-__inout_opt	PARG_CMDLINE_INFO	pArgCmdLineInfo,
-__inout		ULONG*				pulBufLen
-)
+								__in		PROC_TYPE			ProcType,
+								__in_opt	int					nArgc,
+								__in_opt	LPTSTR				lpArgv[],
+								__in_opt	LPTSTR				lpCmdLine,
+								__inout_opt	PARG_CMDLINE_INFO	pArgCmdLineInfo,
+								__inout		ULONG*				pulBufLen
+								)
 {
 	BOOL	bRet = FALSE;
 
@@ -1107,8 +1121,8 @@ __inout		ULONG*				pulBufLen
 		// 计算大小
 		switch (ProcType)
 		{
-			case PROC_TYPE_CONSOLE:
-			case PROC_TYPE_SERVICE:
+		case PROC_TYPE_CONSOLE:
+		case PROC_TYPE_SERVICE:
 			{
 				if (nArgc && lpArgv)
 				{
@@ -1125,7 +1139,7 @@ __inout		ULONG*				pulBufLen
 
 				break;
 			}
-			case PROC_TYPE_NORMAL:
+		case PROC_TYPE_NORMAL:
 			{
 				if (lpCmdLine)
 				{
@@ -1139,11 +1153,11 @@ __inout		ULONG*				pulBufLen
 
 				break;
 			}
-			default:
-				{
-					printfEx(MOD_SIMPLE_DUMP, PRINTF_LEVEL_ERROR, "ProcType error. (%d)", ProcType);
-					__leave;
-				}
+		default:
+			{
+				printfEx(MOD_SIMPLE_DUMP, PRINTF_LEVEL_ERROR, "ProcType error. (%d)", ProcType);
+				__leave;
+			}
 		}
 
 		// 比较大小
@@ -1165,8 +1179,8 @@ __inout		ULONG*				pulBufLen
 		pArgCmdLineInfo->ProcType = ProcType;
 		switch (pArgCmdLineInfo->ProcType)
 		{
-			case PROC_TYPE_CONSOLE:
-			case PROC_TYPE_SERVICE:
+		case PROC_TYPE_CONSOLE:
+		case PROC_TYPE_SERVICE:
 			{
 				if (nArgc && lpArgv)
 				{
@@ -1189,7 +1203,7 @@ __inout		ULONG*				pulBufLen
 
 				break;
 			}
-			case PROC_TYPE_NORMAL:
+		case PROC_TYPE_NORMAL:
 			{
 				if (lpCmdLine)
 				{
@@ -1199,11 +1213,11 @@ __inout		ULONG*				pulBufLen
 
 				break;
 			}
-			default:
-				{
-					printfEx(MOD_SIMPLE_DUMP, PRINTF_LEVEL_ERROR, "pArgCmdLineInfo->ProcType error. (%d)", pArgCmdLineInfo->ProcType);
-					__leave;
-				}
+		default:
+			{
+				printfEx(MOD_SIMPLE_DUMP, PRINTF_LEVEL_ERROR, "pArgCmdLineInfo->ProcType error. (%d)", pArgCmdLineInfo->ProcType);
+				__leave;
+			}
 		}
 
 		bRet = TRUE;
@@ -1218,10 +1232,10 @@ __inout		ULONG*				pulBufLen
 
 BOOL
 CSimpleDump::ParseArgOrCmdLine(
-__in		PARG_CMDLINE_INFO	pArgCmdlineInfo,
-__inout_opt LPTSTR				lpResult,
-__inout		ULONG*				pulBufLen
-)
+							   __in		PARG_CMDLINE_INFO	pArgCmdlineInfo,
+							   __inout_opt LPTSTR				lpResult,
+							   __inout		ULONG*				pulBufLen
+							   )
 {
 	BOOL	bRet = FALSE;
 
@@ -1244,8 +1258,8 @@ __inout		ULONG*				pulBufLen
 		// 计算大小
 		switch (pArgCmdlineInfo->ProcType)
 		{
-			case PROC_TYPE_CONSOLE:
-			case PROC_TYPE_SERVICE:
+		case PROC_TYPE_CONSOLE:
+		case PROC_TYPE_SERVICE:
 			{
 				if (pArgCmdlineInfo->Console.nArgc)
 				{
@@ -1258,18 +1272,18 @@ __inout		ULONG*				pulBufLen
 
 				break;
 			}
-			case PROC_TYPE_NORMAL:
+		case PROC_TYPE_NORMAL:
 			{
 				ulBufLen = (ULONG)_tcslen(pArgCmdlineInfo->NotConsole.tchCmdLine) * sizeof(TCHAR);
 				ulBufLen += sizeof(TCHAR);
 
 				break;
 			}
-			default:
-				{
-					printfEx(MOD_SIMPLE_DUMP, PRINTF_LEVEL_ERROR, "pArgCmdlineInfo->ProcType error. (%d)", pArgCmdlineInfo->ProcType);
-					__leave;
-				}
+		default:
+			{
+				printfEx(MOD_SIMPLE_DUMP, PRINTF_LEVEL_ERROR, "pArgCmdlineInfo->ProcType error. (%d)", pArgCmdlineInfo->ProcType);
+				__leave;
+			}
 		}
 
 		// 比较大小
@@ -1290,8 +1304,8 @@ __inout		ULONG*				pulBufLen
 
 		switch (pArgCmdlineInfo->ProcType)
 		{
-			case PROC_TYPE_CONSOLE:
-			case PROC_TYPE_SERVICE:
+		case PROC_TYPE_CONSOLE:
+		case PROC_TYPE_SERVICE:
 			{
 				i = 0;
 				while (i < pArgCmdlineInfo->Console.nArgc)
@@ -1304,7 +1318,7 @@ __inout		ULONG*				pulBufLen
 
 				break;
 			}
-			case PROC_TYPE_NORMAL:
+		case PROC_TYPE_NORMAL:
 			{
 				lpPrePosition = pArgCmdlineInfo->NotConsole.tchCmdLine;
 				lpCurrentPosition = pArgCmdlineInfo->NotConsole.tchCmdLine;
@@ -1352,11 +1366,11 @@ __inout		ULONG*				pulBufLen
 
 				break;
 			}
-			default:
-				{
-					printfEx(MOD_SIMPLE_DUMP, PRINTF_LEVEL_ERROR, "pArgCmdlineInfo->ProcType error. (%d)", pArgCmdlineInfo->ProcType);
-					__leave;
-				}
+		default:
+			{
+				printfEx(MOD_SIMPLE_DUMP, PRINTF_LEVEL_ERROR, "pArgCmdlineInfo->ProcType error. (%d)", pArgCmdlineInfo->ProcType);
+				__leave;
+			}
 		}
 
 		bRet = TRUE;
@@ -1374,7 +1388,7 @@ __inout		ULONG*				pulBufLen
 }
 
 void
-	CSimpleDump::WaitForOldProcExit()
+CSimpleDump::WaitForOldProcExit()
 {
 	LPTSTR		lpPosition	= NULL;
 	DWORD		dwPidPre	= 0;
@@ -1465,7 +1479,9 @@ void
 }
 
 CSimpleDump *
-	CSimpleDump::GetInstance()
+CSimpleDump::GetInstance(
+						 __in LPTSTR lpDir
+						 )
 {
 	typedef enum _INSTANCE_STATUS
 	{
@@ -1482,7 +1498,7 @@ CSimpleDump *
 	{
 		do 
 		{
-			new CSimpleDump();
+			new CSimpleDump(lpDir);
 			if (!ms_pInstance)
 				Sleep(1000);
 			else
@@ -1507,7 +1523,7 @@ CSimpleDump *
 }
 
 VOID
-	CSimpleDump::ReleaseInstance()
+CSimpleDump::ReleaseInstance()
 {
 	if (ms_pInstance)
 	{
@@ -1516,7 +1532,9 @@ VOID
 	}
 }
 
-CSimpleDump::CSimpleDump()
+CSimpleDump::CSimpleDump(
+						 __in LPTSTR lpDir
+						 )
 {
 	ms_pInstance = this;
 
@@ -1526,6 +1544,10 @@ CSimpleDump::CSimpleDump()
 	m_lpCmdLine = NULL;
 
 	ZeroMemory(m_tchRestartTag, sizeof(m_tchRestartTag));
+
+	ZeroMemory(m_tchDir, sizeof(m_tchDir));
+	if (lpDir)
+		_tcscat_s(m_tchDir, _countof(m_tchDir), lpDir);
 
 	m_pfRestart = NULL;
 

@@ -93,9 +93,9 @@ typedef struct _ARG_CMDLINE_INFO
 typedef
 HRESULT
 (WINAPI * REGISTER_APPLICATION_RESTART)(
-__in_opt	PCWSTR	pwzCommandline,
-__in		DWORD	dwFlags
-);
+										__in_opt	PCWSTR	pwzCommandline,
+										__in		DWORD	dwFlags
+										);
 
 typedef HRESULT(WINAPI * UNREGISTER_APPLICATION_RESTART)(void);
 
@@ -104,7 +104,9 @@ class CSimpleDump
 public:
 	static
 		CSimpleDump *
-		GetInstance();
+		GetInstance(
+		__in LPTSTR lpDir = NULL
+		);
 
 	static
 		VOID
@@ -142,6 +144,7 @@ private:
 	PROC_TYPE							m_ProcType;
 	LPTSTR								m_lpCmdLine;
 	TCHAR								m_tchRestartTag[MAX_PATH];
+	TCHAR								m_tchDir[MAX_PATH];
 
 	RESTART								m_pfRestart;
 
@@ -151,7 +154,9 @@ private:
 
 	PTOP_LEVEL_EXCEPTION_FILTER			m_pfTopLevelExceptionFilter;
 
-	CSimpleDump();
+	CSimpleDump(
+		__in LPTSTR lpDir = NULL
+		);
 
 	~CSimpleDump();
 
@@ -165,7 +170,7 @@ private:
 		DefaultRestartFunc();
 
 	static
-	LONG
+		LONG
 		WINAPI
 		ExceptionHandler(
 		_In_ struct _EXCEPTION_POINTERS* pExceptionInfo
