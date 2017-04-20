@@ -1,12 +1,13 @@
 #include "StringInternal.h"
 
 BOOL
-	CStringInternal::ASCIIToUNICODE(
-	__out	LPTSTR	lpOutBuf,
-	__inout	PULONG	pulOutBufSizeCh,
-	__in	LPSTR	lpInBuf,
-	__in	UINT	CodePage
-	)
+CStringInternal::ASCIIToUNICODE(
+								__out	LPTSTR	lpOutBuf,
+								__inout	PULONG	pulOutBufSizeCh,
+								__in	LPSTR	lpInBuf,
+								__in	ULONG	ulInBufSizeCh,
+								__in	UINT	CodePage
+								)
 {
 	BOOL	bRet		= FALSE;
 
@@ -22,7 +23,7 @@ BOOL
 			__leave;
 		}
 
-		ulSizeCh = MultiByteToWideChar(CodePage, 0, lpInBuf, -1, NULL, 0);
+		ulSizeCh = MultiByteToWideChar(CodePage, 0, lpInBuf, ulInBufSizeCh * sizeof(CHAR), NULL, 0);
 		if (!ulSizeCh)
 		{
 			printfPublic("pre MultiByteToWideChar failed. (%d)", GetLastError());
@@ -42,14 +43,14 @@ BOOL
 			__leave;
 		}
 
-		ulSizeCh = MultiByteToWideChar(CodePage, 0, lpInBuf, -1, lpTemp, ulSizeCh);
+		ulSizeCh = MultiByteToWideChar(CodePage, 0, lpInBuf, ulInBufSizeCh * sizeof(CHAR), lpTemp, ulSizeCh);
 		if (!ulSizeCh)
 		{
 			printfPublic("post MultiByteToWideChar failed. (%d)", GetLastError());
 			__leave;
 		}
 
-		_tcscpy_s(lpOutBuf, *pulOutBufSizeCh, lpTemp);
+		memcpy(lpOutBuf, lpTemp, ulSizeCh * sizeof(TCHAR));
 
 		bRet = TRUE;
 	}
@@ -70,8 +71,9 @@ CStringInternal::UNICODEToASCII(
 								__out	LPSTR	lpOutBuf,
 								__inout	PULONG	pulOutBufSizeCh,
 								__in	LPTSTR	lpInBuf,
+								__in	ULONG	ulInBufSizeCh,
 								__in	UINT	CodePage
-)
+								)
 {
 	BOOL	bRet = FALSE;
 
@@ -87,7 +89,7 @@ CStringInternal::UNICODEToASCII(
 			__leave;
 		}
 
-		ulSizeCh = WideCharToMultiByte(CodePage, 0, lpInBuf, -1, NULL, 0, NULL, NULL);
+		ulSizeCh = WideCharToMultiByte(CodePage, 0, lpInBuf, ulInBufSizeCh * sizeof(TCHAR), NULL, 0, NULL, NULL);
 		if (!ulSizeCh)
 		{
 			printfPublic("pre WideCharToMultiByte failed. (%d)", GetLastError());
@@ -107,14 +109,14 @@ CStringInternal::UNICODEToASCII(
 			__leave;
 		}
 
-		ulSizeCh = WideCharToMultiByte(CodePage, 0, lpInBuf, -1, lpTemp, ulSizeCh, NULL, NULL);
+		ulSizeCh = WideCharToMultiByte(CodePage, 0, lpInBuf, ulInBufSizeCh * sizeof(TCHAR), lpTemp, ulSizeCh, NULL, NULL);
 		if (!ulSizeCh)
 		{
 			printfPublic("post WideCharToMultiByte failed. (%d)", GetLastError());
 			__leave;
 		}
 
-		strcpy_s(lpOutBuf, *pulOutBufSizeCh, lpTemp);
+		memcpy(lpOutBuf, lpTemp, ulSizeCh * sizeof(CHAR));
 
 		bRet = TRUE;
 	}
@@ -132,9 +134,10 @@ CStringInternal::UNICODEToASCII(
 
 BOOL
 CStringInternal::UTF8ToMB(
-								__out	LPSTR	lpOutBuf,
-								__inout	PULONG	pulOutBufSizeCh,
-								__in	LPSTR	lpInBuf
+						  __out	LPSTR	lpOutBuf,
+						  __inout	PULONG	pulOutBufSizeCh,
+						  __in	LPSTR	lpInBuf,
+						  __in	ULONG	ulInBufSizeCh
 								)
 {
 	BOOL	bRet = FALSE;
@@ -151,7 +154,7 @@ CStringInternal::UTF8ToMB(
 			__leave;
 		}
 
-		if (!ASCIIToUNICODE(lpBufTmp, &ulSizeCh, lpInBuf, CP_UTF8))
+		if (!ASCIIToUNICODE(lpBufTmp, &ulSizeCh, lpInBuf, ulInBufSizeCh, CP_UTF8))
 		{
 			if (!ulSizeCh)
 			{
@@ -166,14 +169,14 @@ CStringInternal::UTF8ToMB(
 				__leave;
 			}
 
-			if (!ASCIIToUNICODE(lpBufTmp, &ulSizeCh, lpInBuf, CP_UTF8))
+			if (!ASCIIToUNICODE(lpBufTmp, &ulSizeCh, lpInBuf, ulInBufSizeCh, CP_UTF8))
 			{
 				printfPublic("ASCIIToUNICODE failed");
 				__leave;
 			}
 		}
 
-		if (!UNICODEToASCII(lpOutBuf, pulOutBufSizeCh, lpBufTmp, CP_ACP))
+		if (!UNICODEToASCII(lpOutBuf, pulOutBufSizeCh, lpBufTmp, ulSizeCh, CP_ACP))
 			__leave;
 
 		bRet = TRUE;
@@ -198,4 +201,103 @@ CStringInternal::CStringInternal()
 CStringInternal::~CStringInternal()
 {
 	;
+}
+
+BOOL
+CStringInternal::Equal(
+					   __in LPSTR lpSrc,
+					   __in LPSTR lpDes
+					   )
+{
+	BOOL bRet = FALSE;
+
+
+	__try
+	{
+		if (!lpSrc || !lpDes)
+			__leave;
+
+		if (*lpSrc == *lpDes)
+			bRet = TRUE;
+		else
+		{
+			if ('a' <= *lpSrc && 'z' >= *lpSrc)
+			{
+				if ('a' <= *lpDes && 'z' >= *lpDes)
+				{
+					if (*lpSrc == *lpDes)
+						bRet = TRUE;
+				}
+				else if ('A' <= *lpDes && 'Z' >= *lpDes)
+				{
+					if (*lpSrc == *lpDes + 'a' - 'A')
+						bRet = TRUE;
+				}
+			}
+			else if ('A' <= *lpSrc && 'Z' >= *lpSrc)
+			{
+				if ('a' <= *lpDes && 'z' >= *lpDes)
+				{
+					if (*lpSrc + 'a' - 'A' == *lpDes)
+						bRet = TRUE;
+				}
+				else if ('A' <= *lpDes && 'Z' >= *lpDes)
+				{
+					if (*lpSrc == *lpDes)
+						bRet = TRUE;
+				}
+			}
+		}
+	}
+	__finally
+	{
+		;
+	}
+
+	return bRet;
+}
+
+LPSTR
+CStringInternal::Find(
+					  __in LPSTR lpSrc,
+					  __in ULONG ulSrcSizeCh,
+					  __in LPSTR lpDes,
+					  __in ULONG ulDesSizeCh
+					  )
+{
+	LPSTR	lpRet = NULL;
+
+	ULONG	i = 0;
+	ULONG	j = 0;
+
+
+	__try
+	{
+		if (!lpSrc || !ulSrcSizeCh || !lpDes || !ulDesSizeCh)
+			__leave;
+
+		for (; i < ulSrcSizeCh; i++)
+		{
+			if (!Equal(lpSrc + i, lpDes))
+				continue;
+
+			for (j = 1; j < ulDesSizeCh; j++)
+			{
+				if (!Equal(lpSrc + i + j, lpDes + j))
+					continue;
+			}
+
+			if (j >= ulDesSizeCh)
+			{
+				lpRet = lpSrc + i;
+				__leave;
+			}
+		}
+	}
+	__finally
+	{
+		;
+	}
+
+	return lpRet;
 }

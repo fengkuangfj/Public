@@ -150,7 +150,7 @@ BOOL
 					}
 
 					ulStdOutputReadSizeCh = _countof(tchStdOutputRead);
-					if (!CStringInternal::ASCIIToUNICODE(tchStdOutputRead, &ulStdOutputReadSizeCh, chStdOutputRead, CP_ACP))
+					if (!CStringInternal::ASCIIToUNICODE(tchStdOutputRead, &ulStdOutputReadSizeCh, chStdOutputRead, strlen(chStdOutputRead), CP_ACP))
 					{
 						printfPublic("CStringInternal::ASCIIToUNICODE failed");
 						__leave;
@@ -194,7 +194,7 @@ BOOL
 							break;
 
 						ulStdOutputReadSizeCh = _countof(tchStdOutputRead);
-						if (!CStringInternal::ASCIIToUNICODE(tchStdOutputRead, &ulStdOutputReadSizeCh, chStdOutputRead, CP_ACP))
+						if (!CStringInternal::ASCIIToUNICODE(tchStdOutputRead, &ulStdOutputReadSizeCh, chStdOutputRead, strlen(chStdOutputRead), CP_ACP))
 						{
 							printfPublic("CStringInternal::ASCIIToUNICODE failed");
 							__leave;
