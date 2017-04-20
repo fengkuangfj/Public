@@ -1,12 +1,12 @@
 #include "CommandLine.h"
 
 BOOL
-	CCommandLine::Execute(
-	__in LPTSTR				lpCmdLine,
-	__in BOOL				bWaitUntilCmdExit,
-	__in BOOL				bCreateNewConsole,
-	__in LPCMD_RESULT_INFO	lpCmdResultInfo
-	)
+CCommandLine::Execute(
+					  __in LPTSTR				lpCmdLine,
+					  __in BOOL				bWaitUntilCmdExit,
+					  __in BOOL				bCreateNewConsole,
+					  __in LPCMD_RESULT_INFO	lpCmdResultInfo
+					  )
 {
 	BOOL				bRet							= FALSE;
 
