@@ -17,30 +17,9 @@ COperationSystemVersion::Init()
 			__leave;
 		}
 
-		m_pfIsWindowsServer = (IS_WINDOWS_SERVER)GetProcAddress(m_hModuleKernel32, "IsWindowsServer");
-		m_pfIsWindows1OrGreater = (IS_WINDOWS_10_OR_GREATER)GetProcAddress(m_hModuleKernel32, "IsWindows1OrGreater");
-		m_pfIsWindows8Point1OrGreater = (IS_WINDOWS_8_POINT_1_OR_GREATER)GetProcAddress(m_hModuleKernel32, "IsWindows8Point1OrGreater");
-		m_pfIsWindows8OrGreater = (IS_WINDOWS_8_OR_GREATER)GetProcAddress(m_hModuleKernel32, "IsWindows8OrGreater");
-		m_pfIsWindows7SP1OrGreater = (IS_WINDOWS_7_SP_1_OR_GREATER)GetProcAddress(m_hModuleKernel32, "IsWindows7SP1OrGreater");
-		m_pfIsWindows7OrGreater = (IS_WINDOWS_7_OR_GREATER)GetProcAddress(m_hModuleKernel32, "IsWindows7OrGreater");
-		m_pfIsWindowsVistaSP2OrGreater = (IS_WINDOWS_VISTA_SP2_OR_GREATER)GetProcAddress(m_hModuleKernel32, "IsWindowsVistaSP2OrGreater");
-		m_pfIsWindowsVistaSP1OrGreater = (IS_WINDOWS_VISTA_SP1_OR_GREATER)GetProcAddress(m_hModuleKernel32, "IsWindowsVistaSP1OrGreater");
-		m_pfIsWindowsVistaOrGreater = (IS_WINDOWS_VISTA_OR_GREATER)GetProcAddress(m_hModuleKernel32, "IsWindowsVistaOrGreater");
-		m_pfIsWindowsXPSP3OrGreater = (IS_WINDOWS_XP_SP3_OR_GREATER)GetProcAddress(m_hModuleKernel32, "IsWindowsXPSP3OrGreater");
-		m_pfIsWindowsXPSP2OrGreater = (IS_WINDOWS_XP_SP2_OR_GREATER)GetProcAddress(m_hModuleKernel32, "IsWindowsXPSP2OrGreater");
-		m_pfIsWindowsXPSP1OrGreater = (IS_WINDOWS_XP_SP1_OR_GREATER)GetProcAddress(m_hModuleKernel32, "IsWindowsXPSP1OrGreater");
-		m_pfIsWindowsXPOrGreater = (IS_WINDOWS_XP_OR_GREATER)GetProcAddress(m_hModuleKernel32, "IsWindowsXPOrGreater");
-		if (m_pfIsWindowsXPOrGreater)
-			m_OsVersionUserDefined = GetOSVersionByIsOrGreater();
-		else
+		m_pfGetVersionEx = (GET_VERSION_EX)GetProcAddress(m_hModuleKernel32, "GetVersionExW");
+		if (m_pfGetVersionEx)
 		{
-			m_pfGetVersionEx = (GET_VERSION_EX)GetProcAddress(m_hModuleKernel32, "GetVersionExW");
-			if (!m_pfGetVersionEx)
-			{
-				printfEx(MOD_OPERATION_SYSTEM_VERSION, PRINTF_LEVEL_ERROR, "GetProcAddress failed. (%d)", GetLastError());
-				__leave;
-			}
-
 			m_hModuleNtdll = LoadLibrary(_T("ntdll.dll"));
 			if (!m_hModuleNtdll)
 			{
@@ -53,6 +32,24 @@ COperationSystemVersion::Init()
 				m_OsVersionUserDefined = GetOSVersionByRtlGetNtVersionNumbersAndGetVersionEx();
 			else
 				m_OsVersionUserDefined = GetOSVersionByGetVersionEx();
+		}
+		else
+		{
+			m_pfIsWindowsServer = (IS_WINDOWS_SERVER)GetProcAddress(m_hModuleKernel32, "IsWindowsServer");
+			m_pfIsWindows1OrGreater = (IS_WINDOWS_10_OR_GREATER)GetProcAddress(m_hModuleKernel32, "IsWindows1OrGreater");
+			m_pfIsWindows8Point1OrGreater = (IS_WINDOWS_8_POINT_1_OR_GREATER)GetProcAddress(m_hModuleKernel32, "IsWindows8Point1OrGreater");
+			m_pfIsWindows8OrGreater = (IS_WINDOWS_8_OR_GREATER)GetProcAddress(m_hModuleKernel32, "IsWindows8OrGreater");
+			m_pfIsWindows7SP1OrGreater = (IS_WINDOWS_7_SP_1_OR_GREATER)GetProcAddress(m_hModuleKernel32, "IsWindows7SP1OrGreater");
+			m_pfIsWindows7OrGreater = (IS_WINDOWS_7_OR_GREATER)GetProcAddress(m_hModuleKernel32, "IsWindows7OrGreater");
+			m_pfIsWindowsVistaSP2OrGreater = (IS_WINDOWS_VISTA_SP2_OR_GREATER)GetProcAddress(m_hModuleKernel32, "IsWindowsVistaSP2OrGreater");
+			m_pfIsWindowsVistaSP1OrGreater = (IS_WINDOWS_VISTA_SP1_OR_GREATER)GetProcAddress(m_hModuleKernel32, "IsWindowsVistaSP1OrGreater");
+			m_pfIsWindowsVistaOrGreater = (IS_WINDOWS_VISTA_OR_GREATER)GetProcAddress(m_hModuleKernel32, "IsWindowsVistaOrGreater");
+			m_pfIsWindowsXPSP3OrGreater = (IS_WINDOWS_XP_SP3_OR_GREATER)GetProcAddress(m_hModuleKernel32, "IsWindowsXPSP3OrGreater");
+			m_pfIsWindowsXPSP2OrGreater = (IS_WINDOWS_XP_SP2_OR_GREATER)GetProcAddress(m_hModuleKernel32, "IsWindowsXPSP2OrGreater");
+			m_pfIsWindowsXPSP1OrGreater = (IS_WINDOWS_XP_SP1_OR_GREATER)GetProcAddress(m_hModuleKernel32, "IsWindowsXPSP1OrGreater");
+			m_pfIsWindowsXPOrGreater = (IS_WINDOWS_XP_OR_GREATER)GetProcAddress(m_hModuleKernel32, "IsWindowsXPOrGreater");
+			if (m_pfIsWindowsXPOrGreater)
+				m_OsVersionUserDefined = GetOSVersionByIsOrGreater();
 		}
 
 		m_ProcessorTypeUserDefined = GetOSProcessorTypeInternal();

@@ -5,6 +5,8 @@
 
 #include "..\\PrintfEx\\PrintfEx.h"
 #include "..\\OperationSystemVersion\\OperationSystemVersion.h"
+#include "..\\FileOperation\\FileOperation.h"
+#include "..\\RegOperation\\RegOperation.h"
 
 #pragma comment(lib, "Advapi32.lib")
 
@@ -45,18 +47,6 @@ BOOL
 typedef
 BOOL
 (* UNLOADMOD)();
-
-typedef
-BOOL
-(WINAPI * WOW64_DISABLE_WOW64_FS_REDIRECTION)(
-	__out PVOID * OldValue
-	);
-
-typedef
-BOOL
-(WINAPI * WOW64_REVERT_WOW64_FS_REDIRECTION)(
-	__in PVOID OlValue
-	);
 
 class CService
 {
@@ -119,9 +109,14 @@ public:
 		);
 
 	BOOL
+		CheckNeedRestartComputer(
+		__in LPTSTR lpServiceName
+		);
+
+	BOOL
 		Restart(
 		__in	LPTSTR	lpServiceName,
-		__inout PBOOL	pbReboot
+		__inout PBOOL	pbReboot = NULL
 		);
 
 	BOOL
@@ -154,10 +149,6 @@ private:
 	INITMOD									m_pfInitMod;
 	UNLOADMOD								m_pfUnloadMod;
 	INIT_MOD_ARGUMENTS						m_InitModArguments;
-
-	WOW64_DISABLE_WOW64_FS_REDIRECTION		m_pfWow64DisableWow64FsRedirection;
-	WOW64_REVERT_WOW64_FS_REDIRECTION		m_pfWow64RevertWow64FsRedirection;
-	HMODULE									m_hModule;
 
 	CService();
 
@@ -198,5 +189,11 @@ private:
 		_In_ DWORD	dwEventType,
 		_In_ LPVOID	lpEventData,
 		_In_ LPVOID	lpContext
+		);
+
+	BOOL
+		CheckRegValue(
+		__in LPTSTR		lpServiceName,
+		__in LPCTSTR	lpValue
 		);
 };

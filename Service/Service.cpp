@@ -1,5 +1,7 @@
 #include "Service.h"
 
+#pragma warning(disable : 4509)
+
 CService * CService::ms_pInstance = NULL;
 
 BOOL
@@ -26,9 +28,6 @@ CService::Install(
 	LONG							lResult							= 0;
 	WCHAR							wchPath[MAX_PATH]				= {0};
 	LPWSTR							lpPosition						= NULL;
-	PVOID							pOldValue						= NULL;
-	BOOL							bWow64DisableWow64FsRedirection = FALSE;
-	OS_PROCESSOR_TYPE_USER_DEFINED	OsProcType						= OS_PROCESSOR_TYPE_UNKNOWN;
 	WCHAR							wchSubKey[MAX_PATH]				= {0};
 
 
@@ -38,30 +37,6 @@ CService::Install(
 		{
 			printfEx(MOD_SERVICE, PRINTF_LEVEL_ERROR, "input arguments error. 0x%p 0x%p %d", lpServiceName, lpPath, dwServiceType);
 			__leave;
-		}
-
-		OsProcType = COperationSystemVersion::GetInstance()->GetOSProcessorType();
-		switch (OsProcType)
-		{
-		case OS_PROCESSOR_TYPE_X86:
-			break;
-		case OS_PROCESSOR_TYPE_X64:
-			{
-				if (!m_pfWow64DisableWow64FsRedirection(&pOldValue))
-				{
-					printfEx(MOD_SERVICE, PRINTF_LEVEL_ERROR, "Wow64DisableWow64FsRedirection failed. (%d)", GetLastError());
-					__leave;
-				}
-
-				bWow64DisableWow64FsRedirection = TRUE;
-
-				break;
-			}
-		default:
-			{
-				printfEx(MOD_SERVICE, PRINTF_LEVEL_ERROR, "OsProcType error. %d", OsProcType);
-				__leave;
-			}
 		}
 
 		hScManager = OpenSCManager(NULL, NULL, SC_MANAGER_ALL_ACCESS);
@@ -105,7 +80,7 @@ CService::Install(
 
 					wcscat_s(wchPath, _countof(wchPath), lpPosition + 1);
 
-					if (!CopyFile(lpPath, wchPath, TRUE))
+					if (!CFileOperation::CopyFile(lpPath, wchPath, TRUE))
 					{
 						printfEx(MOD_SERVICE, PRINTF_LEVEL_ERROR, "CopyFile failed. %S -> %S", lpPath, wchPath);
 						__leave;
@@ -243,7 +218,7 @@ CService::Install(
 				wcscat_s(wchTemp, _countof(wchTemp), lpServiceName);
 				wcscat_s(wchTemp, _countof(wchTemp), L"\\Instances");
 
-				lResult = RegCreateKeyEx(
+				lResult = CRegOperation::RegCreateKeyEx(
 					HKEY_LOCAL_MACHINE,
 					wchTemp,
 					0,
@@ -314,7 +289,7 @@ CService::Install(
 				wcscat_s(wchTemp, _countof(wchTemp), lpServiceName);
 				wcscat_s(wchTemp, _countof(wchTemp), L" Instance");
 
-				lResult = RegCreateKeyEx(
+				lResult = CRegOperation::RegCreateKeyEx(
 					HKEY_LOCAL_MACHINE,
 					wchTemp,
 					0,
@@ -399,7 +374,7 @@ CService::Install(
 				wcscat_s(wchSubKey, _countof(wchSubKey), L"SYSTEM\\CurrentControlSet\\services\\");
 				wcscat_s(wchSubKey, _countof(wchSubKey), lpServiceName);
 
-				lResult = RegOpenKeyEx(
+				lResult = CRegOperation::RegOpenKeyEx(
 					HKEY_LOCAL_MACHINE,
 					wchSubKey,
 					0,
@@ -448,7 +423,7 @@ CService::Install(
 					wcscat_s(wchSubKey, _countof(wchSubKey), L"SYSTEM\\CurrentControlSet\\services\\");
 					wcscat_s(wchSubKey, _countof(wchSubKey), lpServiceName);
 
-					lResult = RegOpenKeyEx(
+					lResult = CRegOperation::RegOpenKeyEx(
 						HKEY_LOCAL_MACHINE,
 						wchSubKey,
 						0,
@@ -516,12 +491,6 @@ CService::Install(
 		{
 			CloseServiceHandle(hScManager);
 			hScManager = NULL;
-		}
-
-		if (bWow64DisableWow64FsRedirection)
-		{
-			m_pfWow64RevertWow64FsRedirection(pOldValue);
-			pOldValue = NULL;
 		}
 	}
 
@@ -653,37 +622,10 @@ CService::DeleteFileInDrivers(
 	TCHAR							tchData[MAX_PATH] = {0};
 	DWORD							dwData = 0;
 	TCHAR							tchFilePath[MAX_PATH] = { 0 };
-	PVOID							pOldValue = NULL;
-	BOOL							bWow64DisableWow64FsRedirection = FALSE;
-	OS_PROCESSOR_TYPE_USER_DEFINED	OsProcType = OS_PROCESSOR_TYPE_UNKNOWN;
 
 
 	__try
 	{
-		OsProcType = COperationSystemVersion::GetInstance()->GetOSProcessorType();
-		switch (OsProcType)
-		{
-		case OS_PROCESSOR_TYPE_X86:
-			break;
-		case OS_PROCESSOR_TYPE_X64:
-			{
-				if (!m_pfWow64DisableWow64FsRedirection(&pOldValue))
-				{
-					printfEx(MOD_SERVICE, PRINTF_LEVEL_ERROR, "Wow64DisableWow64FsRedirection failed. (%d)", GetLastError());
-					__leave;
-				}
-
-				bWow64DisableWow64FsRedirection = TRUE;
-
-				break;
-			}
-		default:
-			{
-				printfEx(MOD_SERVICE, PRINTF_LEVEL_ERROR, "OsProcType error. %d", OsProcType);
-				__leave;
-			}
-		}
-
 		if (!lpServiceName)
 		{
 			printfEx(MOD_SERVICE, PRINTF_LEVEL_ERROR, "input argument error");
@@ -693,7 +635,7 @@ CService::DeleteFileInDrivers(
 		_tcscat_s(tchKey, _countof(tchKey), _T("SYSTEM\\CurrentControlSet\\Services\\"));
 		_tcscat_s(tchKey, _countof(tchKey), lpServiceName);
 
-		lRet = RegOpenKeyEx(
+		lRet = CRegOperation::RegOpenKeyEx(
 			HKEY_LOCAL_MACHINE,
 			tchKey,
 			0,
@@ -774,7 +716,7 @@ CService::DeleteFileInDrivers(
 			_tcscat_s(tchFilePath, _countof(tchFilePath), tchData);
 		}
 
-		if (!DeleteFile(tchFilePath))
+		if (!CFileOperation::DeleteFile(tchFilePath))
 		{ 
 			printfEx(MOD_SERVICE, PRINTF_LEVEL_WARNING, "DeleteFile failed. %S (%d)", tchFilePath, GetLastError());
 			// __leave;
@@ -788,12 +730,6 @@ CService::DeleteFileInDrivers(
 		{
 			RegCloseKey(hKey);
 			hKey = NULL;
-		}
-
-		if (bWow64DisableWow64FsRedirection)
-		{
-			m_pfWow64RevertWow64FsRedirection(pOldValue);
-			pOldValue = NULL;
 		}
 	}
 
@@ -1499,16 +1435,6 @@ CService::Init()
 
 	__try
 	{
-		m_hModule = LoadLibrary(_T("Kernel32.dll"));
-		if (!m_hModule)
-		{
-			printfEx(MOD_SERVICE, PRINTF_LEVEL_ERROR, "LoadLibrary failed. (%d)", GetLastError());
-			__leave;
-		}
-
-		m_pfWow64DisableWow64FsRedirection = (WOW64_DISABLE_WOW64_FS_REDIRECTION)GetProcAddress(m_hModule, "Wow64DisableWow64FsRedirection");
-		m_pfWow64RevertWow64FsRedirection = (WOW64_REVERT_WOW64_FS_REDIRECTION)GetProcAddress(m_hModule, "Wow64RevertWow64FsRedirection");
-
 		bRet = TRUE;
 	}
 	__finally
@@ -1531,15 +1457,6 @@ CService::Unload()
 
 	__try
 	{
-		m_pfWow64DisableWow64FsRedirection = NULL;
-		m_pfWow64RevertWow64FsRedirection = NULL;
-
-		if (m_hModule)
-		{
-			FreeLibrary(m_hModule);
-			m_hModule = NULL;
-		}
-
 		COperationSystemVersion::ReleaseInstance();
 		CPrintfEx::ReleaseInstance();
 	}
@@ -1577,7 +1494,7 @@ CService::CanInteractWithTheDesktop(
 
 		swprintf_s(tchServiceKey, _countof(tchServiceKey), _T("SYSTEM\\CurrentControlSet\\services\\%s"), lpServiceName);
 
-		lResult = RegOpenKeyEx(
+		lResult = CRegOperation::RegOpenKeyEx(
 			HKEY_LOCAL_MACHINE,
 			tchServiceKey,
 			0,
@@ -1703,14 +1620,13 @@ CService::Restart(
 	SC_HANDLE		hScManager		= NULL;
 	SC_HANDLE		hService		= NULL;
 	SERVICE_STATUS	ServiceStatus	= {0};
-	int				nCount = 10;
 
 
 	__try
 	{
-		if (!lpServiceName || !pbReboot)
+		if (!lpServiceName)
 		{
-			printfPublic("input arguments error. (0x%p) (0x%p)", lpServiceName, pbReboot);
+			printfPublic("input argument error");
 			__leave;
 		}
 
@@ -1730,7 +1646,9 @@ CService::Restart(
 
 		if (!ControlService(hService, SERVICE_CONTROL_STOP, &ServiceStatus))
 		{
-			*pbReboot = TRUE;
+			if (pbReboot)
+				*pbReboot = TRUE;
+
 			__leave;
 		}
 
@@ -1768,11 +1686,13 @@ CService::Exist(
 				__in LPTSTR lpServiceName
 				)
 {
-	BOOL	bRet = FALSE;
+	BOOL					bRet			= FALSE;
 
-	TCHAR	tchSubKey[MAX_PATH] = {0};
-	LONG	lResult = ERROR_SUCCESS;
-	HKEY	hKey = NULL;
+	SC_HANDLE				hScManager		= NULL;
+	SC_HANDLE				hService		= NULL;
+	SERVICE_STATUS			ServiceStatus	= {0};
+	SERVICE_STATUS_PROCESS 	ServiceStatusProcess  = {0};
+	DWORD					dwNeededSizeB = 0;
 
 
 	__try
@@ -1783,18 +1703,168 @@ CService::Exist(
 			__leave;
 		}
 
+		hScManager = OpenSCManager(NULL, NULL, SC_MANAGER_ALL_ACCESS);
+		if (!hScManager)
+		{
+			printfEx(MOD_SERVICE, PRINTF_LEVEL_ERROR, "OpenSCManager failed. %S (%d)", lpServiceName, GetLastError());
+			__leave;
+		}
+
+		hService = OpenService(hScManager, lpServiceName, SERVICE_ALL_ACCESS);
+		if (!hService)
+			__leave;
+
+		if (!QueryServiceStatusEx(
+			hService,
+			SC_STATUS_PROCESS_INFO,
+			(LPBYTE)&ServiceStatusProcess,
+			sizeof(ServiceStatusProcess),
+			&dwNeededSizeB
+			))
+			__leave;
+
+		if (SERVICE_CONTINUE_PENDING == ServiceStatusProcess.dwCurrentState ||
+			SERVICE_PAUSE_PENDING == ServiceStatusProcess.dwCurrentState ||
+			SERVICE_PAUSED == ServiceStatusProcess.dwCurrentState ||
+			SERVICE_RUNNING == ServiceStatusProcess.dwCurrentState ||
+			SERVICE_START_PENDING == ServiceStatusProcess.dwCurrentState ||
+			SERVICE_STOP_PENDING == ServiceStatusProcess.dwCurrentState ||
+			SERVICE_STOPPED == ServiceStatusProcess.dwCurrentState)
+			bRet = TRUE;
+	}
+	__finally
+	{
+		if (hService)
+		{
+			CloseServiceHandle(hService);
+			hService = NULL;
+		}
+
+		if (hScManager)
+		{
+			CloseServiceHandle(hScManager);
+			hScManager = NULL;
+		}
+	}
+
+	return bRet;
+}
+
+BOOL
+CService::CheckNeedRestartComputer(
+								   __in LPTSTR lpServiceName
+								   )
+{
+	BOOL					bRet			= FALSE;
+
+	SC_HANDLE				hScManager		= NULL;
+	SC_HANDLE				hService		= NULL;
+	SERVICE_STATUS			ServiceStatus	= {0};
+	SERVICE_STATUS_PROCESS 	ServiceStatusProcess  = {0};
+	DWORD					dwNeededSizeB = 0;
+
+
+	__try
+	{
+		if (!lpServiceName)
+		{
+			printfPublic("input argument error");
+			__leave;
+		}
+
+		hScManager = OpenSCManager(NULL, NULL, SC_MANAGER_ALL_ACCESS);
+		if (!hScManager)
+		{
+			printfEx(MOD_SERVICE, PRINTF_LEVEL_ERROR, "OpenSCManager failed. %S (%d)", lpServiceName, GetLastError());
+			__leave;
+		}
+
+		hService = OpenService(hScManager, lpServiceName, SERVICE_ALL_ACCESS);
+		if (!hService)
+			__leave;
+
+		if (!QueryServiceStatusEx(
+			hService,
+			SC_STATUS_PROCESS_INFO,
+			(LPBYTE)&ServiceStatusProcess,
+			sizeof(ServiceStatusProcess),
+			&dwNeededSizeB
+			))
+			__leave;
+
+		if (SERVICE_RUNNING == ServiceStatusProcess.dwCurrentState &&
+			!StartService(hService, 0, NULL) &&
+			ERROR_SERVICE_DISABLED == GetLastError())
+			bRet = TRUE;
+	}
+	__finally
+	{
+		if (hService)
+		{
+			CloseServiceHandle(hService);
+			hService = NULL;
+		}
+
+		if (hScManager)
+		{
+			CloseServiceHandle(hScManager);
+			hScManager = NULL;
+		}
+	}
+
+	return bRet;
+}
+
+BOOL
+CService::CheckRegValue(
+						__in LPTSTR		lpServiceName,
+						__in LPCTSTR	lpValue
+						)
+{
+	BOOL	bRet = FALSE;
+
+	TCHAR	tchSubKey[MAX_PATH] = {0};
+	LONG	lResult = ERROR_SUCCESS;
+	HKEY	hKey = NULL;
+	DWORD	dwType = 0;
+	DWORD	dwData = 0;
+	DWORD	dwDataSizeB = 0;
+
+
+	__try
+	{
+		if (!lpServiceName || !lpValue)
+		{
+			printfPublic("input arguments error. lpServiceName(0x%p) lpValue(0x%p)",
+				lpServiceName, lpValue);
+
+			__leave;
+		}
+
 		StringCchPrintf(tchSubKey, _countof(tchSubKey), _T("SYSTEM\\CurrentControlSet\\services\\%s"), lpServiceName);
-		lResult = RegOpenKeyEx(
+		lResult = CRegOperation::RegOpenKeyEx(
 			HKEY_LOCAL_MACHINE,
 			tchSubKey,
 			0,
-			KEY_ALL_ACCESS ,
+			KEY_ALL_ACCESS,
 			&hKey
 			);
 		if (ERROR_SUCCESS != lResult)
-			bRet = FALSE;
-		else
-			bRet = TRUE;
+			__leave;
+
+		dwDataSizeB = sizeof(dwData);		
+		lResult = RegQueryValueEx(
+			hKey,
+			lpValue,
+			NULL,
+			&dwType,
+			(LPBYTE)&dwData,
+			&dwDataSizeB
+			);
+		if (ERROR_SUCCESS != lResult)
+			__leave;
+
+		bRet = TRUE;
 	}
 	__finally
 	{
