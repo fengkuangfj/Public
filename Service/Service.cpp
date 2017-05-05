@@ -1,7 +1,5 @@
 #include "Service.h"
 
-#pragma warning(disable : 4509)
-
 CService * CService::ms_pInstance = NULL;
 
 BOOL
@@ -1646,10 +1644,13 @@ CService::Restart(
 
 		if (!ControlService(hService, SERVICE_CONTROL_STOP, &ServiceStatus))
 		{
-			if (pbReboot)
-				*pbReboot = TRUE;
+			if (ERROR_INVALID_SERVICE_CONTROL == GetLastError())
+			{
+				if (pbReboot)
+					*pbReboot = TRUE;
 
-			__leave;
+				__leave;
+			}
 		}
 
 		if (!StartService(hService, 0, NULL))
