@@ -70,3 +70,31 @@ CRegOperation::RegCreateKeyEx(
 	CWow64DisableWow64FsRedirection Wow64DisableWow64FsRedirection;
 	return ::RegCreateKeyExW(hKey, lpSubKey, Reserved, lpClass, dwOptions, samDesired, lpSecurityAttributes, phkResult, lpdwDisposition);
 }
+
+LSTATUS
+CRegOperation::RegQueryValueEx(
+							   __in HKEY hKey,
+							   __in_opt LPCSTR lpValueName,
+							   __reserved LPDWORD lpReserved,
+							   __out_opt LPDWORD lpType,
+							   __out_bcount_part_opt(*lpcbData, *lpcbData) __out_data_source(REGISTRY) LPBYTE lpData,
+							   __inout_opt LPDWORD lpcbData
+							   )
+{
+	CWow64DisableWow64FsRedirection Wow64DisableWow64FsRedirection;
+	return ::RegQueryValueExA(hKey, lpValueName, lpReserved, lpType, lpData, lpcbData);
+}
+
+LSTATUS
+CRegOperation::RegQueryValueEx(
+							   __in HKEY hKey,
+							   __in_opt LPCWSTR lpValueName,
+							   __reserved LPDWORD lpReserved,
+							   __out_opt LPDWORD lpType,
+							   __out_bcount_part_opt(*lpcbData, *lpcbData) __out_data_source(REGISTRY) LPBYTE lpData,
+							   __inout_opt LPDWORD lpcbData
+							   )
+{
+	CWow64DisableWow64FsRedirection Wow64DisableWow64FsRedirection;
+	return ::RegQueryValueExW(hKey, lpValueName, lpReserved, lpType, lpData, lpcbData);
+}

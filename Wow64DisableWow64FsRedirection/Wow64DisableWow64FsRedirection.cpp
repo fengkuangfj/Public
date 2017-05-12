@@ -5,6 +5,11 @@ CWow64DisableWow64FsRedirection::CWow64DisableWow64FsRedirection()
 {
 	__try
 	{
+		m_hModule = NULL;
+		m_pfWow64DisableWow64FsRedirection = NULL;
+		m_pfWow64RevertWow64FsRedirection = NULL;
+		m_pOldValue = NULL;
+
 		if (OS_PROCESSOR_TYPE_X64 != COperationSystemVersion::GetInstance()->GetOSProcessorType())
 			__leave;
 

@@ -1694,6 +1694,9 @@ CService::Exist(
 	SERVICE_STATUS			ServiceStatus	= {0};
 	SERVICE_STATUS_PROCESS 	ServiceStatusProcess  = {0};
 	DWORD					dwNeededSizeB = 0;
+	TCHAR					tchSubKey[MAX_PATH] = {0};
+	HKEY					hKey = NULL;
+	LONG					lResult = ERROR_SUCCESS;
 
 
 	__try
@@ -1702,6 +1705,35 @@ CService::Exist(
 		{
 			printfPublic("input argument error");
 			__leave;
+		}
+
+		StringCchPrintf(tchSubKey, _countof(tchSubKey), _T("SYSTEM\\CurrentControlSet\\services\\%s"), lpServiceName);
+
+		lResult = CRegOperation::RegOpenKeyEx(
+			HKEY_LOCAL_MACHINE,
+			tchSubKey,
+			0,
+			KEY_ALL_ACCESS,
+			&hKey
+			);
+		if (ERROR_FILE_NOT_FOUND == lResult)
+			__leave;
+
+		if (hKey)
+		{
+			lResult = CRegOperation::RegQueryValueEx(
+				hKey,
+				_T("Start"),
+				0,
+				NULL,
+				NULL,
+				NULL
+				);
+			if (ERROR_FILE_NOT_FOUND == lResult)
+				__leave;
+
+			RegCloseKey(hKey);
+			hKey = NULL;
 		}
 
 		hScManager = OpenSCManager(NULL, NULL, SC_MANAGER_ALL_ACCESS);
@@ -1735,6 +1767,12 @@ CService::Exist(
 	}
 	__finally
 	{
+		if (hKey)
+		{
+			RegCloseKey(hKey);
+			hKey = NULL;
+		}
+
 		if (hService)
 		{
 			CloseServiceHandle(hService);
@@ -1763,6 +1801,9 @@ CService::CheckNeedRestartComputer(
 	SERVICE_STATUS			ServiceStatus	= {0};
 	SERVICE_STATUS_PROCESS 	ServiceStatusProcess  = {0};
 	DWORD					dwNeededSizeB = 0;
+	LONG					lResult = ERROR_SUCCESS;
+	TCHAR					tchSubKey[MAX_PATH] = {0};
+	HKEY					hKey = NULL;
 
 
 	__try
@@ -1796,10 +1837,52 @@ CService::CheckNeedRestartComputer(
 		if (SERVICE_RUNNING == ServiceStatusProcess.dwCurrentState &&
 			!StartService(hService, 0, NULL) &&
 			ERROR_SERVICE_DISABLED == GetLastError())
+		{
 			bRet = TRUE;
+			__leave;
+		}
+
+		if (SERVICE_STOP_PENDING != ServiceStatusProcess.dwCurrentState)
+			__leave;
+
+		lResult = CRegOperation::RegOpenKeyEx(
+			HKEY_LOCAL_MACHINE,
+			tchSubKey,
+			0,
+			KEY_ALL_ACCESS,
+			&hKey
+			);
+		if (ERROR_FILE_NOT_FOUND == lResult)
+		{
+			bRet = TRUE;
+			__leave;
+		}
+
+		if (!hKey)
+			__leave;
+
+		lResult = CRegOperation::RegQueryValueEx(
+			hKey,
+			_T("Start"),
+			0,
+			NULL,
+			NULL,
+			NULL
+			);
+		if (ERROR_FILE_NOT_FOUND == lResult)
+		{
+			bRet = TRUE;
+			__leave;
+		}
 	}
 	__finally
 	{
+		if (hKey)
+		{
+			RegCloseKey(hKey);
+			hKey = NULL;
+		}
+
 		if (hService)
 		{
 			CloseServiceHandle(hService);

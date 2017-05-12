@@ -58,6 +58,30 @@ public:
 		__out_opt LPDWORD lpdwDisposition
 		);
 
+	static
+		LSTATUS
+		APIENTRY
+		RegQueryValueEx(
+		__in HKEY hKey,
+		__in_opt LPCSTR lpValueName,
+		__reserved LPDWORD lpReserved,
+		__out_opt LPDWORD lpType,
+		__out_bcount_part_opt(*lpcbData, *lpcbData) __out_data_source(REGISTRY) LPBYTE lpData,
+		__inout_opt LPDWORD lpcbData
+		);
+
+	static
+		LSTATUS
+		APIENTRY
+		RegQueryValueEx(
+		__in HKEY hKey,
+		__in_opt LPCWSTR lpValueName,
+		__reserved LPDWORD lpReserved,
+		__out_opt LPDWORD lpType,
+		__out_bcount_part_opt(*lpcbData, *lpcbData) __out_data_source(REGISTRY) LPBYTE lpData,
+		__inout_opt LPDWORD lpcbData
+		);
+
 private:
 	CRegOperation();
 

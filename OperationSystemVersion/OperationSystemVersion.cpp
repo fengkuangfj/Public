@@ -118,13 +118,13 @@ COperationSystemVersion::GetOSVersionByIsOrGreater()
 
 		if (m_pfIsWindowsVistaSP2OrGreater())
 		{
-			ret = OS_VERSION_WINDOWS_VISTA_PS2;
+			ret = OS_VERSION_WINDOWS_VISTA_SP2;
 			__leave;
 		}
 
 		if (m_pfIsWindowsVistaSP1OrGreater())
 		{
-			ret = OS_VERSION_WINDOWS_VISTA_PS1;
+			ret = OS_VERSION_WINDOWS_VISTA_SP1;
 			__leave;
 		}
 
