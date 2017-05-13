@@ -1,13 +1,13 @@
 #include "Public.h"
 
 VOID
-	printfPublicEx(
-	__in LPSTR lpFile,
-	__in LPSTR lpFunction,
-	__in ULONG ulLine,
-	__in LPSTR lpFmt,
-	...
-	)
+printfPublicEx(
+			   __in LPSTR lpFile,
+			   __in LPSTR lpFunction,
+			   __in ULONG ulLine,
+			   __in LPSTR lpFmt,
+			   ...
+			   )
 {
 	va_list	Args;
 
@@ -49,3 +49,34 @@ VOID
 		va_end(Args);
 	}
 }
+
+BOOL
+GenGuid(
+		__inout LPTSTR	lpGuid,
+		__in	ULONG	ulBufSizeCh
+		)
+{  
+	BOOL bRet = FALSE;
+
+	GUID Guid = {0}; 
+
+
+	do 
+	{
+		if (S_OK != CoCreateGuid(&Guid)) 
+			break;
+
+		StringCchPrintf(lpGuid, ulBufSizeCh,
+			_T("{%08X-%04X-%04x-%02X%02X-%02X%02X%02X%02X%02X%02X}"),
+			Guid.Data1,
+			Guid.Data2, 
+			Guid.Data3, 
+			Guid.Data4[0], Guid.Data4[1],
+			Guid.Data4[2], Guid.Data4[3], Guid.Data4[4], Guid.Data4[5], Guid.Data4[6], Guid.Data4[7]
+		);
+
+		bRet = TRUE;
+	} while (FALSE);
+
+	return bRet;  
+}  

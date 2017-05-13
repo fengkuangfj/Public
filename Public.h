@@ -14,10 +14,16 @@
 #define printfPublic(FMT, ...) printfPublicEx(__FILE__, __FUNCSIG__, __LINE__, FMT, __VA_ARGS__)
 
 VOID
-	printfPublicEx(
-	__in LPSTR lpFile,
-	__in LPSTR lpFunction,
-	__in ULONG ulLine,
-	__in LPSTR lpFmt,
-	...
-	);
+printfPublicEx(
+			   __in LPSTR lpFile,
+			   __in LPSTR lpFunction,
+			   __in ULONG ulLine,
+			   __in LPSTR lpFmt,
+			   ...
+			   );
+
+BOOL
+GenGuid(
+		__inout LPTSTR	lpGuid,
+		__in	ULONG	ulBufSizeCh
+		);
