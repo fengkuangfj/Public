@@ -500,10 +500,12 @@ CService::Start(
 				__in LPWSTR lpServiceName
 				)
 {
-	BOOL		bRet		= FALSE;
+	BOOL					bRet		= FALSE;
 
-	SC_HANDLE	hScManager	= NULL;
-	SC_HANDLE	hService	= NULL;
+	SC_HANDLE				hScManager	= NULL;
+	SC_HANDLE				hService	= NULL;
+	SERVICE_STATUS_PROCESS 	ServiceStatusProcess  = {0};
+	DWORD					dwNeededSizeB = 0;
 
 
 	__try
@@ -511,14 +513,14 @@ CService::Start(
 		hScManager = OpenSCManager(NULL, NULL, SC_MANAGER_ALL_ACCESS);
 		if (!hScManager)
 		{
-			printfEx(MOD_SERVICE, PRINTF_LEVEL_ERROR, "OpenSCManager failed. (%d)", GetLastError());
+			printfEx(MOD_SERVICE, PRINTF_LEVEL_ERROR, "OpenSCManager failed. %S (%d)", lpServiceName, GetLastError());
 			__leave;
 		}
 
 		hService = OpenService(hScManager, lpServiceName, SERVICE_ALL_ACCESS);
 		if (!hService)
 		{
-			printfEx(MOD_SERVICE, PRINTF_LEVEL_ERROR, "OpenService failed. (%d)", GetLastError());
+			printfEx(MOD_SERVICE, PRINTF_LEVEL_ERROR, "OpenService failed. %S (%d)", lpServiceName, GetLastError());
 			__leave;
 		}
 
@@ -526,7 +528,15 @@ CService::Start(
 		{
 			if (ERROR_SERVICE_ALREADY_RUNNING != GetLastError())
 			{
-				printfPublic("StartService failed. (%d)", GetLastError());
+				printfEx(MOD_SERVICE, PRINTF_LEVEL_ERROR, "StartService failed. %S (%d)", lpServiceName, GetLastError());
+				__leave;
+			}
+		}
+		else
+		{
+			if (!WaitForRunning(lpServiceName))
+			{
+				printfEx(MOD_SERVICE, PRINTF_LEVEL_ERROR, "Wait failed. %S", lpServiceName);
 				__leave;
 			}
 		}
@@ -556,11 +566,13 @@ CService::Stop(
 			   __in LPWSTR lpServiceName
 			   )
 {
-	BOOL			bRet			= FALSE;
+	BOOL					bRet			= FALSE;
 
-	SC_HANDLE		hScManager		= NULL;
-	SC_HANDLE		hService		= NULL;
-	SERVICE_STATUS	ServiceStatus	= {0};
+	SC_HANDLE				hScManager		= NULL;
+	SC_HANDLE				hService		= NULL;
+	SERVICE_STATUS			ServiceStatus	= {0};
+	SERVICE_STATUS_PROCESS 	ServiceStatusProcess  = {0};
+	DWORD					dwNeededSizeB = 0;
 
 
 	__try
@@ -579,11 +591,56 @@ CService::Stop(
 			__leave;
 		}
 
-		if (!ControlService(hService, SERVICE_CONTROL_STOP, &ServiceStatus))
+		if (!QueryServiceStatusEx(
+			hService,
+			SC_STATUS_PROCESS_INFO,
+			(LPBYTE)&ServiceStatusProcess,
+			sizeof(ServiceStatusProcess),
+			&dwNeededSizeB
+			))
 		{
-			printfEx(MOD_SERVICE, PRINTF_LEVEL_ERROR, "ControlService failed. %S (%d)", lpServiceName, GetLastError());
+			printfEx(MOD_SERVICE, PRINTF_LEVEL_ERROR, "QueryServiceStatusEx failed. %S (%d)", lpServiceName, GetLastError());
 			__leave;
 		}
+
+		if (!(SERVICE_ACCEPT_STOP & ServiceStatusProcess.dwControlsAccepted))
+		{
+			printfEx(MOD_SERVICE, PRINTF_LEVEL_ERROR, "The service can not be stopped. %S", lpServiceName);
+			__leave;
+		}
+
+		if (!ControlService(hService, SERVICE_CONTROL_STOP, &ServiceStatus))
+		{
+			if (ERROR_INVALID_SERVICE_CONTROL == GetLastError())
+				printfEx(MOD_SERVICE, PRINTF_LEVEL_ERROR, "The service can not be stopped. %S", lpServiceName);
+			else
+				printfEx(MOD_SERVICE, PRINTF_LEVEL_ERROR, "ControlService failed. %S (%d)", lpServiceName, GetLastError());
+
+			__leave;
+		}
+
+		do 
+		{
+			memset(&ServiceStatusProcess, 0, sizeof(ServiceStatusProcess));
+			dwNeededSizeB = 0;
+
+			if (!QueryServiceStatusEx(
+				hService,
+				SC_STATUS_PROCESS_INFO,
+				(LPBYTE)&ServiceStatusProcess,
+				sizeof(ServiceStatusProcess),
+				&dwNeededSizeB
+				))
+			{
+				printfEx(MOD_SERVICE, PRINTF_LEVEL_ERROR, "QueryServiceStatusEx failed. %S (%d)", lpServiceName, GetLastError());
+				__leave;
+			}
+
+			if (SERVICE_STOPPED == ServiceStatusProcess.dwCurrentState)
+				break;
+
+			Sleep(1);
+		} while (TRUE);
 
 		bRet = TRUE;
 	}
@@ -606,9 +663,11 @@ CService::Stop(
 }
 
 BOOL
-CService::DeleteFileInDrivers(
-							  __in LPTSTR lpServiceName
-							  )
+CService::GetPath(
+				  __in		LPTSTR	lpServiceName,
+				  __inout	LPTSTR	lpPath,
+				  __in		ULONG	ulBufSizeCh
+				  )
 {
 	BOOL							bRet = FALSE;
 
@@ -619,19 +678,17 @@ CService::DeleteFileInDrivers(
 	DWORD							dwType = 0;
 	TCHAR							tchData[MAX_PATH] = {0};
 	DWORD							dwData = 0;
-	TCHAR							tchFilePath[MAX_PATH] = { 0 };
 
 
 	__try
 	{
-		if (!lpServiceName)
+		if (!lpServiceName || !lpPath || !ulBufSizeCh)
 		{
-			printfEx(MOD_SERVICE, PRINTF_LEVEL_ERROR, "input argument error");
+			printfEx(MOD_SERVICE, PRINTF_LEVEL_ERROR, "input arguments error. lpServiceName(%p) lpPath(%p) ulBufSizeCh(%d)", lpServiceName, lpPath, ulBufSizeCh);
 			__leave;
 		}
 
-		_tcscat_s(tchKey, _countof(tchKey), _T("SYSTEM\\CurrentControlSet\\Services\\"));
-		_tcscat_s(tchKey, _countof(tchKey), lpServiceName);
+		StringCchPrintf(tchKey, _countof(tchKey), _T("SYSTEM\\CurrentControlSet\\Services\\%s"), lpServiceName);
 
 		lRet = CRegOperation::RegOpenKeyEx(
 			HKEY_LOCAL_MACHINE,
@@ -642,34 +699,12 @@ CService::DeleteFileInDrivers(
 			);
 		if (ERROR_SUCCESS != lRet)
 		{
-			printfEx(MOD_SERVICE, PRINTF_LEVEL_ERROR, "RegOpenKeyEx failed. (%d)", lRet);
-			__leave;
-		}
-
-		dwcbData = sizeof(DWORD);
-		lRet = RegQueryValueEx(
-			hKey,
-			_T("start"),
-			NULL,
-			&dwType,
-			(LPBYTE)dwData,
-			&dwcbData
-			);
-		if (ERROR_SUCCESS != lRet)
-		{
-			printfEx(MOD_SERVICE, PRINTF_LEVEL_ERROR, "RegQueryValueEx failed. (%d)", lRet);
-			__leave;
-		}
-
-		if (SERVICE_BOOT_START != dwData &&
-			SERVICE_SYSTEM_START != dwData)
-		{
-			bRet = TRUE;
+			printfEx(MOD_SERVICE, PRINTF_LEVEL_ERROR, "RegOpenKeyEx failed. %S (%d)", lpServiceName, lRet);
 			__leave;
 		}
 
 		dwcbData = sizeof(tchData);
-		lRet = RegQueryValueEx(
+		lRet = CRegOperation::RegQueryValueEx(
 			hKey,
 			_T("ImagePath"),
 			NULL,
@@ -679,39 +714,75 @@ CService::DeleteFileInDrivers(
 			);
 		if (ERROR_SUCCESS != lRet)
 		{
-			printfEx(MOD_SERVICE, PRINTF_LEVEL_ERROR, "RegQueryValueEx failed. (%d)", lRet);
+			printfEx(MOD_SERVICE, PRINTF_LEVEL_ERROR, "RegQueryValueEx failed. %S (%d)", lpServiceName, lRet);
 			__leave;
 		}
 
 		if (_T('%') == tchData[0])
 		{
 			// %systemroot%\system32\svchost.exe
-			_tcscat_s(tchFilePath, _countof(tchFilePath), tchData);
+			StringCchPrintf(lpPath, ulBufSizeCh, _T("%s"), tchData);
 		}
 		else if (_T('\\') == tchData[0])
 		{
 			if (_T('?') == tchData[1])
 			{
 				// \??\C:\Windows\system32\drivers\360reskit64.sys
-				_tcscat_s(tchFilePath, _countof(tchFilePath), tchData + 4);
+				StringCchPrintf(lpPath, ulBufSizeCh, _T("%s"), tchData + 4);
 			}
 			else
 			{
 				// \SystemRoot\system32\drivers\aliide.sys					
-				_tcscat_s(tchFilePath, _countof(tchFilePath), _T("%systemroot%\\"));
-				_tcscat_s(tchFilePath, _countof(tchFilePath), tchData + 12);
+				StringCchPrintf(lpPath, ulBufSizeCh, _T("%systemroot%\\%s"), tchData + 12);
 			}
 		}
 		else if (_T('s') == tchData[0] || _T('S') == tchData[0])
 		{
 			// system32\DRIVERS\360netmon.sys								
-			_tcscat_s(tchFilePath, _countof(tchFilePath), _T("%systemroot%\\"));
-			_tcscat_s(tchFilePath, _countof(tchFilePath), tchData);
+			StringCchPrintf(lpPath, ulBufSizeCh, _T("%systemroot%\\%s"), tchData);
 		}
 		else
 		{
 			// C:\Windows\SysWOW64\Macromed\Flash\FlashPlayerUpdateService.exe
-			_tcscat_s(tchFilePath, _countof(tchFilePath), tchData);
+			StringCchPrintf(lpPath, ulBufSizeCh, _T("%s"), tchData);
+		}
+
+		bRet = TRUE;
+	}
+	__finally
+	{
+		if (hKey)
+		{
+			RegCloseKey(hKey);
+			hKey = NULL;
+		}
+	}
+
+	return bRet;
+}
+
+BOOL
+CService::DeleteFileInDrivers(
+							  __in LPTSTR lpServiceName
+							  )
+{
+	BOOL	bRet = FALSE;
+
+	TCHAR	tchFilePath[MAX_PATH] = { 0 };
+
+
+	__try
+	{
+		if (!lpServiceName)
+		{
+			printfEx(MOD_SERVICE, PRINTF_LEVEL_ERROR, "input argument error");
+			__leave;
+		}
+
+		if (!GetPath(lpServiceName, tchFilePath, _countof(tchFilePath)))
+		{
+			printfEx(MOD_SERVICE, PRINTF_LEVEL_ERROR, "GetPath failed. %S", lpServiceName);
+			__leave;
 		}
 
 		if (!CFileOperation::DeleteFile(tchFilePath))
@@ -724,11 +795,7 @@ CService::DeleteFileInDrivers(
 	}
 	__finally
 	{
-		if (hKey)
-		{
-			RegCloseKey(hKey);
-			hKey = NULL;
-		}
+		;
 	}
 
 	return bRet;
@@ -1551,21 +1618,21 @@ CService::ChangeLoadOrderGroup(
 	{
 		if (!lpServiceName || !lpLoadOrderGroup)
 		{
-			printfPublic("input arguments error. (0x%p) (0x%p)", lpServiceName, lpLoadOrderGroup);
+			printfEx(MOD_SERVICE, PRINTF_LEVEL_ERROR, "input arguments error. (0x%p) (0x%p)", lpServiceName, lpLoadOrderGroup);
 			__leave;
 		}
 
 		hScManager = OpenSCManager(NULL, NULL, SC_MANAGER_ALL_ACCESS);
 		if (!hScManager)
 		{
-			printfPublic("OpenSCManager failed. (%d)", GetLastError());
+			printfEx(MOD_SERVICE, PRINTF_LEVEL_ERROR, "OpenSCManager failed. (%d)", GetLastError());
 			__leave;
 		}
 
 		hService = OpenService(hScManager, lpServiceName, SERVICE_ALL_ACCESS);
 		if (!hService)
 		{
-			printfPublic("OpenService failed. (%d)", GetLastError());
+			printfEx(MOD_SERVICE, PRINTF_LEVEL_ERROR, "OpenService failed. (%d)", GetLastError());
 			__leave;
 		}
 
@@ -1583,7 +1650,7 @@ CService::ChangeLoadOrderGroup(
 			NULL
 			))
 		{
-			printfPublic("ChangeServiceConfig failed. (%d)", GetLastError());
+			printfEx(MOD_SERVICE, PRINTF_LEVEL_ERROR, "ChangeServiceConfig failed. (%d)", GetLastError());
 			__leave;
 		}
 
@@ -1609,57 +1676,184 @@ CService::ChangeLoadOrderGroup(
 
 BOOL
 CService::Restart(
-				  __in	LPTSTR	lpServiceName,
-				  __inout PBOOL	pbReboot
+				  __in		LPTSTR	lpServiceName,
+				  __inout	PBOOL	pbReboot
 						)
 {
-	BOOL			bRet			= FALSE;
+	BOOL					bRet			= FALSE;
 
-	SC_HANDLE		hScManager		= NULL;
-	SC_HANDLE		hService		= NULL;
-	SERVICE_STATUS	ServiceStatus	= {0};
+	SC_HANDLE				hScManager		= NULL;
+	SC_HANDLE				hService		= NULL;
+	SERVICE_STATUS			ServiceStatus	= {0};
+	SERVICE_STATUS_PROCESS 	ServiceStatusProcess  = {0};
+	DWORD					dwNeededSizeB = 0;
 
 
 	__try
 	{
 		if (!lpServiceName)
 		{
-			printfPublic("input argument error");
+			printfEx(MOD_SERVICE, PRINTF_LEVEL_ERROR, "input argument error");
 			__leave;
 		}
 
 		hScManager = OpenSCManager(NULL, NULL, SC_MANAGER_ALL_ACCESS);
 		if (!hScManager)
 		{
-			printfPublic("OpenSCManager failed. (%d)", GetLastError());
+			printfEx(MOD_SERVICE, PRINTF_LEVEL_ERROR, "OpenSCManager failed. %S (%d)", lpServiceName, GetLastError());
 			__leave;
 		}
 
 		hService = OpenService(hScManager, lpServiceName, SERVICE_ALL_ACCESS);
 		if (!hService)
 		{
-			printfPublic("OpenService failed. (%d)", GetLastError());
+			printfEx(MOD_SERVICE, PRINTF_LEVEL_ERROR, "OpenService failed. %S (%d)", lpServiceName, GetLastError());
 			__leave;
 		}
 
-		if (!ControlService(hService, SERVICE_CONTROL_STOP, &ServiceStatus))
+		if (!QueryServiceStatusEx(
+			hService,
+			SC_STATUS_PROCESS_INFO,
+			(LPBYTE)&ServiceStatusProcess,
+			sizeof(ServiceStatusProcess),
+			&dwNeededSizeB
+			))
 		{
-			if (ERROR_INVALID_SERVICE_CONTROL == GetLastError())
+			printfEx(MOD_SERVICE, PRINTF_LEVEL_ERROR, "QueryServiceStatusEx failed. %S (%d)", lpServiceName, GetLastError());
+			__leave;
+		}
+
+		if (SERVICE_START_PENDING == ServiceStatusProcess.dwCurrentState)
+		{
+			// 正在启动中
+			do 
 			{
+				memset(&ServiceStatusProcess, 0, sizeof(ServiceStatusProcess));
+				dwNeededSizeB = 0;
+
+				if (!QueryServiceStatusEx(
+					hService,
+					SC_STATUS_PROCESS_INFO,
+					(LPBYTE)&ServiceStatusProcess,
+					sizeof(ServiceStatusProcess),
+					&dwNeededSizeB
+					))
+				{
+					printfEx(MOD_SERVICE, PRINTF_LEVEL_ERROR, "QueryServiceStatusEx failed. %S (%d)", lpServiceName, GetLastError());
+					__leave;
+				}
+
+				if (SERVICE_START_PENDING != ServiceStatusProcess.dwCurrentState)
+					break;
+
+				Sleep(1);
+			} while (TRUE);
+		}
+
+		if (SERVICE_CONTINUE_PENDING == ServiceStatusProcess.dwCurrentState ||
+			SERVICE_PAUSE_PENDING == ServiceStatusProcess.dwCurrentState ||
+			SERVICE_PAUSED == ServiceStatusProcess.dwCurrentState ||
+			SERVICE_RUNNING == ServiceStatusProcess.dwCurrentState)
+		{
+			// 需要停止
+			memset(&ServiceStatusProcess, 0, sizeof(ServiceStatusProcess));
+			dwNeededSizeB = 0;
+
+			if (!QueryServiceStatusEx(
+				hService,
+				SC_STATUS_PROCESS_INFO,
+				(LPBYTE)&ServiceStatusProcess,
+				sizeof(ServiceStatusProcess),
+				&dwNeededSizeB
+				))
+			{
+				printfEx(MOD_SERVICE, PRINTF_LEVEL_ERROR, "QueryServiceStatusEx failed. %S (%d)", lpServiceName, GetLastError());
+				__leave;
+			}
+
+			if (!(SERVICE_ACCEPT_STOP & ServiceStatusProcess.dwControlsAccepted))
+			{
+				// 无法停止
 				if (pbReboot)
 					*pbReboot = TRUE;
 
 				__leave;
 			}
-		}
 
-		if (!StartService(hService, 0, NULL))
-		{
-			if (ERROR_SERVICE_ALREADY_RUNNING != GetLastError())
+			if (!ControlService(hService, SERVICE_CONTROL_STOP, &ServiceStatus))
 			{
-				printfPublic("StartService failed. (%d)", GetLastError());
+				if (ERROR_INVALID_SERVICE_CONTROL == GetLastError())
+				{
+					// 无法停止
+					if (pbReboot)
+						*pbReboot = TRUE;
+				}
+				else
+				{
+					// 停止失败
+					printfEx(MOD_SERVICE, PRINTF_LEVEL_ERROR, "ControlService failed. %S (%d)", lpServiceName, GetLastError());
+				}
+
 				__leave;
 			}
+			else
+			{
+				// 停止成功
+				memset(&ServiceStatusProcess, 0, sizeof(ServiceStatusProcess));
+				dwNeededSizeB = 0;
+
+				if (!QueryServiceStatusEx(
+					hService,
+					SC_STATUS_PROCESS_INFO,
+					(LPBYTE)&ServiceStatusProcess,
+					sizeof(ServiceStatusProcess),
+					&dwNeededSizeB
+					))
+				{
+					printfEx(MOD_SERVICE, PRINTF_LEVEL_ERROR, "QueryServiceStatusEx failed. %S (%d)", lpServiceName, GetLastError());
+					__leave;
+				}
+			}
+		}
+
+		if (SERVICE_STOP_PENDING == ServiceStatusProcess.dwCurrentState)
+		{
+			// 正在停止中
+			do 
+			{
+				memset(&ServiceStatusProcess, 0, sizeof(ServiceStatusProcess));
+				dwNeededSizeB = 0;
+
+				if (!QueryServiceStatusEx(
+					hService,
+					SC_STATUS_PROCESS_INFO,
+					(LPBYTE)&ServiceStatusProcess,
+					sizeof(ServiceStatusProcess),
+					&dwNeededSizeB
+					))
+				{
+					printfEx(MOD_SERVICE, PRINTF_LEVEL_ERROR, "QueryServiceStatusEx failed. %S (%d)", lpServiceName, GetLastError());
+					__leave;
+				}
+
+				if (SERVICE_STOP_PENDING != ServiceStatusProcess.dwCurrentState)
+					break;
+
+				Sleep(1);
+			} while (TRUE);
+		}
+
+		if (SERVICE_STOPPED != ServiceStatusProcess.dwCurrentState)
+		{
+			printfEx(MOD_SERVICE, PRINTF_LEVEL_ERROR, "dwCurrentState error. %S (%d)", lpServiceName, ServiceStatusProcess.dwCurrentState);
+			__leave;
+		}
+
+		// 已经停止
+		if (!Start(lpServiceName))
+		{
+			printfEx(MOD_SERVICE, PRINTF_LEVEL_ERROR, "Start failed. %S", lpServiceName);
+			__leave;
 		}
 
 		bRet = TRUE;
@@ -1703,7 +1897,7 @@ CService::Exist(
 	{
 		if (!lpServiceName)
 		{
-			printfPublic("input argument error");
+			printfEx(MOD_SERVICE, PRINTF_LEVEL_ERROR, "input argument error");
 			__leave;
 		}
 
@@ -1810,7 +2004,7 @@ CService::CheckNeedRestartComputer(
 	{
 		if (!lpServiceName)
 		{
-			printfPublic("input argument error");
+			printfEx(MOD_SERVICE, PRINTF_LEVEL_ERROR, "input argument error");
 			__leave;
 		}
 
@@ -1844,6 +2038,8 @@ CService::CheckNeedRestartComputer(
 
 		if (SERVICE_STOP_PENDING != ServiceStatusProcess.dwCurrentState)
 			__leave;
+
+		StringCchPrintf(tchSubKey, _countof(tchSubKey), _T("SYSTEM\\CurrentControlSet\\services\\%s"), lpServiceName);
 
 		lResult = CRegOperation::RegOpenKeyEx(
 			HKEY_LOCAL_MACHINE,
@@ -1919,7 +2115,7 @@ CService::CheckRegValue(
 	{
 		if (!lpServiceName || !lpValue)
 		{
-			printfPublic("input arguments error. lpServiceName(0x%p) lpValue(0x%p)",
+			printfEx(MOD_SERVICE, PRINTF_LEVEL_ERROR, "input arguments error. lpServiceName(0x%p) lpValue(0x%p)",
 				lpServiceName, lpValue);
 
 			__leave;
@@ -1956,6 +2152,92 @@ CService::CheckRegValue(
 		{
 			RegCloseKey(hKey);
 			hKey = NULL;
+		}
+	}
+
+	return bRet;
+}
+
+BOOL
+CService::WaitForRunning(
+			   __in LPTSTR lpServiceName
+			   )
+{
+	BOOL					bRet			= FALSE;
+
+	SC_HANDLE				hScManager		= NULL;
+	SC_HANDLE				hService		= NULL;
+	SERVICE_STATUS_PROCESS 	ServiceStatusProcess  = {0};
+	DWORD					dwNeededSizeB = 0;
+
+
+	__try
+	{
+		if (!lpServiceName)
+		{
+			printfEx(MOD_SERVICE, PRINTF_LEVEL_ERROR, "input argument error");
+			__leave;
+		}
+
+		hScManager = OpenSCManager(NULL, NULL, SC_MANAGER_ALL_ACCESS);
+		if (!hScManager)
+		{
+			printfEx(MOD_SERVICE, PRINTF_LEVEL_ERROR, "OpenSCManager failed. %S (%d)", lpServiceName, GetLastError());
+			__leave;
+		}
+
+		do 
+		{
+			hService = OpenService(hScManager, lpServiceName, SERVICE_ALL_ACCESS);
+			if (hService)
+				break;
+
+			if (ERROR_SERVICE_DOES_NOT_EXIST != GetLastError())
+			{
+				printfEx(MOD_SERVICE, PRINTF_LEVEL_ERROR, "OpenService failed. %S (%d)", lpServiceName, GetLastError());
+				__leave;
+			}
+
+			Sleep(1);
+		} while (TRUE);
+
+		do 
+		{
+			memset(&ServiceStatusProcess, 0, sizeof(ServiceStatusProcess));
+			dwNeededSizeB = 0;
+
+			if (!QueryServiceStatusEx(
+				hService,
+				SC_STATUS_PROCESS_INFO,
+				(LPBYTE)&ServiceStatusProcess,
+				sizeof(ServiceStatusProcess),
+				&dwNeededSizeB
+				))
+			{
+				printfEx(MOD_SERVICE, PRINTF_LEVEL_ERROR, "QueryServiceStatusEx failed. %S (%d)", lpServiceName, GetLastError());
+				__leave;
+			}
+
+			if (SERVICE_RUNNING == ServiceStatusProcess.dwCurrentState)
+				break;
+
+			Sleep(1);
+		} while (TRUE);
+
+		bRet = TRUE;
+	}
+	__finally
+	{
+		if (hService)
+		{
+			CloseServiceHandle(hService);
+			hService = NULL;
+		}
+
+		if (hScManager)
+		{
+			CloseServiceHandle(hScManager);
+			hScManager = NULL;
 		}
 	}
 

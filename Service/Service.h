@@ -138,6 +138,11 @@ public:
 		__in LPTSTR lpServiceName
 		);
 
+	BOOL
+		WaitForRunning(
+		__in LPTSTR lpServiceName
+		);
+
 private:
 	static CService						*	ms_pInstance;
 
@@ -195,5 +200,12 @@ private:
 		CheckRegValue(
 		__in LPTSTR		lpServiceName,
 		__in LPCTSTR	lpValue
+		);
+
+	BOOL
+		GetPath(
+		__in	LPTSTR	lpServiceName,
+		__inout LPTSTR	lpPath,
+		__in	ULONG	ulBufSizeCh
 		);
 };
