@@ -75,7 +75,9 @@ public:
 
 	BOOL
 		Start(
-		__in LPWSTR lpServiceName
+		__in LPWSTR		lpServiceName,
+		__in DWORD		dwNumServiceArgs = 0,
+		__in LPCTSTR *	lpServiceArgVectors = NULL
 		);
 
 	BOOL

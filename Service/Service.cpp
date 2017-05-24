@@ -497,7 +497,9 @@ CService::Install(
 
 BOOL
 CService::Start(
-				__in LPWSTR lpServiceName
+				__in LPWSTR		lpServiceName,
+				__in DWORD		dwNumServiceArgs,
+				__in LPCTSTR *	lpServiceArgVectors
 				)
 {
 	BOOL					bRet		= FALSE;
@@ -506,6 +508,7 @@ CService::Start(
 	SC_HANDLE				hService	= NULL;
 	SERVICE_STATUS_PROCESS 	ServiceStatusProcess  = {0};
 	DWORD					dwNeededSizeB = 0;
+	BOOL					bStartPending = FALSE;
 
 
 	__try
@@ -524,7 +527,7 @@ CService::Start(
 			__leave;
 		}
 
-		if (!StartService(hService, 0, NULL))
+		if (!StartService(hService, dwNumServiceArgs, lpServiceArgVectors))
 		{
 			if (ERROR_SERVICE_ALREADY_RUNNING != GetLastError())
 			{
@@ -534,11 +537,55 @@ CService::Start(
 		}
 		else
 		{
-			if (!WaitForRunning(lpServiceName))
+			if (!QueryServiceStatusEx(
+				hService,
+				SC_STATUS_PROCESS_INFO,
+				(LPBYTE)&ServiceStatusProcess,
+				sizeof(ServiceStatusProcess),
+				&dwNeededSizeB
+				))
 			{
-				printfEx(MOD_SERVICE, PRINTF_LEVEL_ERROR, "Wait failed. %S", lpServiceName);
+				printfEx(MOD_SERVICE, PRINTF_LEVEL_ERROR, "QueryServiceStatusEx failed. %S (%d)", lpServiceName, GetLastError());
 				__leave;
 			}
+
+			if (SERVICE_STOPPED == ServiceStatusProcess.dwCurrentState)
+			{
+				printfEx(MOD_SERVICE, PRINTF_LEVEL_ERROR, "SERVICE_STOPPED. %S", lpServiceName);
+				__leave;
+			}
+
+			if (SERVICE_START_PENDING == ServiceStatusProcess.dwCurrentState)
+				bStartPending = TRUE;
+
+			do 
+			{
+				memset(&ServiceStatusProcess, 0, sizeof(ServiceStatusProcess));
+				dwNeededSizeB = 0;
+
+				if (!QueryServiceStatusEx(
+					hService,
+					SC_STATUS_PROCESS_INFO,
+					(LPBYTE)&ServiceStatusProcess,
+					sizeof(ServiceStatusProcess),
+					&dwNeededSizeB
+					))
+				{
+					printfEx(MOD_SERVICE, PRINTF_LEVEL_ERROR, "QueryServiceStatusEx failed. %S (%d)", lpServiceName, GetLastError());
+					__leave;
+				}
+
+				if (SERVICE_RUNNING == ServiceStatusProcess.dwCurrentState)
+					break;
+
+				if (bStartPending && SERVICE_STOPPED == ServiceStatusProcess.dwCurrentState)
+				{
+					printfEx(MOD_SERVICE, PRINTF_LEVEL_ERROR, "SERVICE_STOPPED. %S", lpServiceName);
+					__leave;
+				}
+
+				Sleep(1);
+			} while (TRUE);
 		}
 
 		bRet = TRUE;
@@ -2160,8 +2207,8 @@ CService::CheckRegValue(
 
 BOOL
 CService::WaitForRunning(
-			   __in LPTSTR lpServiceName
-			   )
+						 __in LPTSTR lpServiceName
+						 )
 {
 	BOOL					bRet			= FALSE;
 
