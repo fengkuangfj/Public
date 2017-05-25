@@ -28,4 +28,5 @@ private:
 	WOW64_DISABLE_WOW64_FS_REDIRECTION	m_pfWow64DisableWow64FsRedirection;
 	WOW64_REVERT_WOW64_FS_REDIRECTION	m_pfWow64RevertWow64FsRedirection;
 	PVOID								m_pOldValue;
+	BOOL								m_bWow64DisableWow64FsRedirection;
 };

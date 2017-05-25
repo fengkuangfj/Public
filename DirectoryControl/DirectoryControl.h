@@ -57,6 +57,13 @@ public:
 		__in BOOL	bWildcard
 		);
 
+	static
+		BOOL
+		Copy(
+		__in LPTSTR lpSrc,
+		__in LPTSTR lpDes
+		);
+
 private:
 	static
 		BOOL

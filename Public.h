@@ -6,6 +6,9 @@
 #include <locale.h>
 #include <time.h>
 #include <stdio.h>
+#include <objbase.h>
+
+#pragma comment(lib, "ole32.lib")
 
 #ifndef MOD_PUBLIC
 #define MOD_PUBLIC _T("¹«¹²")

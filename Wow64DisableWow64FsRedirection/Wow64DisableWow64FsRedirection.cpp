@@ -9,6 +9,7 @@ CWow64DisableWow64FsRedirection::CWow64DisableWow64FsRedirection()
 		m_pfWow64DisableWow64FsRedirection = NULL;
 		m_pfWow64RevertWow64FsRedirection = NULL;
 		m_pOldValue = NULL;
+		m_bWow64DisableWow64FsRedirection = FALSE;
 
 #ifdef _X86_
 		if (OS_PROCESSOR_TYPE_X64 != COperationSystemVersion::GetInstance()->GetOSProcessorType())
@@ -23,7 +24,7 @@ CWow64DisableWow64FsRedirection::CWow64DisableWow64FsRedirection()
 		if (!m_pfWow64DisableWow64FsRedirection || !m_pfWow64RevertWow64FsRedirection)
 			__leave;
 
-		m_pfWow64DisableWow64FsRedirection(&m_pOldValue);
+		m_bWow64DisableWow64FsRedirection = m_pfWow64DisableWow64FsRedirection(&m_pOldValue);
 #endif
 	}
 	__finally
@@ -36,7 +37,7 @@ CWow64DisableWow64FsRedirection::~CWow64DisableWow64FsRedirection()
 {
 	if (m_hModule)
 	{
-		if (m_pfWow64RevertWow64FsRedirection && m_pOldValue)
+		if (m_pfWow64RevertWow64FsRedirection && m_bWow64DisableWow64FsRedirection)
 			m_pfWow64RevertWow64FsRedirection(m_pOldValue);
 
 		FreeLibrary(m_hModule);

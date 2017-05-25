@@ -5,6 +5,7 @@
 #include <Psapi.h>
 #include <Shlobj.h>
 #include <Shlwapi.h>
+#include <Tlhelp32.h>
 
 #include "..\\Public.h"
 #include "..\\ModulePath\\ModulePath.h"
@@ -186,6 +187,21 @@ public:
 		__in	ULONG	ulPid,
 		__inout LPTSTR	lpBuf,
 		__in	ULONG	ulBufSizeCh
+		);
+
+	BOOL
+		Terminate(
+		__in LPTSTR lpPath
+		);
+
+	BOOL
+		Terminate(
+		__in ULONG ulPid
+		);
+
+	BOOL
+		SetAutoRun(
+		__in LPTSTR lpPath
 		);
 
 private:

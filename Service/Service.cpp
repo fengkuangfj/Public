@@ -1829,7 +1829,8 @@ CService::Restart(
 
 			if (!ControlService(hService, SERVICE_CONTROL_STOP, &ServiceStatus))
 			{
-				if (ERROR_INVALID_SERVICE_CONTROL == GetLastError())
+				if (ERROR_INVALID_SERVICE_CONTROL == GetLastError() ||
+					ERROR_SERVICE_CANNOT_ACCEPT_CTRL == GetLastError())
 				{
 					// ÎÞ·¨Í£Ö¹
 					if (pbReboot)

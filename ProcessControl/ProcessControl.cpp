@@ -920,3 +920,187 @@ CProcessControl::Get(
 
 	return bRet;
 }
+
+BOOL
+CProcessControl::Terminate(
+						   __in LPTSTR lpPath
+						   )
+{
+	BOOL			bRet = FALSE;
+
+	HANDLE			hProcSnapshot = INVALID_HANDLE_VALUE;
+	PROCESSENTRY32	ProcessEntry32 = {0};
+	TCHAR			tchPath[MAX_PATH] = {0};
+
+
+	__try
+	{
+		if (!lpPath)
+		{
+			printfPublic("input argument error");
+			__leave;
+		}
+
+		hProcSnapshot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
+		if (INVALID_HANDLE_VALUE == hProcSnapshot)
+		{
+			printfPublic("CreateToolhelp32Snapshot failed. (%d)", GetLastError());
+			__leave;
+		}
+
+		ProcessEntry32.dwSize = sizeof(ProcessEntry32);
+
+		if (!Process32First(hProcSnapshot, &ProcessEntry32))
+		{
+			printfPublic("Process32First failed. (%d)", GetLastError());
+			__leave;
+		}
+
+		do 
+		{
+			if (!Get(FALSE, ProcessEntry32.th32ProcessID, tchPath, _countof(tchPath)))
+			{
+				printfPublic("Get failed. (%d)", ProcessEntry32.th32ProcessID);
+				continue;
+			}
+
+			if (0 == _tcsicmp(lpPath, tchPath))
+			{
+				if (!Terminate(ProcessEntry32.th32ProcessID))
+					printfPublic("Terminate failed. (%d)", ProcessEntry32.th32ProcessID);
+			}
+		} while (Process32Next(hProcSnapshot, &ProcessEntry32));
+
+		bRet = TRUE;
+	}
+	__finally
+	{
+		if (INVALID_HANDLE_VALUE != hProcSnapshot)
+		{
+			CloseHandle(hProcSnapshot);
+			hProcSnapshot = INVALID_HANDLE_VALUE;
+		}
+	}
+
+	return bRet;
+}
+
+BOOL
+CProcessControl::Terminate(
+						   __in ULONG ulPid
+						   )
+{
+	BOOL	bRet = FALSE;
+
+	HANDLE	hProcess = NULL;
+
+
+	__try
+	{
+		if (!ulPid)
+		{
+			printfPublic("input argument error");
+			__leave;
+		}
+
+		hProcess = OpenProcess(PROCESS_QUERY_INFORMATION, FALSE, ulPid);
+		if (!hProcess)
+		{
+			printfPublic("OpenProcess failed. (%d)", GetLastError());
+			__leave;
+		}
+
+		if (!TerminateProcess(hProcess, 0))
+		{
+			printfPublic("TerminateProcess failed. (%d)", GetLastError());
+			__leave;
+		}
+
+		bRet = TRUE;
+	}
+	__finally
+	{
+		if (hProcess)
+		{
+			CloseHandle(hProcess);
+			hProcess = NULL;
+		}
+	}
+
+	return bRet;
+}
+
+BOOL
+CProcessControl::SetAutoRun(
+							__in LPTSTR lpPath
+						 )
+{
+	BOOL	bRet = FALSE;
+
+	LONG	lResult = ERROR_SUCCESS;
+	HKEY	hKey = NULL;
+	LPTSTR	lpName = NULL;
+	TCHAR	tchValueName[MAX_PATH] = {0};
+
+
+	__try
+	{
+		if (!lpPath)
+		{
+			printfPublic("input argument error");
+			__leave;
+		}
+
+		lResult = RegOpenKeyEx(
+			HKEY_LOCAL_MACHINE,
+			_T("Software\\Microsoft\\Windows\\CurrentVersion\\Run"),
+			0,
+			KEY_ALL_ACCESS,
+			&hKey
+			);
+		if (ERROR_SUCCESS != lResult)
+		{
+			printfPublic("RegOpenKeyEx failed. (%d)", lResult);
+			__leave;
+		}
+
+		lpName = PathFindFileName(lpPath);
+		if (!lpName)
+		{
+			printfPublic("PathFindFileName failed. (%d)", GetLastError());
+			__leave;
+		}
+
+		StringCchPrintf(tchValueName, _countof(tchValueName), _T("%s"), lpName);
+
+		PathRemoveExtension(tchValueName);
+
+		lResult = RegSetValueEx(
+			hKey,
+			tchValueName,
+			0,
+			REG_SZ,
+			(const BYTE *)lpPath,
+			_tcslen(lpPath) * sizeof(TCHAR)
+			);
+		if (ERROR_SUCCESS != lResult)
+		{
+			printfPublic("RegSetValueEx failed. (%d)", lResult);
+			__leave;
+		}
+
+		RegFlushKey(hKey);		
+
+		bRet = TRUE;
+	}
+	__finally
+	{
+		if (hKey)
+		{
+			RegCloseKey(hKey);
+			hKey = NULL;
+		}
+	}
+
+	return bRet;
+}
