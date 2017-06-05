@@ -7,6 +7,7 @@
 #include <Shlwapi.h>
 
 #include "..\\Public.h"
+#include "..\\OperationSystemVersion\\OperationSystemVersion.h"
 
 #pragma comment(lib, "Shlwapi.lib")
 #pragma comment(lib, "Shell32.lib")
@@ -35,7 +36,8 @@ typedef enum _FILE_MODIFY_TIME_CMP
 class CCrashDump
 {
 public:
-	BOOL
+	static
+		BOOL
 		SetType(
 		__in CRASH_DUMP_TYPE CrashDumpType
 		);
@@ -44,6 +46,12 @@ public:
 		Store(
 		__in LPTSTR lpDumpDir,
 		__in LPTSTR lpDriverPath
+		);
+
+	static
+		BOOL
+		SetCrashOnRightCtrlAndScrollLockDouble(
+		__in PBOOL pbReboot
 		);
 
 private:

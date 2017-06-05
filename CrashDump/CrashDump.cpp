@@ -21,7 +21,6 @@ BOOL
 		case CRASH_DUMP_TYPE_FULL:
 		case CRASH_DUMP_TYPE_MINI:
 		case CRASH_DUMP_TYPE_AUTO:
-			__leave;
 		case CRASH_DUMP_TYPE_MAIN:
 			{
 				// 打开注册表\\Machine\\System\\CurrentControlSet\\Control\\CrashControl
@@ -38,8 +37,7 @@ BOOL
 					__leave;
 				}
 
-				// 将CrashDumpEnabled的值置为2(核心内存转储)
-				dwValue = 2;
+				dwValue = CrashDumpType;
 				lResult = RegSetValueEx(
 					hKey,
 					_T("CrashDumpEnabled"),
@@ -413,4 +411,174 @@ CCrashDump::CCrashDump()
 CCrashDump::~CCrashDump()
 {
 	;
+}
+
+BOOL
+CCrashDump::SetCrashOnRightCtrlAndScrollLockDouble(
+	__in PBOOL pbReboot
+	)
+{
+	BOOL	bRet = FALSE;
+
+	LONG	lResult = ERROR_SUCCESS;
+	HKEY	hKey = NULL;
+	DWORD	dwType = 0;
+	DWORD	dwValue = 0;
+	DWORD	dwValueSizeB = 0;
+
+
+	__try
+	{
+		if (!pbReboot)
+			__leave;
+
+		lResult = RegOpenKeyEx(
+			HKEY_LOCAL_MACHINE,
+			_T("System\\CurrentControlSet\\Services\\i8042prt\\Parameters"),
+			0,
+			KEY_ALL_ACCESS,
+			&hKey
+			);
+		if (ERROR_SUCCESS != lResult)
+		{
+			printfPublic("RegOpenKeyEx failed. (0x%x)", lResult);
+			__leave;
+		}
+
+		dwValueSizeB = sizeof(DWORD);
+		lResult = RegQueryValueEx(
+			hKey,
+			_T("CrashOnCtrlScroll"),
+			0,
+			&dwType,
+			(LPBYTE)&dwValue,
+			&dwValueSizeB
+			);
+		if (ERROR_SUCCESS != lResult)
+		{
+			if (ERROR_FILE_NOT_FOUND == lResult)
+				*pbReboot = TRUE;
+			else
+			{
+				printfPublic("RegQueryValueEx failed. (0x%x)", lResult);
+				__leave;
+			}
+		}
+		else
+		{
+			if (0x01 == dwValue)
+			{
+				bRet = TRUE;
+				__leave;
+			}
+		}
+
+		dwValue = 0x01;
+		lResult = RegSetValueEx(
+			hKey,
+			_T("CrashOnCtrlScroll"),
+			NULL,
+			REG_DWORD,
+			(const BYTE *)&dwValue,
+			sizeof(DWORD)
+			);
+		if (ERROR_SUCCESS != lResult)
+		{
+			printfPublic("RegSetValueEx failed. (0x%x)", lResult);
+			__leave;
+		}
+
+		RegFlushKey(hKey);
+
+		bRet = TRUE;
+	}
+	__finally
+	{
+		if (hKey)
+		{
+			RegCloseKey(hKey);
+			hKey = NULL;
+		}
+	}
+
+	if (OS_VERSION_WINDOWS_VISTA <= COperationSystemVersion::GetInstance()->GetOSVersion())
+	{
+		bRet = FALSE;
+
+		__try
+		{
+			if (!pbReboot)
+				__leave;
+
+			lResult = RegOpenKeyEx(
+				HKEY_LOCAL_MACHINE,
+				_T("System\\CurrentControlSet\\Services\\kbdhid\\Parameters"),
+				0,
+				KEY_ALL_ACCESS,
+				&hKey
+				);
+			if (ERROR_SUCCESS != lResult)
+			{
+				printfPublic("RegOpenKeyEx failed. (0x%x)", lResult);
+				__leave;
+			}
+
+			dwValueSizeB = sizeof(DWORD);
+			lResult = RegQueryValueEx(
+				hKey,
+				_T("CrashOnCtrlScroll"),
+				0,
+				&dwType,
+				(LPBYTE)&dwValue,
+				&dwValueSizeB
+				);
+			if (ERROR_SUCCESS != lResult)
+			{
+				if (ERROR_FILE_NOT_FOUND == lResult)
+					*pbReboot = TRUE;
+				else
+				{
+					printfPublic("RegQueryValueEx failed. (0x%x)", lResult);
+					__leave;
+				}
+			}
+			else
+			{
+				if (0x01 == dwValue)
+				{
+					bRet = TRUE;
+					__leave;
+				}
+			}
+
+			dwValue = 0x01;
+			lResult = RegSetValueEx(
+				hKey,
+				_T("CrashOnCtrlScroll"),
+				NULL,
+				REG_DWORD,
+				(const BYTE *)&dwValue,
+				sizeof(DWORD)
+				);
+			if (ERROR_SUCCESS != lResult)
+			{
+				printfPublic("RegSetValueEx failed. (0x%x)", lResult);
+				__leave;
+			}
+
+			RegFlushKey(hKey);
+
+			bRet = TRUE;
+		}
+		__finally
+		{
+			if (hKey)
+			{
+				RegCloseKey(hKey);
+				hKey = NULL;
+			}
+		}
+	}
+
+	return bRet;
 }
