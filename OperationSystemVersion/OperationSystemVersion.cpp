@@ -183,6 +183,12 @@ COperationSystemVersion::GetOSVersionByGetVersionEx()
 			__leave;
 		}
 
+		m_VersionNumber.dwMajorVersion = OsVersionInfoEx.dwMajorVersion;
+		m_VersionNumber.dwMinorVersion = OsVersionInfoEx.dwMinorVersion;
+		m_VersionNumber.wServicePackMajor = OsVersionInfoEx.wServicePackMajor;
+		m_VersionNumber.wServicePackMinor = OsVersionInfoEx.wServicePackMinor;
+		m_VersionNumber.dwBuildNumber = OsVersionInfoEx.dwBuildNumber;
+
 		switch (OsVersionInfoEx.dwPlatformId)
 		{
 			case VER_PLATFORM_WIN32s:
@@ -330,7 +336,14 @@ OS_VERSION_USER_DEFINED
 			__leave;
 		}
 
+		m_VersionNumber.dwBuildNumber = OsVersionInfoEx.dwBuildNumber;
+
 		m_pfRtlGetNtVersionNumbers(&OsVersionInfoEx.dwMajorVersion, &OsVersionInfoEx.dwMinorVersion, &OsVersionInfoEx.dwBuildNumber);
+
+		m_VersionNumber.dwMajorVersion = OsVersionInfoEx.dwMajorVersion;
+		m_VersionNumber.dwMinorVersion = OsVersionInfoEx.dwMinorVersion;
+		m_VersionNumber.wServicePackMajor = OsVersionInfoEx.wServicePackMajor;
+		m_VersionNumber.wServicePackMinor = OsVersionInfoEx.wServicePackMinor;
 
 		switch (OsVersionInfoEx.dwPlatformId)
 		{
@@ -611,6 +624,8 @@ COperationSystemVersion::COperationSystemVersion()
 	m_OsVersionUserDefined = OS_VERSION_UNKNOWN;
 	m_ProcessorTypeUserDefined = OS_PROCESSOR_TYPE_UNKNOWN;
 
+	memset(&m_VersionNumber, 0, sizeof(m_VersionNumber));
+
 	if (!Init())
 		printfEx(MOD_OPERATION_SYSTEM_VERSION, PRINTF_LEVEL_ERROR, "Init failed");
 }
@@ -622,4 +637,32 @@ COperationSystemVersion::~COperationSystemVersion()
 
 	m_OsVersionUserDefined = OS_VERSION_UNKNOWN;
 	m_ProcessorTypeUserDefined = OS_PROCESSOR_TYPE_UNKNOWN;
+}
+
+BOOL
+COperationSystemVersion::GetVersionNumber(
+	__inout LPVERSION_NUMBER lpVersionNumber
+	)
+{
+	BOOL bRet = FALSE;
+
+
+	__try
+	{
+		if (!lpVersionNumber)
+		{
+			printfEx(MOD_OPERATION_SYSTEM_VERSION, PRINTF_LEVEL_ERROR, "input argrment error");
+			__leave;
+		}
+
+		*lpVersionNumber = m_VersionNumber;
+
+		bRet = TRUE;
+	}
+	__finally
+	{
+		;
+	}
+
+	return bRet;
 }

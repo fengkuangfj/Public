@@ -47,6 +47,15 @@ typedef enum _OS_PROCESSOR_TYPE_USER_DEFINED
 	OS_PROCESSOR_TYPE_X64
 } OS_PROCESSOR_TYPE_USER_DEFINED, *POS_PROCESSOR_TYPE_USER_DEFINED;
 
+typedef struct _VERSION_NUMBER
+{
+	DWORD dwMajorVersion;
+	DWORD dwMinorVersion;
+	DWORD wServicePackMajor;
+	DWORD wServicePackMinor;
+	DWORD dwBuildNumber;
+} VERSION_NUMBER, *PVERSION_NUMBER, *LPVERSION_NUMBER;
+
 typedef BOOL(WINAPI *IS_WINDOWS_SERVER)(void);
 typedef BOOL(WINAPI *IS_WINDOWS_10_OR_GREATER)(void);
 typedef BOOL(WINAPI *IS_WINDOWS_8_POINT_1_OR_GREATER)(void);
@@ -80,11 +89,17 @@ public:
 	OS_PROCESSOR_TYPE_USER_DEFINED
 		GetOSProcessorType();
 
+	BOOL
+		GetVersionNumber(
+		__inout LPVERSION_NUMBER lpVersionNumber	
+		);
+
 private:
 	static COperationSystemVersion	*	ms_pInstance;
 
 	OS_VERSION_USER_DEFINED				m_OsVersionUserDefined;
 	OS_PROCESSOR_TYPE_USER_DEFINED		m_ProcessorTypeUserDefined;
+	VERSION_NUMBER						m_VersionNumber;
 
 	HMODULE								m_hModuleKernel32;
 	HMODULE								m_hModuleNtdll;
