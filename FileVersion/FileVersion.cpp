@@ -62,24 +62,30 @@ CFileVersion::Get(
 	UINT				nLen = 0;
 
 
-	__try
+	do 
 	{
 		if (!lpPath || !lpFileVersionInfo)
-			__leave;
+			break;
 
-		dwResult = GetFileVersionInfoSize(lpPath, NULL);  
-		if (!dwResult)
-			__leave;
+		{
+			CWow64DisableWow64FsRedirection Wow64DisableWow64FsRedirection;
+			dwResult = GetFileVersionInfoSize(lpPath, NULL);  
+			if (!dwResult)
+				break;
+		}
 
 		lpData = calloc(1, dwResult);
 		if (!lpData)
-			__leave;
+			break;
 
-		if (!GetFileVersionInfo(lpPath, 0, dwResult, lpData))
-			__leave;
+		{
+			CWow64DisableWow64FsRedirection Wow64DisableWow64FsRedirection;
+			if (!GetFileVersionInfo(lpPath, 0, dwResult, lpData))
+				break;
+		}
 
 		if (!VerQueryValue(lpData, _T("\\"), (LPVOID *)&pVsFixedFileInfo, &nLen))
-			__leave;
+			break;
 
 		lpFileVersionInfo->ulMajorVersion = HIWORD(pVsFixedFileInfo->dwFileVersionMS);
 		lpFileVersionInfo->ulMinorVersion = LOWORD(pVsFixedFileInfo->dwFileVersionMS);
@@ -87,14 +93,12 @@ CFileVersion::Get(
 		lpFileVersionInfo->ulBuildVersion = LOWORD(pVsFixedFileInfo->dwFileVersionLS);
 
 		bRet = TRUE;
-	}
-	__finally
+	} while (FALSE);
+
+	if (lpData)
 	{
-		if (lpData)
-		{
-			free(lpData);
-			lpData = NULL;
-		}
+		free(lpData);
+		lpData = NULL;
 	}
 
 	return bRet;

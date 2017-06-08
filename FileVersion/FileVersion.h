@@ -7,6 +7,8 @@
 
 #pragma comment(lib, "Version.lib")
 
+#include "..\\Wow64DisableWow64FsRedirection\\Wow64DisableWow64FsRedirection.h"
+
 typedef struct _FILE_VERSION_INFO
 {
 	ULONG ulMajorVersion;
