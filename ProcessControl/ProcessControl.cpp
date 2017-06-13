@@ -57,6 +57,12 @@ CProcessControl::Get(
 				__leave;
 			}
 
+			if (!GetLongPathName(lpOutBuf, lpOutBuf, ulOutBufSizeCh))
+			{
+				printfPublic("GetLongPathName failed. (%d)", GetLastError());
+				__leave;
+			}
+
 			bRet = TRUE;
 			__leave;
 		}
@@ -93,6 +99,13 @@ CProcessControl::Get(
 		{
 			_tcscat_s(lpOutBuf, ulOutBufSizeCh, tchVolName);
 			_tcscat_s(lpOutBuf, ulOutBufSizeCh, tchProcPathDev + _tcslen(tchVolNameDev));
+
+			if (!GetLongPathName(lpOutBuf, lpOutBuf, ulOutBufSizeCh))
+			{
+				printfPublic("GetLongPathName failed. (%d)", GetLastError());
+				bRet = FALSE;
+				__leave;
+			}
 		}
 	}
 	__finally
