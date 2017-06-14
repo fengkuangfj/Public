@@ -170,9 +170,6 @@ public:
 		);
 
 	VOID
-		DeleteMyselfBySHChangeNotify();
-
-	VOID
 		DeleteMyselfByCreateProcess();
 
 	BOOL

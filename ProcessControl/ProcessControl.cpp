@@ -548,33 +548,6 @@ CProcessControl::Raise(
 }
 
 VOID
-CProcessControl::DeleteMyselfBySHChangeNotify()
-{
-	TCHAR tchProcPath[MAX_PATH]	= {0};
-
-
-	__try
-	{
-		if (!CModulePath::Get(NULL, tchProcPath, _countof(tchProcPath)))
-		{
-			printfPublic("CModulePath::Get failed");
-			__leave;
-		}
-
-		// 直接调用SHChangeNotify可以立即将进程的exe删掉，但有条件
-		// 1、可以调用SHChangeNotify
-		// 2、explorer正在运行
-		SHChangeNotify(SHCNE_DELETE, SHCNF_PATH, tchProcPath, NULL);
-	}
-	__finally
-	{
-		;
-	}
-
-	return ;
-}
-
-VOID
 CProcessControl::DeleteMyselfByCreateProcess()
 {
 	TCHAR				tchCmd[MAX_PATH]		= {0};
@@ -646,11 +619,15 @@ CProcessControl::DeleteMyselfByCreateProcess()
 			__leave;
 		}
 
+		// SHChangeNotify(SHCNE_DELETE, SHCNF_PATH, tchProcPath, NULL);
+
 		if (-1 == ResumeThread(ProcInfo.hThread))
 		{
 			printfPublic("ResumeThread failed. (%d)", GetLastError());
 			__leave;
 		}
+
+		ExitProcess(0);
 	}
 	__finally
 	{
@@ -864,6 +841,12 @@ CProcessControl::Get(
 				__leave;
 			}
 
+			if (!GetLongPathNameA(lpOutBuf, lpOutBuf, ulOutBufSizeCh))
+			{
+				printfPublic("GetLongPathName failed. (%d)", GetLastError());
+				__leave;
+			}
+
 			bRet = TRUE;
 			__leave;
 		}
@@ -881,6 +864,12 @@ CProcessControl::Get(
 			if (!m_QueryFullProcessImageNameA(hProc, 0, lpOutBuf, &dwProcPathLenCh))
 			{
 				printfPublic("QueryFullProcessImageName failed. (%d)", GetLastError());
+				__leave;
+			}
+
+			if (!GetLongPathNameA(lpOutBuf, lpOutBuf, ulOutBufSizeCh))
+			{
+				printfPublic("GetLongPathName failed. (%d)", GetLastError());
 				__leave;
 			}
 
@@ -920,6 +909,13 @@ CProcessControl::Get(
 		{
 			strcat_s(lpOutBuf, ulOutBufSizeCh, chVolName);
 			strcat_s(lpOutBuf, ulOutBufSizeCh, chProcPathDev + strlen(chVolNameDev));
+
+			if (!GetLongPathNameA(lpOutBuf, lpOutBuf, ulOutBufSizeCh))
+			{
+				printfPublic("GetLongPathName failed. (%d)", GetLastError());
+				bRet = FALSE;
+				__leave;
+			}
 		}
 	}
 	__finally

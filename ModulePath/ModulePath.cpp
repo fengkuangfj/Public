@@ -95,6 +95,13 @@ CModulePath::Get(
 			__leave;
 		}
 
+		dwResult = GetLongPathNameA(lpOutBuf, lpOutBuf, ulOutBufSizeCh);
+		if (!dwResult)
+		{
+			printfPublic("GetLongPathName failed. (%d)", GetLastError());
+			__leave;
+		}
+
 		bRet = TRUE;
 	}
 	__finally
