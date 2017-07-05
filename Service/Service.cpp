@@ -850,8 +850,9 @@ CService::DeleteFileInDrivers(
 
 BOOL
 CService::Delete(
-				 __in LPWSTR lpServiceName
-				 )
+__in LPWSTR lpServiceName,
+__in BOOL	bDeleteFile
+)
 {
 	BOOL		bRet		= FALSE;
 
@@ -861,7 +862,7 @@ CService::Delete(
 
 	__try
 	{
-		if (!DeleteFileInDrivers(lpServiceName))
+		if (bDeleteFile && !DeleteFileInDrivers(lpServiceName))
 		{
 			printfEx(MOD_SERVICE, PRINTF_LEVEL_ERROR, "DeleteFileInDrivers failed. %S", lpServiceName);
 			__leave;
@@ -1926,7 +1927,8 @@ CService::Restart(
 
 BOOL
 CService::Exist(
-				__in LPTSTR lpServiceName
+				__in		LPTSTR lpServiceName,
+				__in_opt	LPTSTR lpGuid
 				)
 {
 	BOOL					bRet			= FALSE;
@@ -2006,6 +2008,44 @@ CService::Exist(
 			SERVICE_STOP_PENDING == ServiceStatusProcess.dwCurrentState ||
 			SERVICE_STOPPED == ServiceStatusProcess.dwCurrentState)
 			bRet = TRUE;
+
+		if (bRet && lpGuid)
+		{
+			StringCchPrintf(tchSubKey, _countof(tchSubKey), _T("AppID\\%s"), lpGuid);
+
+			lResult = CRegOperation::RegOpenKeyEx(
+				HKEY_CLASSES_ROOT,
+				tchSubKey,
+				0,
+				KEY_ALL_ACCESS,
+				&hKey
+				);
+			if (ERROR_FILE_NOT_FOUND == lResult)
+			{
+				bRet = FALSE;
+				__leave;
+			}
+
+			if (!hKey)
+			{
+				bRet = FALSE;
+				__leave;
+			}
+
+			lResult = CRegOperation::RegQueryValueEx(
+				hKey,
+				_T("LocalService"),
+				0,
+				NULL,
+				NULL,
+				NULL
+				);
+			if (ERROR_FILE_NOT_FOUND == lResult)
+			{
+				bRet = FALSE;
+				__leave;
+			}
+		}
 	}
 	__finally
 	{

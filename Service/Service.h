@@ -92,7 +92,8 @@ public:
 
 	BOOL
 		Delete(
-		__in LPWSTR lpServiceName
+		__in LPWSTR lpServiceName,
+		__in BOOL	bDeleteFile = TRUE
 		);
 
 	BOOL
@@ -107,7 +108,8 @@ public:
 
 	BOOL
 		Exist(
-		__in LPTSTR lpServiceName
+		__in		LPTSTR lpServiceName,
+		__in_opt	LPTSTR lpGuid = NULL
 		);
 
 	BOOL
