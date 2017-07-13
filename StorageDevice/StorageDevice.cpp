@@ -84,7 +84,7 @@ BOOL
 }
 
 BOOL
-	CStorageDevice::GetVolumePhysicalLlocation(
+	CStorageDevice::GetVolumePhysicalLocation(
 	__in	LPTSTR lpPath,
 	__out	PULONG pDiskNumber
 	)
@@ -177,7 +177,7 @@ BOOL
 			__leave;
 		}
 
-		if (!GetVolumePhysicalLlocation(lpInBuf, &ulDiskNumber))
+		if (!GetVolumePhysicalLocation(lpInBuf, &ulDiskNumber))
 		{
 			printfEx(MOD_STORAGE_DEVICE, PRINTF_LEVEL_ERROR, "GetVolumePhysicalLlocation failed");
 			__leave;

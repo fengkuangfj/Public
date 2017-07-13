@@ -2,6 +2,7 @@
 
 #include <Windows.h>
 #include <tchar.h>
+#include <WinIoCtl.h>
 
 #include "..\\PrintfEx\\PrintfEx.h"
 #include "..\\Wmi\\Wmi.h"
@@ -30,7 +31,7 @@ public:
 
 	static
 		BOOL
-		GetVolumePhysicalLlocation(
+		GetVolumePhysicalLocation(
 		__in	LPTSTR lpPath,
 		__out	PULONG pDiskNumber
 		);

@@ -3,32 +3,36 @@
 
 BOOL
 CDirectoryControl::Delete(
-						  __in LPTSTR lptchDirPath
+						  __in LPTSTR	lptchDirPath,
+						  __in BOOL		bDealRemovableStorageDevice
 						  )
 {
-	return Control(lptchDirPath, TRUE);
+	return Control(lptchDirPath, TRUE, bDealRemovableStorageDevice);
 }
 
 BOOL
 CDirectoryControl::Empty(
-						 __in LPTSTR lptchDirPath
+						 __in LPTSTR	lptchDirPath,
+						 __in BOOL		bDealRemovableStorageDevice
 						 )
 {
-	return Control(lptchDirPath, FALSE);
+	return Control(lptchDirPath, FALSE, bDealRemovableStorageDevice);
 }
 
 BOOL
 CDirectoryControl::Control(
 						   __in LPTSTR	lptchDirPath,
-						   __in BOOL	bDelete
+						   __in BOOL	bDelete,
+						   __in BOOL	bDealRemovableStorageDevice
 						   )
 {
-	BOOL			bRet = FALSE;
+	BOOL				bRet = FALSE;
 
-	TCHAR			tchDirExpression[MAX_PATH] = {0};
-	HANDLE			hFind = INVALID_HANDLE_VALUE;
-	WIN32_FIND_DATA ffd = { 0 };
-	TCHAR			tchPath[MAX_PATH] = {0};
+	TCHAR				tchDirExpression[MAX_PATH] = {0};
+	HANDLE				hFind = INVALID_HANDLE_VALUE;
+	WIN32_FIND_DATA		ffd = { 0 };
+	TCHAR				tchPath[MAX_PATH] = {0};
+	STORAGE_BUS_TYPE	StorageBusType = BusTypeUnknown;
 
 
 	__try
@@ -44,6 +48,14 @@ CDirectoryControl::Control(
 			printfEx(MOD_DIRECTORY_CONTROL, PRINTF_LEVEL_WARNING, "not exist. (%S)",
 				lptchDirPath);
 
+			__leave;
+		}
+
+		if (!bDealRemovableStorageDevice &&
+			CStorageDevice::GetBusType(lptchDirPath, &StorageBusType) &&
+			BusTypeUsb == StorageBusType)
+		{
+			bRet = TRUE;
 			__leave;
 		}
 
@@ -126,15 +138,17 @@ BOOL
 CDirectoryControl::DeleteInternalFile(
 									  __in LPTSTR	lptchDirPath,
 									  __in LPTSTR	lptchFileName,
-									  __in BOOL		bWildcard
+									  __in BOOL		bWildcard,
+									  __in BOOL		bDealRemovableStorageDevice
 									  )
 {
-	BOOL			bRet = FALSE;
+	BOOL				bRet = FALSE;
 
-	TCHAR			tchDirExpression[MAX_PATH] = {0};
-	HANDLE			hFind = INVALID_HANDLE_VALUE;
-	WIN32_FIND_DATA ffd = { 0 };
-	TCHAR			tchPath[MAX_PATH] = {0};
+	TCHAR				tchDirExpression[MAX_PATH] = {0};
+	HANDLE				hFind = INVALID_HANDLE_VALUE;
+	WIN32_FIND_DATA		ffd = { 0 };
+	TCHAR				tchPath[MAX_PATH] = {0};
+	STORAGE_BUS_TYPE	StorageBusType = BusTypeUnknown;
 
 
 	__try
@@ -152,6 +166,14 @@ CDirectoryControl::DeleteInternalFile(
 			printfEx(MOD_DIRECTORY_CONTROL, PRINTF_LEVEL_WARNING, "not exist. (%S)",
 				lptchDirPath);
 
+			__leave;
+		}
+
+		if (!bDealRemovableStorageDevice &&
+			CStorageDevice::GetBusType(lptchDirPath, &StorageBusType) &&
+			BusTypeUsb == StorageBusType)
+		{
+			bRet = TRUE;
 			__leave;
 		}
 
@@ -228,15 +250,17 @@ BOOL
 CDirectoryControl::DeleteInternalDir(
 									 __in LPTSTR	lptchDirPath,
 									 __in LPTSTR	lptchDirName,
-									 __in BOOL		bWildcard
+									 __in BOOL		bWildcard,
+									 __in BOOL		bDealRemovableStorageDevice
 									 )
 {
-	BOOL			bRet = FALSE;
+	BOOL				bRet = FALSE;
 
-	TCHAR			tchDirExpression[MAX_PATH] = {0};
-	HANDLE			hFind = INVALID_HANDLE_VALUE;
-	WIN32_FIND_DATA ffd = { 0 };
-	TCHAR			tchPath[MAX_PATH] = {0};
+	TCHAR				tchDirExpression[MAX_PATH] = {0};
+	HANDLE				hFind = INVALID_HANDLE_VALUE;
+	WIN32_FIND_DATA		ffd = { 0 };
+	TCHAR				tchPath[MAX_PATH] = {0};
+	STORAGE_BUS_TYPE	StorageBusType = BusTypeUnknown;
 
 
 	__try
@@ -254,6 +278,14 @@ CDirectoryControl::DeleteInternalDir(
 			printfEx(MOD_DIRECTORY_CONTROL, PRINTF_LEVEL_WARNING, "not exist. (%S)",
 				lptchDirPath);
 
+			__leave;
+		}
+
+		if (!bDealRemovableStorageDevice &&
+			CStorageDevice::GetBusType(lptchDirPath, &StorageBusType) &&
+			BusTypeUsb == StorageBusType)
+		{
+			bRet = TRUE;
 			__leave;
 		}
 
@@ -337,15 +369,17 @@ BOOL
 CDirectoryControl::EmptyExceptFile(
 								   __in LPTSTR	lptchDirPath,
 								   __in LPTSTR	lptchFileName,
-								   __in BOOL	bWildcard
+								   __in BOOL	bWildcard,
+								   __in BOOL	bDealRemovableStorageDevice
 								   )
 {
-	BOOL			bRet = FALSE;
+	BOOL				bRet = FALSE;
 
-	TCHAR			tchDirExpression[MAX_PATH] = {0};
-	HANDLE			hFind = INVALID_HANDLE_VALUE;
-	WIN32_FIND_DATA ffd = { 0 };
-	TCHAR			tchPath[MAX_PATH] = {0};
+	TCHAR				tchDirExpression[MAX_PATH] = {0};
+	HANDLE				hFind = INVALID_HANDLE_VALUE;
+	WIN32_FIND_DATA		ffd = { 0 };
+	TCHAR				tchPath[MAX_PATH] = {0};
+	STORAGE_BUS_TYPE	StorageBusType = BusTypeUnknown;
 
 
 	__try
@@ -363,6 +397,14 @@ CDirectoryControl::EmptyExceptFile(
 			printfEx(MOD_DIRECTORY_CONTROL, PRINTF_LEVEL_WARNING, "not exist. (%S)",
 				lptchDirPath);
 
+			__leave;
+		}
+
+		if (!bDealRemovableStorageDevice &&
+			CStorageDevice::GetBusType(lptchDirPath, &StorageBusType) &&
+			BusTypeUsb == StorageBusType)
+		{
+			bRet = TRUE;
 			__leave;
 		}
 
@@ -446,15 +488,17 @@ BOOL
 CDirectoryControl::DeleteExceptFile(
 									__in LPTSTR	lptchDirPath,
 									__in LPTSTR	lptchFileName,
-									__in BOOL	bWildcard
+									__in BOOL	bWildcard,
+									__in BOOL	bDealRemovableStorageDevice
 									)
 {
-	BOOL			bRet = FALSE;
+	BOOL				bRet = FALSE;
 
-	TCHAR			tchDirExpression[MAX_PATH] = {0};
-	HANDLE			hFind = INVALID_HANDLE_VALUE;
-	WIN32_FIND_DATA ffd = { 0 };
-	TCHAR			tchPath[MAX_PATH] = {0};
+	TCHAR				tchDirExpression[MAX_PATH] = {0};
+	HANDLE				hFind = INVALID_HANDLE_VALUE;
+	WIN32_FIND_DATA		ffd = { 0 };
+	TCHAR				tchPath[MAX_PATH] = {0};
+	STORAGE_BUS_TYPE	StorageBusType = BusTypeUnknown;
 
 
 	__try
@@ -472,6 +516,14 @@ CDirectoryControl::DeleteExceptFile(
 			printfEx(MOD_DIRECTORY_CONTROL, PRINTF_LEVEL_WARNING, "not exist. (%S)",
 				lptchDirPath);
 
+			__leave;
+		}
+
+		if (!bDealRemovableStorageDevice &&
+			CStorageDevice::GetBusType(lptchDirPath, &StorageBusType) &&
+			BusTypeUsb == StorageBusType)
+		{
+			bRet = TRUE;
 			__leave;
 		}
 
