@@ -105,6 +105,12 @@ CDirectoryControl::Control(
 
 		if (bDelete)
 		{
+			if (INVALID_HANDLE_VALUE != hFind)
+			{
+				FindClose(hFind);
+				hFind = INVALID_HANDLE_VALUE;
+			}
+
 			if (!RemoveDirectory(lptchDirPath))
 			{
 				if (145 != GetLastError())
@@ -587,6 +593,12 @@ CDirectoryControl::DeleteExceptFile(
 				tchDirExpression, GetLastError());
 
 			__leave;
+		}
+
+		if (INVALID_HANDLE_VALUE != hFind)
+		{
+			FindClose(hFind);
+			hFind = INVALID_HANDLE_VALUE;
 		}
 
 		if (!RemoveDirectory(lptchDirPath))
