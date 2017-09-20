@@ -1,5 +1,7 @@
 #include "Public.h"
 
+#pragma warning(disable : 4127)
+
 VOID
 printfPublicEx(
 			   __in LPSTR lpFile,

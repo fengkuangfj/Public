@@ -9,6 +9,7 @@
 #include <objbase.h>
 
 #pragma comment(lib, "ole32.lib")
+#pragma comment(lib, "User32.lib")
 
 #ifndef MOD_PUBLIC
 #define MOD_PUBLIC _T("¹«¹²")
