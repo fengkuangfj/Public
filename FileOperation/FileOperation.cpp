@@ -100,7 +100,6 @@ CFileOperation::MoveFile(
 {
 	BOOL	bRet = FALSE;
 
-	TCHAR	tchSrcTemp[MAX_PATH] = {0};
 	TCHAR	tchDesTemp[MAX_PATH] = {0};
 	TCHAR	tchTempDir[MAX_PATH] = {0};
 	TCHAR	tchGuid[MAX_PATH] = {0};
@@ -121,7 +120,7 @@ CFileOperation::MoveFile(
 
 			StringCchPrintf(tchDesTemp, _countof(tchDesTemp), _T("%s%s"), tchTempDir, tchGuid);
 
-			if (!MoveFile(lpDes, tchSrcTemp))
+			if (!MoveFile(lpDes, tchDesTemp))
 			{
 				if (!MoveFileEx(lpSrc, lpDes, MOVEFILE_REPLACE_EXISTING | MOVEFILE_DELAY_UNTIL_REBOOT))
 					__leave;
